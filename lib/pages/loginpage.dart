@@ -1,12 +1,66 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fyp/components/button.dart';
+import 'package:fyp/components/textfield.dart';
 import 'package:fyp/components/tile.dart';
 
-class LoginPage extends StatelessWidget{
-  const LoginPage({super.key});
+class LoginPage extends StatefulWidget{
+  LoginPage({super.key});
 
-  void signUserIn(){
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
 
+class _LoginPageState extends State<LoginPage> {
+  final username = TextEditingController();
+
+  final password = TextEditingController();
+
+  void signUserIn() async{
+    showDialog(
+      context: context, 
+      builder: (context){
+        return const Center(
+          child: CircularProgressIndicator(),
+        );
+      },
+    );
+    try{
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: username.text, 
+        password: password.text
+        );
+        Navigator.pop(context);
+    }on FirebaseAuthException catch (e){
+      Navigator.pop(context);
+      if(e.code == 'user-not-found'){
+        wrongEmailMessage();
+      }else if (e.code == 'wrong-password'){
+        wrongPasswordMessage();
+      }
+    }
+  }
+
+  void wrongEmailMessage(){
+    showDialog(
+      context: context, 
+      builder: (context){
+        return const AlertDialog(
+          title:Text('Incorrect Email'),
+        );
+      },
+    );
+  }
+
+  void wrongPasswordMessage(){
+    showDialog(
+      context: context, 
+      builder: (context){
+        return const AlertDialog(
+          title:Text('Incorrect Password'),
+        );
+      },
+    );
   }
 
   @override
@@ -34,28 +88,18 @@ class LoginPage extends StatelessWidget{
                 ),
               ),
               
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal:50.0),
-                child: SizedBox(
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: "Username"
-                    ),
-                  ),
-                ),
+              MyTextField(
+                controller: username,
+                hintText: 'Username', 
+                obscureText: false,
               ),
 
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal:50.0),
-                child: SizedBox(
-                  child: TextField(
-                    obscureText: true,
-                    decoration: InputDecoration(
-                      hintText: "Password"
-                    ),
-                  ),
-                ),
+              MyTextField(
+                controller: password,
+                hintText: 'Password', 
+                obscureText: true,
               ),
+             
 
               const SizedBox(height:25),
 
@@ -135,7 +179,4 @@ class LoginPage extends StatelessWidget{
       )
     );
   }
-
-  
-
 }
