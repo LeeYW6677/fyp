@@ -1,55 +1,40 @@
+import 'package:email_validator/email_validator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fyp/components/customTextField.dart';
-import 'package:email_validator/email_validator.dart';
-import 'package:fyp/pages/forgotPassword.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+class ForgotPasswordPage extends StatefulWidget {
+  const ForgotPasswordPage  ({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<ForgotPasswordPage> createState() => _ForgotPasswordPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _ForgotPasswordPageState extends State<ForgotPasswordPage> {  
   final email = TextEditingController();
-  final password = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   String? errorMessage;
 
-  void signUserIn() async {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return const Center(
-          child: CircularProgressIndicator(),
-        );
-      },
-    );
+  @override
+  void dispose(){
+    email.dispose();
+    super.dispose();
+  }
 
-    try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: email.text,
-        password: password.text,
+  Future passwordReset() async{
+    try{
+    await FirebaseAuth.instance.sendPasswordResetEmail(
+      email: email.text.trim(), 
       );
-      Navigator.pop(context);
-      errorMessage = null;
-    } on FirebaseAuthException catch (e) {
-      Navigator.pop(context);
-      setState(() {
-        if (e.code == 'invalid-login-credentials') {
-          errorMessage = 'Invalid login credentials';
-        } else {
-          errorMessage = 'An error has occured. Please try again later.';
-        }
-      });
+    }on FirebaseAuthException catch (e){
+      errorMessage = 'asd';
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: Container(
+      body: Container(
       decoration: const BoxDecoration(
         image: DecorationImage(
           image: AssetImage('lib/Images/tarumtbg.png'), // Adjust the image path
@@ -111,13 +96,21 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 25),
                   Text(
-                    'Login Page',
+                    'Forgot Password',
                     style: TextStyle(
                       color: Colors.grey[700],
                       fontSize: 24,
                     ),
                   ),
                   const SizedBox(height: 25),
+                  const Text(
+                    'Enter your email and we will send you a password reset link',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height:15),
                   Form(
                     key: _formKey,
                     child: Column(
@@ -139,47 +132,6 @@ class _LoginPageState extends State<LoginPage> {
                           errorText: errorMessage,
                         ),
                         const SizedBox(height: 25),
-                        CustomTextField(
-                          controller: password,
-                          hintText: 'Enter your password',
-                          hiding: true,
-                          showIcon: true,
-                          icon: const Icon(Icons.lock),
-                          validator: (value) {
-                            if (value!.isEmpty) {
-                              return 'Please enter your password';
-                            }
-                            return null; // Return null if the input is valid
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 25.0, vertical: 15.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        TextButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) {
-                                  return ForgotPasswordPage();
-                                },
-                              ),
-                            );
-                          },
-                          child: const Text(
-                            'Forgot Password?',
-                            style: TextStyle(
-                              color: Colors.blue,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        )
                       ],
                     ),
                   ),
@@ -187,8 +139,7 @@ class _LoginPageState extends State<LoginPage> {
                   ElevatedButton(
                     onPressed: () {
                       if (_formKey.currentState!.validate()) {
-                        // If the form is valid, call the sign-in function
-                        signUserIn();
+                        passwordReset();
                       }
                     },
                     style: ElevatedButton.styleFrom(
@@ -196,7 +147,7 @@ class _LoginPageState extends State<LoginPage> {
                       minimumSize: const Size(400, 0),
                     ),
                     child: const Text(
-                      'Sign in',
+                      'Submit',
                       style: TextStyle(
                           color: Colors.white,
                           fontSize: 16,

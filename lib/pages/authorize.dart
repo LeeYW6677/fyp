@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fyp/pages/home.dart';
-import 'package:fyp/pages/loginOrRegister.dart';
+import 'package:fyp/pages/loginpage.dart';
 
 
 class Authorization extends StatelessWidget {
@@ -17,7 +17,7 @@ class Authorization extends StatelessWidget {
             return Home();
           }
           else{
-            return LoginOrRegisterPage();
+            return const LoginPage();
           }
         },
       )

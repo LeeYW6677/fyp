@@ -7,6 +7,8 @@ class CustomTextField extends StatefulWidget {
   final bool showIcon;
   final Icon? icon;
   final int width;
+  final String? Function(String?)? validator;
+  final String? errorText;
 
   CustomTextField({
     required this.controller,
@@ -15,6 +17,8 @@ class CustomTextField extends StatefulWidget {
     this.hiding = false,
     this.showIcon = false,
     this.icon,
+    this.validator,
+    this.errorText
   });
 
   @override
@@ -25,17 +29,24 @@ class _CustomTextFieldState extends State<CustomTextField> {
   bool obscureText = false;
 
   @override
+  void initState() {
+    super.initState();
+    obscureText = widget.hiding; // Initialize based on the widget's hiding property
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 25.0),
-      child: TextField(
+      child: TextFormField(
         controller: widget.controller,
-        obscureText: widget.hiding ? true : obscureText,
+        obscureText: obscureText, // Use the obscureText property here
         decoration: InputDecoration(
           hintText: widget.hintText,
+          errorText: widget.errorText,
           enabledBorder: const OutlineInputBorder(
             borderSide: BorderSide(
-            width: 1, color: Colors.grey), //<-- SEE HERE
+            width: 1, color: Colors.grey),
           ),
           focusedBorder: const OutlineInputBorder(
             borderSide: BorderSide(
@@ -43,23 +54,37 @@ class _CustomTextFieldState extends State<CustomTextField> {
               color: Colors.blue,
             ),
           ),
+          errorBorder: const OutlineInputBorder(
+             borderSide: BorderSide(
+              width: 1,
+              color: Colors.red,
+            ),
+          ),
+          focusedErrorBorder: const OutlineInputBorder(
+             borderSide: BorderSide(
+              width: 1,
+              color: Colors.red,
+            ),
+          ),
           prefixIcon: widget.showIcon ? widget.icon : null,
           suffixIcon: widget.hiding
               ? IconButton(
                   padding: const EdgeInsetsDirectional.only(end: 12.0),
                   icon: obscureText
-                      ? const Icon(Icons.visibility_off)
-                      : const Icon(Icons.visibility),
+                      ? const Icon(Icons.visibility)
+                      : const Icon(Icons.visibility_off),
                   onPressed: () {
                     setState(() {
-                      obscureText = !obscureText;
+                      obscureText = !obscureText; // Toggle the state
                     });
                   },
                 )
               : null,
         ),
+        validator: widget.validator,
       ),
     );
   }
 }
+
 
