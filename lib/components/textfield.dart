@@ -1,27 +1,32 @@
 import 'package:flutter/material.dart';
 
-class MyTextField extends StatelessWidget {
-  final controller;
+class MyTextField extends StatefulWidget {
+  final TextEditingController controller;
   final String hintText;
-  final bool obscureText;
-  const MyTextField({
-    super.key, 
-    required this.controller, 
-    required this.hintText, 
-    required this.obscureText
+
+  MyTextField({
+    required this.controller,
+    required this.hintText,
   });
 
   @override
+  _MyTextFieldState createState() => _MyTextFieldState();
+}
+
+class _MyTextFieldState extends State<MyTextField> {
+
+
+
+  @override
   Widget build(BuildContext context) {
-    return Padding(
+     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 25.0),
       child: TextField(
-        controller: controller,
-        obscureText: obscureText,
+        controller: widget.controller,
         decoration: InputDecoration(
-          hintText: hintText
+          hintText: widget.hintText
         ),
-      ),
-      );
+      )
+    );
   }
 }
