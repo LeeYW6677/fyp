@@ -1,29 +1,32 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:fyp/components/drawer.dart';
+import 'package:fyp/components/footer.dart';
+import 'package:fyp/components/header.dart';
+import 'package:fyp/reponsive.dart';
 
 class Home extends StatelessWidget {
   Home({super.key});
-  final user = FirebaseAuth.instance.currentUser!;
-
-  void signUserOut(){
-    FirebaseAuth.instance.signOut();
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body:Center(
-        child: Column(
+      appBar: const Header(),
+      drawer: !Responsive.isDesktop(context) ? const drawer() : null,
+      body: SafeArea(
+        child: Row(
           children: [
-            Text("Hello " + user.email!),
-
-            IconButton(
-              onPressed: signUserOut, 
-              icon: const Icon(Icons.logout)
+            if (Responsive.isDesktop(context))
+              const Expanded(
+                child: drawer(),
               ),
+            Expanded(
+              flex: 5,
+              child: Container(),
+            ),
           ],
-        )
+        ),
       ),
+      bottomNavigationBar: !Responsive.isMobile(context) ? const Footer() : null,
     );
   }
 }

@@ -1,49 +1,14 @@
-import 'package:email_validator/email_validator.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:fyp/components/customTextField.dart';
-import 'package:fyp/pages/forgotPassowrdPage2.dart';
+import 'package:fyp/pages/loginpage.dart';
 
-class ForgotPasswordPage extends StatefulWidget {
-  const ForgotPasswordPage({super.key});
+class ForgotPasswordPage2 extends StatefulWidget {
+  const ForgotPasswordPage2({super.key});
 
   @override
-  State<ForgotPasswordPage> createState() => _ForgotPasswordPageState();
+  State<ForgotPasswordPage2> createState() => _ForgotPasswordPage2State();
 }
 
-class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
-  final email = TextEditingController();
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  String? errorMessage;
-  String? success = '';
-
-  @override
-  void dispose(){
-    email.dispose();
-    super.dispose();
-  }
-
-  Future passwordReset() async {
-    try {
-      await FirebaseAuth.instance
-          .sendPasswordResetEmail(
-            email: email.text.trim(),
-          )
-          .then((value) => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) {
-                    return ForgotPasswordPage2();
-                  },
-                ),
-              ));
-    } on FirebaseAuthException catch(e){
-      setState(() {
-        errorMessage = 'An error has occurred. Please try again later.';
-      });
-    }
-  }
-
+class _ForgotPasswordPage2State extends State<ForgotPasswordPage2> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -81,10 +46,10 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
                       IconButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                        icon: const Icon(Icons.arrow_back)),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          icon: const Icon(Icons.arrow_back)),
                     ],
                   ),
                   RichText(
@@ -126,50 +91,30 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   ),
                   const SizedBox(height: 25),
                   const Text(
-                    'Enter your email and we will send you a password reset link',
+                    'Password reset email has been sent. Please check your email.\n',
                     style: TextStyle(
                       color: Colors.black,
                       fontSize: 16,
                     ),
                   ),
                   const SizedBox(height: 15),
-                  Form(
-                    key: _formKey,
-                    child: Column(
-                      children: [
-                        CustomTextField(
-                          controller: email,
-                          hintText: 'Enter your email',
-                          hiding: false,
-                          showIcon: true,
-                          icon: const Icon(Icons.email),
-                          validator: (value) {
-                            if (value!.isEmpty) {
-                              return 'Please enter your email';
-                            } else if (!EmailValidator.validate(value)) {
-                              return 'Invalid email';
-                            }
-                            return null;
-                          },
-                          errorText: errorMessage,
-                        ),
-                        const SizedBox(height: 25),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 15),
                   ElevatedButton(
                     onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        passwordReset();
-                      }
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) {
+                            return const LoginPage();
+                          },
+                        ),
+                      );
                     },
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.all(25),
                       minimumSize: const Size(400, 0),
                     ),
                     child: const Text(
-                      'Submit',
+                      'Return to Login Page',
                       style: TextStyle(
                           color: Colors.white,
                           fontSize: 16,
