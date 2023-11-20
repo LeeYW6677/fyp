@@ -1,24 +1,46 @@
-import 'package:flutter/material.dart';
-import 'package:fyp/pages/authorize.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:fyp/pages/home.dart';
+import 'package:fyp/pages/login.dart';
+import 'package:fyp/functions/firebase_options.dart';
+import 'package:fyp/pages/register.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.web,
   );
-  runApp(const MyApp());
+  runApp(const SocietyManagementSystem());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class SocietyManagementSystem extends StatefulWidget {
+  const SocietyManagementSystem({Key? key}) : super(key: key);
+
+  @override
+  _SocietyManagementSystemState createState() => _SocietyManagementSystemState();
+}
+
+class _SocietyManagementSystemState extends State<SocietyManagementSystem> {
+  User? user;
+
+  @override
+  void initState() {
+    super.initState();
+    user = FirebaseAuth.instance.currentUser;
+  }
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: Authorization(),
+      theme: ThemeData.light().copyWith(
+        scrollbarTheme: const ScrollbarThemeData().copyWith(
+          thumbColor: MaterialStateProperty.all(Colors.grey[500]),
+          thumbVisibility: MaterialStateProperty.all<bool>(true),
+        ),
+      ),
+      home: user != null ? const Home() : const Login(),
     );
   }
 }

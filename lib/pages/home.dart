@@ -1,33 +1,67 @@
 import 'package:flutter/material.dart';
-import 'package:fyp/components/drawer.dart';
-import 'package:fyp/components/footer.dart';
-import 'package:fyp/components/header.dart';
-import 'package:fyp/reponsive.dart';
+import 'package:fyp/functions/customWidget.dart';
+import 'package:fyp/functions/responsive.dart';
 
-class Home extends StatelessWidget {
-  Home({super.key});
 
+class Home extends StatefulWidget {
+  const Home({super.key});
+
+  @override
+  State<Home> createState() => _HomeState();
+}
+
+class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const Header(),
-      drawer: !Responsive.isDesktop(context) ? const drawer() : null,
+      drawer: !Responsive.isDesktop(context)
+          ? const CustomDrawer(
+              index: 1,
+            )
+          : null,
       body: SafeArea(
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (Responsive.isDesktop(context))
               const Expanded(
-                child: drawer(),
+                child: CustomDrawer(
+                  index: 1,
+                ),
               ),
-            Expanded(
+            const Expanded(
               flex: 5,
-              child: Container(),
+              child: SingleChildScrollView(
+                child: Column(children: [
+                  NavigationMenu(
+                    buttonTexts: ['Dashboard'],
+                    destination: [Home()],
+                  ),
+                  Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Dashboard',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 20,
+                              ),
+                            ),
+                            Divider(
+                              thickness: 0.1,
+                              color: Colors.black,
+                            ),
+                          ]))
+                ]),
+              ),
             ),
           ],
         ),
       ),
-      bottomNavigationBar: !Responsive.isMobile(context) ? const Footer() : null,
+      bottomNavigationBar: const Footer(),
     );
   }
 }
-
