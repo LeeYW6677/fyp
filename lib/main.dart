@@ -1,10 +1,11 @@
+import 'dart:ui';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fyp/pages/home.dart';
 import 'package:fyp/pages/login.dart';
 import 'package:fyp/functions/firebase_options.dart';
-import 'package:fyp/pages/register.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,6 +34,7 @@ class _SocietyManagementSystemState extends State<SocietyManagementSystem> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      scrollBehavior: CustomScrollBehavior(),
       debugShowCheckedModeBanner: false,
       theme: ThemeData.light().copyWith(
         scrollbarTheme: const ScrollbarThemeData().copyWith(
@@ -43,4 +45,12 @@ class _SocietyManagementSystemState extends State<SocietyManagementSystem> {
       home: user != null ? const Home() : const Login(),
     );
   }
+}
+
+class CustomScrollBehavior extends MaterialScrollBehavior {
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.mouse,
+      };
 }

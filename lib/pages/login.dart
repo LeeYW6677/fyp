@@ -58,11 +58,7 @@ class _LoginState extends State<Login> {
       } else if (userId.startsWith('B')) {
         UserRole.role = 'branch head';
       } else {
-        if (userQuery.docs.first['position'] == 'member') {
-          UserRole.role = 'member';
-        } else {
-          UserRole.role = 'committee';
-        }
+        UserRole.role = 'student';
       }
 
       Navigator.push(

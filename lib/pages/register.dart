@@ -58,13 +58,15 @@ class _RegisterState extends State<Register> {
         try {
           final newStudent =
               FirebaseFirestore.instance.collection('user').doc(id.text);
-          final authResult =
+          UserCredential userCredential =
               await FirebaseAuth.instance.createUserWithEmailAndPassword(
             email: email.text,
             password: password.text,
           );
 
-          final user = authResult.user;
+          User? user = userCredential.user;
+          await user?.sendEmailVerification();
+
           if (user != null) {
             newStudent.set({
               'name': name.text,
@@ -460,7 +462,8 @@ class _RegisterState extends State<Register> {
                                   Expanded(
                                     child: CustomTextField(
                                       controller: ic,
-                                      hintText: 'Enter your IC No. (Format: 123456-12-1234)',
+                                      hintText:
+                                          'Enter your IC No. (Format: 123456-12-1234)',
                                       validator: (value) {
                                         if (value!.isEmpty) {
                                           return 'Please enter your IC No.';

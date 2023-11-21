@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
-import 'package:fyp/pages/member.dart';
+import 'package:fyp/pages/society.dart';
 
 class RegisterAdvisor extends StatefulWidget {
   const RegisterAdvisor({
@@ -92,8 +92,8 @@ class _RegisterAdvisorState extends State<RegisterAdvisor> {
               child: SingleChildScrollView(
                 child: Column(children: [
                   const NavigationMenu(
-                    buttonTexts: ['Member', 'Register'],
-                    destination: [Member(), RegisterAdvisor()],
+                    buttonTexts: ['Society', 'Register'],
+                    destination: [Society(), RegisterAdvisor()],
                   ),
                   Padding(
                       padding: const EdgeInsets.all(16.0),

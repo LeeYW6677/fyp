@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fyp/pages/advisorProfile.dart';
 import 'package:fyp/pages/home.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:fyp/pages/member.dart';
+import 'package:fyp/pages/society.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -148,7 +148,7 @@ class CustomDrawer extends StatelessWidget {
                 color: index == 2 ? Colors.white : Colors.black,
               ),
               title: Text(
-                'Member',
+                'Society',
                 style: TextStyle(
                   color: index == 2 ? Colors.white : Colors.black,
                 ),
@@ -157,7 +157,7 @@ class CustomDrawer extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const Member(),
+                    builder: (context) => const Society(),
                   ),
                 );
               },
@@ -453,7 +453,7 @@ class Header extends StatelessWidget implements PreferredSizeWidget {
             const SizedBox(width: 15),
             IconButton(
               onPressed: () {
-                if (UserRole.role == 'member' || UserRole.role == 'committee') {
+                if (UserRole.role == 'student') {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -602,28 +602,6 @@ class PasswordStrengthIndicator extends StatelessWidget {
           ],
         ),
       ],
-    );
-  }
-}
-
-class CustomDataTable extends StatelessWidget {
-  final List<DataColumn> columns;
-  final DataTableSource source;
-
-  const CustomDataTable({
-    Key? key,
-    required this.columns,
-    required this.source,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return PaginatedDataTable(
-      rowsPerPage: PaginatedDataTable.defaultRowsPerPage,
-      columns: columns,
-      source: source,
-      sortColumnIndex: 0,
-      sortAscending: true,
     );
   }
 }
