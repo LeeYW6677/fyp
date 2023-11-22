@@ -528,19 +528,21 @@ class _RegisterState extends State<Register> {
                                     ),
                                   ),
                                   Expanded(
-                                    flex: 4,
-                                    child: CustomDDL(
-                                      controller: programme,
-                                      hintText: 'Select your programme',
-                                      items: programmeItems,
-                                      value: selectedProgramme,
-                                      onChanged: (newValue) {
-                                        setState(() {
-                                          selectedProgramme = newValue!;
-                                        });
-                                      },
-                                    ),
-                                  ),
+                                      flex: 4,
+                                      child: CustomDDL<String>(
+                                        controller: programme,
+                                        hintText: 'Select your programme',
+                                        items: programmeItems,
+                                        value: selectedProgramme,
+                                        dropdownItems: programmeItems
+                                            .map<DropdownMenuItem<String>>(
+                                                (programme) {
+                                          return DropdownMenuItem<String>(
+                                            value: programme,
+                                            child: Text(programme),
+                                          );
+                                        }).toList(),
+                                      )),
                                 ],
                               ),
                             ),
@@ -559,21 +561,34 @@ class _RegisterState extends State<Register> {
                                     ),
                                   ),
                                   Expanded(
-                                    flex: 4,
-                                    child: CustomDDL(
-                                      controller: faculty,
-                                      hintText: 'Select your faculty',
-                                      items: const ['FOCS', 'FOAS', 'FAFB'],
-                                      value: selectedFaculty,
-                                      onChanged: (newValue) {
-                                        setState(() {
-                                          selectedFaculty = newValue!;
-                                          getProgrammesForFaculty(
-                                              selectedFaculty);
-                                        });
-                                      },
-                                    ),
-                                  ),
+                                      flex: 4,
+                                      child: CustomDDL<String>(
+                                        controller: faculty,
+                                        hintText: 'Select your faculty',
+                                        items: const ['FOCS', 'FOAS', 'FAFB'],
+                                        value: selectedFaculty,
+                                        onChanged: (String? newValue) {
+                                          setState(() {
+                                            selectedFaculty = newValue!;
+                                            getProgrammesForFaculty(
+                                                selectedFaculty);
+                                          });
+                                        },
+                                        dropdownItems: const [
+                                          DropdownMenuItem<String>(
+                                            value: 'FOCS',
+                                            child: Text('FOCS'),
+                                          ),
+                                          DropdownMenuItem<String>(
+                                            value: 'FOAS',
+                                            child: Text('FOAS'),
+                                          ),
+                                          DropdownMenuItem<String>(
+                                            value: 'FAFB',
+                                            child: Text('FAFB'),
+                                          ),
+                                        ],
+                                      )),
                                 ],
                               ),
                             ),

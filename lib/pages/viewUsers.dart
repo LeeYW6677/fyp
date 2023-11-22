@@ -63,8 +63,8 @@ class _ViewUsersState extends State<ViewUsers> {
                                   width: 15,
                                 ),
                                 SizedBox(
-                                  width: 400,
-                                  child: CustomDDL(
+                                    width: 400,
+                                    child: CustomDDL<String>(
                                       controller: society,
                                       hintText: 'Select society',
                                       items: const [
@@ -72,8 +72,22 @@ class _ViewUsersState extends State<ViewUsers> {
                                         'Advisor',
                                         'Society'
                                       ],
-                                      value: 'Student'),
-                                ),
+                                      value: 'Student',
+                                      dropdownItems: const [
+                                        DropdownMenuItem<String>(
+                                          value: 'Student',
+                                          child: Text('Student'),
+                                        ),
+                                        DropdownMenuItem<String>(
+                                          value: 'Advisor',
+                                          child: Text('Advisor'),
+                                        ),
+                                        DropdownMenuItem<String>(
+                                          value: 'Society',
+                                          child: Text('Society'),
+                                        ),
+                                      ],
+                                    )),
                               ],
                             ),
                             Padding(

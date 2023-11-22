@@ -7,6 +7,7 @@ import 'package:fyp/pages/advisorFirstLogin.dart';
 import 'package:fyp/pages/forgotPassword1.dart';
 import 'package:fyp/pages/home.dart';
 import 'package:fyp/pages/register.dart';
+import 'package:localstorage/localstorage.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -19,7 +20,10 @@ class _LoginState extends State<Login> {
   final email = TextEditingController();
   final password = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final LocalStorage storage = LocalStorage('user');
+
   String? errorMessage;
+  String? role;
 
   void signUserIn() async {
     showDialog(
@@ -42,12 +46,8 @@ class _LoginState extends State<Login> {
           .limit(1)
           .get();
 
-      Navigator.pop(context);
-      UserRole.id = userQuery.docs.first.id;
-      UserRole.name = userQuery.docs.first['name'];
-
-      if (UserRole.id.startsWith('A')) {
-        UserRole.role = 'advisor';
+      if (userQuery.docs.first.id.startsWith('A')) {
+        role = 'advisor';
         if (userQuery.docs.first['ic'] == '') {
           Navigator.push(
             context,
@@ -56,12 +56,16 @@ class _LoginState extends State<Login> {
             ),
           );
         }
-      } else if (UserRole.id.startsWith('B')) {
-        UserRole.role = 'branch head';
+      } else if (userQuery.docs.first.id.startsWith('B')) {
+        role = 'branch head';
       } else {
-        UserRole.role = 'student';
+        role = 'student';
       }
 
+      Navigator.pop(context);
+      storage.setItem('name', userQuery.docs.first['name']);
+      storage.setItem('id', userQuery.docs.first.id);
+      storage.setItem('role', role);
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -254,7 +258,6 @@ class _LoginState extends State<Login> {
                                     },
                                   ),
                                 );
-                               
                               },
                               child: const Text(
                                 'Register now',

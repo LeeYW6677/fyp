@@ -4,12 +4,14 @@ import 'package:fyp/pages/home.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:fyp/pages/society.dart';
 import 'package:intl/intl.dart';
+import 'package:localstorage/localstorage.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fyp/pages/login.dart';
 import 'package:fyp/pages/profile.dart';
 import 'package:fyp/functions/responsive.dart';
+import 'dart:html' as html;
 
 class CustomButton extends StatelessWidget {
   final VoidCallback? onPressed;
@@ -48,47 +50,44 @@ class CustomButton extends StatelessWidget {
   }
 }
 
-class CustomDDL extends StatefulWidget {
-  final TextEditingController controller;
+class CustomDDL<T> extends StatefulWidget {
+  final T? value;
   final String hintText;
-  final List<String> items;
-  final String value;
-  final void Function(String?)? onChanged;
+  final TextEditingController controller;
+  final Function(T?)? onChanged;
+  final List<T> items;
+  final List<DropdownMenuItem<T>> dropdownItems;
 
   const CustomDDL({
-    super.key,
+    Key? key,
     required this.controller,
     required this.hintText,
     required this.items,
+    required this.dropdownItems,
     required this.value,
     this.onChanged,
-  });
+  }) : super(key: key);
 
   @override
-  _CustomDDLState createState() => _CustomDDLState();
+  _CustomDDLState<T> createState() => _CustomDDLState<T>();
 }
 
-class _CustomDDLState extends State<CustomDDL> {
+class _CustomDDLState<T> extends State<CustomDDL<T>> {
   @override
   Widget build(BuildContext context) {
-    return DropdownButtonFormField<String>(
+    return DropdownButtonFormField<T>(
       isDense: true,
       value: widget.value,
       focusColor: Colors.white,
-      onChanged: (String? newValue) {
+      onChanged: (T? newValue) {
         setState(() {
-          widget.controller.text = newValue!;
+          widget.controller.text = newValue?.toString() ?? '';
         });
         if (widget.onChanged != null) {
           widget.onChanged!(newValue);
         }
       },
-      items: widget.items.map((item) {
-        return DropdownMenuItem<String>(
-          value: item,
-          child: Text(item),
-        );
-      }).toList(),
+      items: widget.dropdownItems,
       decoration: InputDecoration(
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 10.0, vertical: 0),
@@ -417,6 +416,8 @@ class Header extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    LocalStorage storage = LocalStorage('user');
+
     return FutureBuilder<String>(
       future: getData(),
       builder: (context, snapshot) {
@@ -453,7 +454,7 @@ class Header extends StatelessWidget implements PreferredSizeWidget {
             const SizedBox(width: 15),
             IconButton(
               onPressed: () {
-                if (UserRole.role == 'student') {
+                if (storage.getItem('role') == 'student') {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -604,10 +605,4 @@ class PasswordStrengthIndicator extends StatelessWidget {
       ],
     );
   }
-}
-
-class UserRole {
-  static String role = '';
-  static String id = '';
-  static String name ='';
 }

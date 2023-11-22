@@ -5,6 +5,7 @@ import 'package:fyp/functions/responsive.dart';
 import 'package:fyp/pages/resetPassword.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:localstorage/localstorage.dart';
 
 class AdvisorProfile extends StatefulWidget {
   const AdvisorProfile({super.key});
@@ -27,6 +28,7 @@ class _AdvisorProfileState extends State<AdvisorProfile> {
   String selectedDepartment = 'FOCS';
   final GlobalKey<FormState> _formKey1 = GlobalKey<FormState>();
   final GlobalKey<FormState> _formKey2 = GlobalKey<FormState>();
+    final LocalStorage storage = LocalStorage('user');
 
   @override
   void initState() {
@@ -35,6 +37,7 @@ class _AdvisorProfileState extends State<AdvisorProfile> {
   }
 
   Future<void> getData() async {
+
     User? user = FirebaseAuth.instance.currentUser;
     String? userEmail = user?.email;
 
@@ -53,7 +56,7 @@ class _AdvisorProfileState extends State<AdvisorProfile> {
       setState(() {
         selectedGender = initialGender;
       });
-      if (UserRole.role == 'advisor') {
+      if (storage.getItem('role') == 'advisor') {
         selectedDepartment = data.docs.first['department'];
       }
       Timestamp timestamp = data.docs.first['dob'];
@@ -80,23 +83,23 @@ class _AdvisorProfileState extends State<AdvisorProfile> {
           firestore.collection('user').doc(data.docs.first.id);
 
       try {
-        if (UserRole.role == 'advisor') {
-        await userDoc.update({
-          'name': name.text,
-          'gender': selectedGender,
-          'department': selectedDepartment,
-          'dob': Timestamp.fromDate(DateFormat('dd-MM-yyyy').parse(dob.text)),
-          'ic': ic.text,
-          'contact': contact.text,
-        });
-        }else{
-            await userDoc.update({
-          'name': name.text,
-          'gender': selectedGender,
-          'dob': Timestamp.fromDate(DateFormat('dd-MM-yyyy').parse(dob.text)),
-          'ic': ic.text,
-          'contact': contact.text,
-        });
+        if (storage.getItem('role') == 'advisor') {
+          await userDoc.update({
+            'name': name.text,
+            'gender': selectedGender,
+            'department': selectedDepartment,
+            'dob': Timestamp.fromDate(DateFormat('dd-MM-yyyy').parse(dob.text)),
+            'ic': ic.text,
+            'contact': contact.text,
+          });
+        } else {
+          await userDoc.update({
+            'name': name.text,
+            'gender': selectedGender,
+            'dob': Timestamp.fromDate(DateFormat('dd-MM-yyyy').parse(dob.text)),
+            'ic': ic.text,
+            'contact': contact.text,
+          });
         }
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -122,6 +125,7 @@ class _AdvisorProfileState extends State<AdvisorProfile> {
 
   @override
   Widget build(BuildContext context) {
+     
     return Scaffold(
       appBar: const Header(),
       drawer: !Responsive.isDesktop(context) ? const CustomDrawer() : null,
@@ -489,7 +493,7 @@ class _AdvisorProfileState extends State<AdvisorProfile> {
                                               ),
                                             ),
                                           ),
-                                          if (UserRole.role == 'advisor')
+                                          if (storage.getItem('role') == 'advisor')
                                             Expanded(
                                               child: Padding(
                                                 padding:
@@ -509,31 +513,46 @@ class _AdvisorProfileState extends State<AdvisorProfile> {
                                                       ),
                                                     ),
                                                     Expanded(
-                                                      flex: 4,
-                                                      child: CustomDDL(
-                                                        controller: department,
-                                                        hintText:
-                                                            'Select your department',
-                                                        items: const [
-                                                          'FOCS',
-                                                          'FOAS',
-                                                          'FAFB'
-                                                        ],
-                                                        value:
-                                                            selectedDepartment,
-                                                        onChanged: (newValue) {
-                                                          setState(() {
-                                                            selectedDepartment =
-                                                                newValue!;
-                                                          });
-                                                        },
-                                                      ),
-                                                    ),
+                                                        flex: 4,
+                                                        child:
+                                                            CustomDDL<String>(
+                                                          controller:
+                                                              department,
+                                                          hintText:
+                                                              'Select your department',
+                                                          items: const [
+                                                            'FOCS',
+                                                            'FOAS',
+                                                            'FAFB'
+                                                          ],
+                                                          value:
+                                                              selectedDepartment,
+                                                          dropdownItems: const [
+                                                            DropdownMenuItem<
+                                                                String>(
+                                                              value: 'FOCS',
+                                                              child:
+                                                                  Text('FOCS'),
+                                                            ),
+                                                            DropdownMenuItem<
+                                                                String>(
+                                                              value: 'FOAS',
+                                                              child:
+                                                                  Text('FOAS'),
+                                                            ),
+                                                            DropdownMenuItem<
+                                                                String>(
+                                                              value: 'FAFB',
+                                                              child:
+                                                                  Text('FAFB'),
+                                                            ),
+                                                          ],
+                                                        )),
                                                   ],
                                                 ),
                                               ),
                                             ),
-                                          if (UserRole.role == 'branch head')
+                                          if (storage.getItem('role') == 'branch head')
                                             const Expanded(
                                               child: SizedBox(),
                                             )
@@ -865,7 +884,7 @@ class _AdvisorProfileState extends State<AdvisorProfile> {
                                           ),
                                         ],
                                       ),
-                                      if (UserRole.role == 'advisor')
+                                      if (storage.getItem('role') == 'advisor')
                                         Row(
                                           children: [
                                             Expanded(
@@ -887,26 +906,48 @@ class _AdvisorProfileState extends State<AdvisorProfile> {
                                                       ),
                                                     ),
                                                     Expanded(
-                                                      flex: 4,
-                                                      child: CustomDDL(
-                                                        controller: department,
-                                                        hintText:
-                                                            'Select your department',
-                                                        items: const [
-                                                          'FOCS',
-                                                          'FOAS',
-                                                          'FAFB'
-                                                        ],
-                                                        value:
-                                                            selectedDepartment,
-                                                        onChanged: (newValue) {
-                                                          setState(() {
-                                                            selectedDepartment =
-                                                                newValue!;
-                                                          });
-                                                        },
-                                                      ),
-                                                    ),
+                                                        flex: 4,
+                                                        child:
+                                                            CustomDDL<String>(
+                                                          controller:
+                                                              department,
+                                                          hintText:
+                                                              'Select your department',
+                                                          items: const [
+                                                            'FOCS',
+                                                            'FOAS',
+                                                            'FAFB'
+                                                          ],
+                                                          value:
+                                                              selectedDepartment,
+                                                          onChanged: (String?
+                                                              newValue) {
+                                                            setState(() {
+                                                              selectedDepartment =
+                                                                  newValue!;
+                                                            });
+                                                          },
+                                                          dropdownItems: const [
+                                                            DropdownMenuItem<
+                                                                String>(
+                                                              value: 'FOCS',
+                                                              child:
+                                                                  Text('FOCS'),
+                                                            ),
+                                                            DropdownMenuItem<
+                                                                String>(
+                                                              value: 'FOAS',
+                                                              child:
+                                                                  Text('FOAS'),
+                                                            ),
+                                                            DropdownMenuItem<
+                                                                String>(
+                                                              value: 'FAFB',
+                                                              child:
+                                                                  Text('FAFB'),
+                                                            ),
+                                                          ],
+                                                        )),
                                                   ],
                                                 ),
                                               ),

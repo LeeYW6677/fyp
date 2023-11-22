@@ -459,7 +459,8 @@ class _AdvisorFirstLoginState extends State<AdvisorFirstLogin> {
                                     Expanded(
                                       child: CustomTextField(
                                         controller: contact,
-                                        hintText: 'Enter your contact No. (Format: +60123456789)',
+                                        hintText:
+                                            'Enter your contact No. (Format: +60123456789)',
                                         prefixText: '+60',
                                         validator: (value) {
                                           if (value!.isEmpty) {
@@ -489,19 +490,21 @@ class _AdvisorFirstLoginState extends State<AdvisorFirstLogin> {
                                       ),
                                     ),
                                     Expanded(
-                                      flex: 4,
-                                      child: CustomDDL(
-                                        controller: department,
-                                        hintText: 'Select your department',
-                                        items: departmentItems,
-                                        value: '',
-                                        onChanged: (newValue) {
-                                          setState(() {
-                                            selectedDepartment = newValue!;
-                                          });
-                                        },
-                                      ),
-                                    ),
+                                        flex: 4,
+                                        child: CustomDDL<String>(
+                                          controller: department,
+                                          hintText: 'Select your department',
+                                          items: departmentItems,
+                                          value:
+                                              selectedDepartment,
+                                          dropdownItems:
+                                              departmentItems.map((department) {
+                                            return DropdownMenuItem<String>(
+                                              value: department,
+                                              child: Text(department),
+                                            );
+                                          }).toList(),
+                                        )),
                                   ],
                                 ),
                               ),
