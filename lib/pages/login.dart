@@ -43,9 +43,10 @@ class _LoginState extends State<Login> {
           .get();
 
       Navigator.pop(context);
-      String userId = userQuery.docs.first.id;
+      UserRole.id = userQuery.docs.first.id;
+      UserRole.name = userQuery.docs.first['name'];
 
-      if (userId.startsWith('A')) {
+      if (UserRole.id.startsWith('A')) {
         UserRole.role = 'advisor';
         if (userQuery.docs.first['ic'] == '') {
           Navigator.push(
@@ -55,7 +56,7 @@ class _LoginState extends State<Login> {
             ),
           );
         }
-      } else if (userId.startsWith('B')) {
+      } else if (UserRole.id.startsWith('B')) {
         UserRole.role = 'branch head';
       } else {
         UserRole.role = 'student';

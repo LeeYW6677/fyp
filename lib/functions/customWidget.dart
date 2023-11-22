@@ -608,4 +608,6 @@ class PasswordStrengthIndicator extends StatelessWidget {
 
 class UserRole {
   static String role = '';
+  static String id = '';
+  static String name ='';
 }

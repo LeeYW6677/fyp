@@ -13,9 +13,12 @@ class Society extends StatefulWidget {
 
 class _SocietyState extends State<Society> {
   final society = TextEditingController();
+  String selectedSociety = 'S001';
   List<String> AdvisorNames = [''];
   List<String> coAdvisorNames = ['', ''];
   List<Map<String, dynamic>> _members = [];
+  List<String> societyIDs = [];
+  List<String> societyNames = [];
   List<String> positionOrder = [
     'President',
     'Vice President',
@@ -26,12 +29,122 @@ class _SocietyState extends State<Society> {
     'Member',
   ];
 
+  String getSocietyNameById(String societyID) {
+    int index = societyIDs.indexOf(societyID);
+    if (index != -1 && index < societyNames.length) {
+      return societyNames[index];
+    } else {
+      return 'Unknown Society';
+    }
+  }
+
+  Future<void> _showInputDialog(BuildContext context) async {
+    TextEditingController name = TextEditingController();
+    TextEditingController id = TextEditingController();
+
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Add New Member'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CustomTextField(
+                  controller: id,
+                  hintText: 'Enter student ID',
+                  onChanged: (value) async {
+                    FirebaseFirestore firestore = FirebaseFirestore.instance;
+                    DocumentSnapshot<Map<String, dynamic>> student =
+                        await FirebaseFirestore.instance
+                            .collection('user')
+                            .doc(id.text)
+                            .get();
+
+                    if (student.exists) {
+                      Map<String, dynamic> studentData = student.data()!;
+                      name.text = studentData['name'];
+                    } else {
+                      name.text = '';
+                    }
+                  },
+                ),
+                const SizedBox(height: 10),
+                CustomTextField(
+                  controller: name,
+                  hintText: 'Associated Student Name',
+                  enabled: false,
+                ),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                QuerySnapshot<Map<String, dynamic>> existingMembers =
+                    await FirebaseFirestore.instance
+                        .collection('members')
+                        .where('studentID', isEqualTo: id.text)
+                        .where('societyID', isEqualTo: selectedSociety)
+                        .get();
+
+                if (existingMembers.docs.isEmpty) {
+                  await FirebaseFirestore.instance.collection('members').add({
+                    'studentID': id.text,
+                    'societyID': selectedSociety,
+                    'position': 'member'
+                  });
+
+                  Navigator.of(context).pop();
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Student already registered as member.'),
+                      width: 225.0,
+                      behavior: SnackBarBehavior.floating,
+                      duration: Duration(seconds: 3),
+                    ),
+                  );
+                }
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> getData() async {
     FirebaseFirestore firestore = FirebaseFirestore.instance;
     try {
+      QuerySnapshot society = await firestore
+          .collection('member')
+          .where('studentID', isEqualTo: UserRole.id)
+          .get();
+
+      societyIDs = List<String>.from(
+          society.docs.map((doc) => doc['societyID'].toString()));
+
+
+      QuerySnapshot societySnapshot = await firestore
+          .collection('society')
+          .where('societyID', whereIn: societyIDs)
+          .get();
+
+      societyNames = societySnapshot.docs
+          .map((doc) => doc['societyName'].toString())
+          .toList();
       QuerySnapshot advisor = await firestore
           .collection('user')
-          .where('societyID', isEqualTo: 'S001')
+          .where('societyID', isEqualTo: selectedSociety)
           .get();
 
       AdvisorNames.clear();
@@ -43,7 +156,7 @@ class _SocietyState extends State<Society> {
       QuerySnapshot<Map<String, dynamic>> members = await FirebaseFirestore
           .instance
           .collection('member')
-          .where('societyID', isEqualTo: 'S001')
+          .where('societyID', isEqualTo: selectedSociety)
           .get();
 
       for (QueryDocumentSnapshot<Map<String, dynamic>> memberDocSnapshot
@@ -158,13 +271,24 @@ class _SocietyState extends State<Society> {
                                   width: 15,
                                 ),
                                 SizedBox(
-                                  width: 400,
-                                  child: CustomDDL(
-                                      controller: society,
-                                      hintText: 'Select society',
-                                      items: const ['Computer Science Society'],
-                                      value: 'Computer Science Society'),
-                                ),
+                                    width: 400,
+                                    child: DropdownButton<String>(
+                                      value: selectedSociety,
+                                      onChanged: (newValue) {
+                                        setState(() {
+                                          selectedSociety = newValue!;
+                                        });
+                                      },
+                                      items: societyIDs.map((societyID) {
+                                        String societyName =
+                                            getSocietyNameById(societyID);
+
+                                        return DropdownMenuItem<String>(
+                                          value: societyID,
+                                          child: Text(societyName),
+                                        );
+                                      }).toList(),
+                                    ))
                               ],
                             ),
                             Padding(
@@ -182,72 +306,152 @@ class _SocietyState extends State<Society> {
                                     padding: const EdgeInsets.all(16.0),
                                     child: Column(
                                       children: [
-                                        Row(
+                                        LayoutBuilder(
+                                            builder: (context, constraints) {
+                                          if (!Responsive.isMobile(context)) {
+                                            return Column(
+                                              children: [
+                                                Row(
+                                                  children: [
+                                                    const Expanded(
+                                                      flex: 2,
+                                                      child: Text(
+                                                        'Advisor:',
+                                                        style: TextStyle(
+                                                          fontSize: 16,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    Expanded(
+                                                      flex: 4,
+                                                      child: Text(
+                                                        AdvisorNames[0],
+                                                        style: const TextStyle(
+                                                          fontSize: 16,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    const Expanded(
+                                                      flex: 2,
+                                                      child: Text(
+                                                        'Co-Advisor:',
+                                                        style: TextStyle(
+                                                          fontSize: 16,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    Expanded(
+                                                      flex: 4,
+                                                      child: Text(
+                                                        coAdvisorNames[0],
+                                                        style: const TextStyle(
+                                                          fontSize: 16,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                const SizedBox(
+                                                  height: 5,
+                                                ),
+                                                Row(
+                                                  children: [
+                                                    Expanded(
+                                                      flex: 2,
+                                                      child: Container(),
+                                                    ),
+                                                    Expanded(
+                                                      flex: 4,
+                                                      child: Container(),
+                                                    ),
+                                                    Expanded(
+                                                      flex: 2,
+                                                      child: Container(),
+                                                    ),
+                                                    Expanded(
+                                                      flex: 4,
+                                                      child: Text(
+                                                        coAdvisorNames[1],
+                                                        style: const TextStyle(
+                                                          fontSize: 16,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                )
+                                              ],
+                                            );
+                                          } else {
+                                            return Column(
+                                              children: [
+                                                Row(
+                                                  children: [
+                                                    const Expanded(
+                                                      flex: 2,
+                                                      child: Text(
+                                                        'Advisor:',
+                                                        style: TextStyle(
+                                                          fontSize: 16,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    Expanded(
+                                                      flex: 4,
+                                                      child: Text(
+                                                        AdvisorNames[0],
+                                                        style: const TextStyle(
+                                                          fontSize: 16,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                Row(
+                                                  children: [
+                                                    const Expanded(
+                                                      flex: 2,
+                                                      child: Text(
+                                                        'Co-Advisor:',
+                                                        style: TextStyle(
+                                                          fontSize: 16,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    Expanded(
+                                                      flex: 4,
+                                                      child: Text(
+                                                        coAdvisorNames[0],
+                                                        style: const TextStyle(
+                                                          fontSize: 16,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                Row(
+                                                  children: [
+                                                    Expanded(
+                                                      flex: 2,
+                                                      child: Container(),
+                                                    ),
+                                                    Expanded(
+                                                      flex: 4,
+                                                      child: Text(
+                                                        coAdvisorNames[1],
+                                                        style: const TextStyle(
+                                                          fontSize: 16,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                )
+                                              ],
+                                            );
+                                          }
+                                        }),
+                                        const Row(
                                           children: [
-                                            const Expanded(
-                                              flex: 1,
-                                              child: Text(
-                                                'Advisor:',
-                                                style: TextStyle(
-                                                  fontSize: 16,
-                                                ),
-                                              ),
-                                            ),
-                                            Expanded(
-                                              flex: 4,
-                                              child: Text(
-                                                AdvisorNames[0],
-                                                style: const TextStyle(
-                                                  fontSize: 16,
-                                                ),
-                                              ),
-                                            ),
-                                            const Expanded(
-                                              flex: 1,
-                                              child: Text(
-                                                'Co-Advisor:',
-                                                style: TextStyle(
-                                                  fontSize: 16,
-                                                ),
-                                              ),
-                                            ),
-                                            Expanded(
-                                              flex: 4,
-                                              child: Text(
-                                                coAdvisorNames[0],
-                                                style: const TextStyle(
-                                                  fontSize: 16,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(
-                                          height: 5,
-                                        ),
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              flex: 1,
-                                              child: Container(),
-                                            ),
-                                            Expanded(
-                                              flex: 4,
-                                              child: Container(),
-                                            ),
-                                            Expanded(
-                                              flex: 1,
-                                              child: Container(),
-                                            ),
-                                            Expanded(
-                                              flex: 4,
-                                              child: Text(
-                                                coAdvisorNames[1],
-                                                style: const TextStyle(
-                                                  fontSize: 16,
-                                                ),
-                                              ),
-                                            ),
+                                            SizedBox(height: 10),
                                           ],
                                         ),
                                         Row(
@@ -289,7 +493,9 @@ class _SocietyState extends State<Society> {
                                               MainAxisAlignment.end,
                                           children: [
                                             CustomButton(
-                                              onPressed: () {},
+                                              onPressed: () {
+                                                _showInputDialog(context);
+                                              },
                                               text: 'Add',
                                               buttonColor: Colors.green,
                                               width: 100,
@@ -347,46 +553,49 @@ class _CustomDataTableState extends State<CustomDataTable> {
   int selectedRowsPerPage = 10;
   int? _sortColumnIndex;
   bool _sortAscending = true;
+  final search = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Row(
-          children: [
-            const Text('Rows per page: '),
-            DropdownButton<int>(
-              value: selectedRowsPerPage,
-              onChanged: (value) {
-                setState(() {
-                  selectedRowsPerPage = value!;
-                  widget.source.rowsPerPage = value;
-                });
-              },
-              items: [10, 20, 50].map((rows) {
-                return DropdownMenuItem<int>(
-                  value: rows,
-                  child: Text('$rows'),
-                );
-              }).toList(),
-            ),
-            const SizedBox(width: 20),
-            Container(
-              width: 200,
-              child: TextField(
+        PaginatedDataTable(
+          header: Row(
+            children: [
+              const Text(
+                'Rows per page: ',
+                style: TextStyle(fontSize: 16),
+              ),
+              DropdownButton<int>(
+                value: selectedRowsPerPage,
                 onChanged: (value) {
                   setState(() {
-                    widget.source.filter(value);
+                    selectedRowsPerPage = value!;
+                    widget.source.rowsPerPage = value;
                   });
                 },
-                decoration: const InputDecoration(
-                  labelText: 'Search by Any Field',
+                items: [10, 20, 50].map((rows) {
+                  return DropdownMenuItem<int>(
+                    value: rows,
+                    child: Text('$rows'),
+                  );
+                }).toList(),
+              ),
+              const Spacer(),
+              SizedBox(
+                width: 200,
+                child: CustomTextField(
+                  hintText: 'Search by any field',
+                  controller: search,
+                  onChanged: (value) {
+                    setState(() {
+                      widget.source.filter(value);
+                    });
+                  },
                 ),
               ),
-            ),
-          ],
-        ),
-        PaginatedDataTable(
+            ],
+          ),
           showCheckboxColumn: true,
           rowsPerPage: selectedRowsPerPage,
           columns: widget.columns.map((column) {
