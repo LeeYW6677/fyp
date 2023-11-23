@@ -415,7 +415,7 @@ class _RegisterState extends State<Register> {
                                     child: CustomTextField(
                                       controller: dob,
                                       hintText: 'Enter your date of birth',
-                                      icon: const Icon(
+                                      suffixIcon: const Icon(
                                           Icons.calendar_today_rounded),
                                       onTap: () async {
                                         DateTime? pickedDate =
@@ -531,7 +531,6 @@ class _RegisterState extends State<Register> {
                                       child: CustomDDL<String>(
                                         controller: programme,
                                         hintText: 'Select your programme',
-                                        items: programmeItems,
                                         value: selectedProgramme,
                                         dropdownItems: programmeItems
                                             .map<DropdownMenuItem<String>>(
@@ -564,7 +563,6 @@ class _RegisterState extends State<Register> {
                                       child: CustomDDL<String>(
                                         controller: faculty,
                                         hintText: 'Select your faculty',
-                                        items: const ['FOCS', 'FOAS', 'FAFB'],
                                         value: selectedFaculty,
                                         onChanged: (String? newValue) {
                                           setState(() {

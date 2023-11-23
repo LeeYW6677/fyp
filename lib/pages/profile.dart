@@ -366,7 +366,7 @@ class _ProfileState extends State<Profile> {
                                                       controller: dob,
                                                       hintText:
                                                           'Enter your date of birth',
-                                                      icon: const Icon(Icons
+                                                      suffixIcon: const Icon(Icons
                                                           .calendar_today_rounded),
                                                       onTap: () async {
                                                         DateTime? pickedDate =
@@ -525,7 +525,6 @@ class _ProfileState extends State<Profile> {
                                                         controller: programme,
                                                         hintText:
                                                             'Select your programme',
-                                                        items: programmeItems,
                                                         value:
                                                             selectedProgramme,
                                                         dropdownItems:
@@ -567,11 +566,6 @@ class _ProfileState extends State<Profile> {
                                                         controller: faculty,
                                                         hintText:
                                                             'Select your faculty',
-                                                        items: const [
-                                                          'FOCS',
-                                                          'FOAS',
-                                                          'FAFB'
-                                                        ],
                                                         value: selectedFaculty,
                                                         onChanged:
                                                             (String? newValue) {
@@ -812,7 +806,7 @@ class _ProfileState extends State<Profile> {
                                                       controller: dob,
                                                       hintText:
                                                           'Enter your date of birth',
-                                                      icon: const Icon(Icons
+                                                      suffixIcon: const Icon(Icons
                                                           .calendar_today_rounded),
                                                       onTap: () async {
                                                         DateTime? pickedDate =
@@ -970,7 +964,6 @@ class _ProfileState extends State<Profile> {
                                                         controller: programme,
                                                         hintText:
                                                             'Select your programme',
-                                                        items: programmeItems,
                                                         value:
                                                             selectedProgramme,  
                                                         dropdownItems:
@@ -1016,11 +1009,6 @@ class _ProfileState extends State<Profile> {
                                                         controller: faculty,
                                                         hintText:
                                                             'Select your faculty',
-                                                        items: const [
-                                                          'FOCS',
-                                                          'FOAS',
-                                                          'FAFB'
-                                                        ],
                                                         value: selectedFaculty,
                                                         onChanged:
                                                             (String? newValue) {

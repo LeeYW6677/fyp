@@ -9,6 +9,10 @@ class Society extends StatefulWidget {
 
   @override
   State<Society> createState() => _SocietyState();
+
+  static _SocietyState? of(BuildContext context) {
+    return context.findAncestorStateOfType<_SocietyState>();
+  }
 }
 
 class _SocietyState extends State<Society> {
@@ -18,6 +22,8 @@ class _SocietyState extends State<Society> {
   List<String> AdvisorNames = [''];
   List<String> coAdvisorNames = ['', ''];
   List<Map<String, dynamic>> _members = [];
+  List<Map<String, dynamic>> highcomm = [];
+  List<Map<String, dynamic>> lowcomm = [];
   List<String> societyIDs = [];
   List<String> societyNames = [];
   List<String> positionOrder = [
@@ -108,8 +114,7 @@ class _SocietyState extends State<Society> {
         return <String, dynamic>{};
       }));
 
-      _members.removeWhere((member) => member == null);
-
+      //arrange members
       _members.sort((a, b) {
         String positionA = a['position'] ?? 'Member';
         String positionB = b['position'] ?? 'Member';
@@ -123,6 +128,10 @@ class _SocietyState extends State<Society> {
         return indexA.compareTo(indexB);
       });
 
+      highcomm =
+          _members.where((member) => member['position'] != 'Member').toList();
+      lowcomm =
+          _members.where((member) => member['position'] == 'Member').toList();
       setState(() {
         _members = _members;
       });
@@ -220,7 +229,6 @@ class _SocietyState extends State<Society> {
                                     child: CustomDDL<String>(
                                       controller: society,
                                       hintText: 'Select society',
-                                      items: societyIDs,
                                       value: selectedSociety,
                                       onChanged: (String? newValue) {
                                         setState(() {
@@ -449,56 +457,6 @@ class _SocietyState extends State<Society> {
                                                   ),
                                                 ],
                                               ),
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.end,
-                                                children: [
-                                                  CustomButton(
-                                                    onPressed: () {
-                                                      showDialog(
-                                                          context: context,
-                                                          builder: (_) {
-                                                            return AddDialog(
-                                                              selectedSociety:
-                                                                  selectedSociety,
-                                                              addFunction: () {
-                                                                fetchSocietyDetails();
-                                                              },
-                                                            );
-                                                          });
-                                                    },
-                                                    text: 'Add',
-                                                    buttonColor: Colors.green,
-                                                    width: 100,
-                                                  ),
-                                                  const SizedBox(
-                                                    width: 25,
-                                                  ),
-                                                  CustomButton(
-                                                    onPressed: () {
-                                                      showDialog(
-                                                          context: context,
-                                                          builder: (_) {
-                                                            return EditDialog(
-                                                              selectedSociety:
-                                                                  selectedSociety,
-                                                            );
-                                                          });
-                                                    },
-                                                    text: 'Edit',
-                                                    width: 100,
-                                                  ),
-                                                  const SizedBox(
-                                                    width: 25,
-                                                  ),
-                                                  CustomButton(
-                                                    onPressed: () {},
-                                                    text: 'Delete',
-                                                    buttonColor: Colors.red,
-                                                    width: 100,
-                                                  )
-                                                ],
-                                              )
                                             ],
                                           ),
                                         )
@@ -565,7 +523,6 @@ class _CustomDataTableState extends State<CustomDataTable> {
               child: CustomDDL<int>(
                 controller: row,
                 hintText: 'Select rows per page',
-                items: const [10, 20, 50],
                 value: selectedRowsPerPage,
                 onChanged: (int? newValue) {
                   setState(() {
@@ -636,6 +593,60 @@ class _CustomDataTableState extends State<CustomDataTable> {
           sortColumnIndex: _sortColumnIndex,
           sortAscending: _sortAscending,
         ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            CustomButton(
+              onPressed: () {
+                showDialog(
+                    context: context,
+                    builder: (_) {
+                      return AddDialog(
+                        selectedSociety: Society.of(context)!.selectedSociety,
+                        function: () {
+                          Society.of(context)!.fetchSocietyDetails();
+                        },
+                      );
+                    });
+              },
+              text: 'Add',
+              buttonColor: Colors.green,
+              width: 100,
+            ),
+            const SizedBox(
+              width: 25,
+            ),
+            CustomButton(
+              onPressed: () {
+                showDialog(
+                    context: context,
+                    builder: (_) {
+                      return EditDialog(
+                        selectedSociety: Society.of(context)!.selectedSociety,
+                        highcomm: Society.of(context)!.highcomm,
+                        lowcomm: Society.of(context)!.lowcomm,
+                        function: () {
+                          Society.of(context)!.fetchSocietyDetails();
+                        },
+                      );
+                    });
+              },
+              text: 'Promote',
+              width: 100,
+            ),
+            const SizedBox(
+              width: 25,
+            ),
+            CustomButton(
+              onPressed: () {
+                widget.source.deleteSelectedRows();
+              },
+              text: 'Delete',
+              buttonColor: Colors.red,
+              width: 100,
+            )
+          ],
+        )
       ],
     );
   }
@@ -739,13 +750,25 @@ class _MembersDataSource extends DataTableSource {
     });
     notifyListeners();
   }
+
+  void deleteSelectedRows() {
+    for (int index in selectedRows) {
+      if (index < displayedMembers.length) {
+        String studentID = displayedMembers[index]['studentID'];
+        print('Deleting student with ID: $studentID');
+      }
+    }
+    selectedRows.clear();
+    // Notify listeners to update the UI
+    notifyListeners();
+  }
 }
 
 class AddDialog extends StatefulWidget {
   final String selectedSociety;
-  final VoidCallback? addFunction;
+  final VoidCallback? function;
 
-  AddDialog({required this.selectedSociety, this.addFunction});
+  AddDialog({required this.selectedSociety, this.function});
   @override
   _AddDialogState createState() => _AddDialogState();
 }
@@ -831,8 +854,8 @@ class _AddDialogState extends State<AddDialog> {
                   'societyID': widget.selectedSociety,
                   'position': 'Member'
                 });
-                if (widget.addFunction != null) {
-                  widget.addFunction!();
+                if (widget.function != null) {
+                  widget.function!();
                 }
                 Navigator.of(context).pop();
               } else {
@@ -855,113 +878,100 @@ class _AddDialogState extends State<AddDialog> {
 
 class EditDialog extends StatefulWidget {
   final String selectedSociety;
-  final VoidCallback? editFunction;
+  final VoidCallback? function;
+  final List<Map<String, dynamic>> highcomm;
+  final List<Map<String, dynamic>> lowcomm;
 
-  EditDialog({required this.selectedSociety, this.editFunction});
+  EditDialog(
+      {required this.selectedSociety,
+      this.function,
+      required this.highcomm,
+      required this.lowcomm});
   @override
   _EditDialogState createState() => _EditDialogState();
 }
 
 class _EditDialogState extends State<EditDialog> {
-  TextEditingController name = TextEditingController();
-  TextEditingController id = TextEditingController();
-  String? errorMessage;
-  bool found = false;
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  TextEditingController position = TextEditingController();
+  TextEditingController id1 = TextEditingController();
+  TextEditingController id2 = TextEditingController();
+  TextEditingController name1 = TextEditingController();
+  TextEditingController name2 = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
+    position.text = widget.highcomm[0]['position'].toString();
+    name2.text = widget.highcomm[0]['name'].toString();
+    name1.text = widget.lowcomm[0]['name'].toString();
+    String selectedID1 = widget.lowcomm[0]['studentID'].toString();
+    String selectedID2 = widget.highcomm[0]['studentID'].toString();
     return AlertDialog(
-      title: const Text('Edit Position'),
-      content: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CustomTextField(
-                controller: id,
-                errorText: errorMessage,
-                hintText: 'Enter student ID',
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return 'Please enter student ID';
-                  } else if (!RegExp(r'^\d{2}[A-Z]{3}\d{5}$').hasMatch(value)) {
-                    return 'Invalid student ID';
-                  }
-                  return null;
-                },
-                onChanged: (value) async {
-                  DocumentSnapshot<Map<String, dynamic>> student =
-                      await FirebaseFirestore.instance
-                          .collection('user')
-                          .doc(id.text)
-                          .get();
-
-                  if (student.exists) {
-                    Map<String, dynamic> studentData = student.data()!;
-                    name.text = studentData['name'];
-                    found = true;
-                  } else {
-                    name.text = '';
-                    found = false;
-                  }
-                },
-              ),
-              const SizedBox(height: 10),
-              CustomTextField(
-                controller: name,
-                hintText: 'Associated Student Name',
-                enabled: false,
-              ),
-              const SizedBox(height: 10),
-              CustomTextField(
-                controller: name,
-                hintText: 'Position',
-                enabled: false,
-              ),
-              CustomTextField(
-                controller: id,
-                errorText: errorMessage,
-                hintText: 'Enter student ID',
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return 'Please enter student ID';
-                  } else if (!RegExp(r'^\d{2}[A-Z]{3}\d{5}$').hasMatch(value)) {
-                    return 'Invalid student ID';
-                  }
-                  return null;
-                },
-                onChanged: (value) async {
-                  DocumentSnapshot<Map<String, dynamic>> student =
-                      await FirebaseFirestore.instance
-                          .collection('user')
-                          .doc(id.text)
-                          .get();
-
-                  if (student.exists) {
-                    Map<String, dynamic> studentData = student.data()!;
-                    name.text = studentData['name'];
-                    found = true;
-                  } else {
-                    name.text = '';
-                    found = false;
-                  }
-                },
-              ),
-              const SizedBox(height: 10),
-              CustomTextField(
-                controller: name,
-                hintText: 'Associated Student Name',
-                enabled: false,
-              ),
-              const SizedBox(height: 10),
-              CustomTextField(
-                controller: name,
-                hintText: 'Position',
-                enabled: false,
-              ),
-            ],
-          ),
+      title: const Text('Promote'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Promoted Member'),
+            const SizedBox(height: 10),
+            CustomDDL<String>(
+              value: widget.lowcomm[0]['studentID'].toString(),
+              controller: id1,
+              hintText: 'Select student ID',
+              dropdownItems: widget.lowcomm.map((student) {
+                String studentID = student['studentID'];
+                return DropdownMenuItem<String>(
+                  value: studentID,
+                  child: Text(studentID),
+                );
+              }).toList(),
+              onChanged: (value) {
+                int index = widget.lowcomm
+                    .indexWhere((student) => student['studentID'] == id1.text);
+                name1.text = widget.lowcomm[index]['name'].toString();
+                selectedID1 = id1.text;
+              },
+            ),
+            const SizedBox(height: 10),
+            CustomTextField(
+              controller: name1,
+              hintText: 'Student Name',
+              enabled: false,
+            ),
+            const SizedBox(height: 50),
+            const Text('Demoted Member'),
+            const SizedBox(height: 10),
+            CustomDDL<String>(
+              value: widget.highcomm[0]['studentID'].toString(),
+              controller: id2,
+              hintText: 'Select student ID',
+              dropdownItems: widget.highcomm.map((student) {
+                String studentID = student['studentID'];
+                return DropdownMenuItem<String>(
+                  value: studentID,
+                  child: Text(studentID),
+                );
+              }).toList(),
+              onChanged: (value) {
+                int index = widget.highcomm
+                    .indexWhere((student) => student['studentID'] == id2.text);
+                position.text = widget.highcomm[index]['position'].toString();
+                name2.text = widget.highcomm[index]['name'].toString();
+                selectedID2 = id2.text;
+              },
+            ),
+            const SizedBox(height: 10),
+            CustomTextField(
+              controller: name2,
+              hintText: 'Student Name',
+              enabled: false,
+            ),
+            const SizedBox(height: 10),
+            CustomTextField(
+              controller: position,
+              hintText: 'Student Position',
+              enabled: false,
+            ),
+          ],
         ),
       ),
       actions: <Widget>[
@@ -973,36 +983,46 @@ class _EditDialogState extends State<EditDialog> {
         ),
         TextButton(
           onPressed: () async {
-            setState(() {
-              errorMessage = null;
-            });
-
-            if (_formKey.currentState!.validate() && found) {
-              QuerySnapshot<Map<String, dynamic>> existingMembers =
-                  await FirebaseFirestore.instance
-                      .collection('member')
-                      .where('studentID', isEqualTo: id.text)
-                      .where('societyID', isEqualTo: widget.selectedSociety)
-                      .get();
-              if (existingMembers.docs.isEmpty) {
-                await FirebaseFirestore.instance.collection('member').add({
-                  'studentID': id.text,
-                  'societyID': widget.selectedSociety,
-                  'position': 'Member'
-                });
-                if (widget.editFunction != null) {
-                  widget.editFunction!();
+            try {
+              await FirebaseFirestore.instance
+                  .collection('member')
+                  .where('studentID', isEqualTo: selectedID1)
+                  .where('societyID', isEqualTo: widget.selectedSociety)
+                  .get()
+                  .then((snapshot) {
+                for (var doc in snapshot.docs) {
+                  doc.reference.update({
+                    'position': position.text,
+                  });
                 }
-                Navigator.of(context).pop();
-              } else {
-                setState(() {
-                  errorMessage = 'Student already registered';
-                });
-              }
-            } else {
-              setState(() {
-                errorMessage = 'Student not found';
               });
+
+              await FirebaseFirestore.instance
+                  .collection('member')
+                  .where('studentID', isEqualTo: selectedID2)
+                  .where('societyID', isEqualTo: widget.selectedSociety)
+                  .get()
+                  .then((snapshot) {
+                for (var doc in snapshot.docs) {
+                  doc.reference.update({
+                    'position': 'Member',
+                  });
+                }
+              });
+              if (widget.function != null) {
+                widget.function!();
+              }
+              Navigator.of(context).pop();
+            } catch (error) {
+              Navigator.of(context).pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Failed to update position. Please try again.'),
+                  width: 225.0,
+                  behavior: SnackBarBehavior.floating,
+                  duration: Duration(seconds: 3),
+                ),
+              );
             }
           },
           child: const Text('OK'),

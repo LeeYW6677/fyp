@@ -54,14 +54,12 @@ class CustomDDL<T> extends StatefulWidget {
   final String hintText;
   final TextEditingController controller;
   final Function(T?)? onChanged;
-  final List<T> items;
   final List<DropdownMenuItem<T>> dropdownItems;
 
   const CustomDDL({
     Key? key,
     required this.controller,
     required this.hintText,
-    required this.items,
     required this.dropdownItems,
     required this.value,
     this.onChanged,
@@ -219,6 +217,7 @@ class CustomTextField extends StatefulWidget {
   final bool enabled;
   final VoidCallback? onTap;
   final void Function(String)? onChanged;
+  final Icon? suffixIcon;
 
   const CustomTextField({
     Key? key,
@@ -233,6 +232,7 @@ class CustomTextField extends StatefulWidget {
     this.enabled = true,
     this.onTap,
     this.onChanged,
+    this.suffixIcon,
   }) : super(key: key);
 
   @override
@@ -251,6 +251,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
   @override
   Widget build(BuildContext context) {
     return TextFormField(
+      style: const TextStyle(color: Colors.black),
       onTap: widget.onTap,
       enabled: widget.enabled,
       controller: widget.controller,
@@ -262,6 +263,8 @@ class _CustomTextFieldState extends State<CustomTextField> {
         prefixText: widget.prefixText,
         hintText: widget.hintText,
         errorText: widget.errorText,
+        filled: true,
+        fillColor: widget.enabled? Colors.white : Colors.grey[300],
         enabledBorder: const OutlineInputBorder(
           borderSide: BorderSide(width: 1, color: Colors.grey),
         ),
@@ -283,7 +286,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
             color: Colors.red,
           ),
         ),
-        disabledBorder: const OutlineInputBorder(
+        disabledBorder: const OutlineInputBorder(         
             borderSide: BorderSide(width: 1, color: Colors.grey)),
         prefixIcon: widget.icon,
         suffixIcon: widget.hiding
@@ -298,7 +301,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
                   });
                 },
               )
-            : null,
+            : widget.suffixIcon,
       ),
       validator: widget.validator,
     );

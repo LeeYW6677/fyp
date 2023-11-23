@@ -377,7 +377,7 @@ class _AdvisorProfileState extends State<AdvisorProfile> {
                                                       controller: dob,
                                                       hintText:
                                                           'Enter your date of birth',
-                                                      icon: const Icon(Icons
+                                                      suffixIcon: const Icon(Icons
                                                           .calendar_today_rounded),
                                                       onTap: () async {
                                                         DateTime? pickedDate =
@@ -520,11 +520,6 @@ class _AdvisorProfileState extends State<AdvisorProfile> {
                                                               department,
                                                           hintText:
                                                               'Select your department',
-                                                          items: const [
-                                                            'FOCS',
-                                                            'FOAS',
-                                                            'FAFB'
-                                                          ],
                                                           value:
                                                               selectedDepartment,
                                                           dropdownItems: const [
@@ -764,7 +759,7 @@ class _AdvisorProfileState extends State<AdvisorProfile> {
                                                       controller: dob,
                                                       hintText:
                                                           'Enter your date of birth',
-                                                      icon: const Icon(Icons
+                                                      suffixIcon: const Icon(Icons
                                                           .calendar_today_rounded),
                                                       onTap: () async {
                                                         DateTime? pickedDate =
@@ -913,11 +908,6 @@ class _AdvisorProfileState extends State<AdvisorProfile> {
                                                               department,
                                                           hintText:
                                                               'Select your department',
-                                                          items: const [
-                                                            'FOCS',
-                                                            'FOAS',
-                                                            'FAFB'
-                                                          ],
                                                           value:
                                                               selectedDepartment,
                                                           onChanged: (String?

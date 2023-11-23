@@ -381,7 +381,7 @@ class _AdvisorFirstLoginState extends State<AdvisorFirstLogin> {
                                       child: CustomTextField(
                                         controller: dob,
                                         hintText: 'Enter your date of birth',
-                                        icon: const Icon(
+                                        suffixIcon: const Icon(
                                             Icons.calendar_today_rounded),
                                         onTap: () async {
                                           DateTime? pickedDate =
@@ -494,7 +494,6 @@ class _AdvisorFirstLoginState extends State<AdvisorFirstLogin> {
                                         child: CustomDDL<String>(
                                           controller: department,
                                           hintText: 'Select your department',
-                                          items: departmentItems,
                                           value:
                                               selectedDepartment,
                                           dropdownItems:

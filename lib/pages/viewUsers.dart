@@ -66,11 +66,6 @@ class _ViewUsersState extends State<ViewUsers> {
                                     child: CustomDDL<String>(
                                       controller: society,
                                       hintText: 'Select society',
-                                      items: const [
-                                        'Student',
-                                        'Advisor',
-                                        'Society'
-                                      ],
                                       value: 'Student',
                                       dropdownItems: const [
                                         DropdownMenuItem<String>(
