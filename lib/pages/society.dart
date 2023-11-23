@@ -461,6 +461,9 @@ class _SocietyState extends State<Society> {
                                                             return AddDialog(
                                                               selectedSociety:
                                                                   selectedSociety,
+                                                              addFunction: () {
+                                                                fetchSocietyDetails();
+                                                              },
                                                             );
                                                           });
                                                     },
@@ -552,47 +555,47 @@ class _CustomDataTableState extends State<CustomDataTable> {
     return Column(
       children: [
         Row(
-            children: [
-              const Text(
-                'Rows per page: ',
-                style: TextStyle(fontSize: 16),
+          children: [
+            const Text(
+              'Rows per page: ',
+              style: TextStyle(fontSize: 16),
+            ),
+            SizedBox(
+              width: 65,
+              child: CustomDDL<int>(
+                controller: row,
+                hintText: 'Select rows per page',
+                items: const [10, 20, 50],
+                value: selectedRowsPerPage,
+                onChanged: (int? newValue) {
+                  setState(() {
+                    selectedRowsPerPage = newValue!;
+                    widget.source.rowsPerPage = newValue;
+                  });
+                },
+                dropdownItems: [10, 20, 50].map((rows) {
+                  return DropdownMenuItem<int>(
+                    value: rows,
+                    child: Text('$rows'),
+                  );
+                }).toList(),
               ),
-              SizedBox(
-                width: 65,
-                child: CustomDDL<int>(
-                  controller: row,
-                  hintText: 'Select rows per page',
-                  items: const [10, 20, 50],
-                  value: selectedRowsPerPage,
-                  onChanged: (int? newValue) {
-                    setState(() {
-                      selectedRowsPerPage = newValue!;
-                      widget.source.rowsPerPage = newValue;
-                    });
-                  },
-                  dropdownItems: [10, 20, 50].map((rows) {
-                    return DropdownMenuItem<int>(
-                      value: rows,
-                      child: Text('$rows'),
-                    );
-                  }).toList(),
-                ),
+            ),
+            const Spacer(),
+            SizedBox(
+              width: 200,
+              child: CustomTextField(
+                hintText: 'Search by any field',
+                controller: search,
+                onChanged: (value) {
+                  setState(() {
+                    widget.source.filter(value);
+                  });
+                },
               ),
-              const Spacer(),
-              SizedBox(
-                width: 200,
-                child: CustomTextField(
-                  hintText: 'Search by any field',
-                  controller: search,
-                  onChanged: (value) {
-                    setState(() {
-                      widget.source.filter(value);
-                    });
-                  },
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
+        ),
         PaginatedDataTable(
           showCheckboxColumn: true,
           rowsPerPage: selectedRowsPerPage,
@@ -740,20 +743,19 @@ class _MembersDataSource extends DataTableSource {
 
 class AddDialog extends StatefulWidget {
   final String selectedSociety;
+  final VoidCallback? addFunction;
 
-  AddDialog({required this.selectedSociety});
-
+  AddDialog({required this.selectedSociety, this.addFunction});
   @override
-  _MyDialogState createState() => _MyDialogState();
+  _AddDialogState createState() => _AddDialogState();
 }
 
-class _MyDialogState extends State<AddDialog> {
+class _AddDialogState extends State<AddDialog> {
   TextEditingController name = TextEditingController();
   TextEditingController id = TextEditingController();
   String? errorMessage;
   bool found = false;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -829,7 +831,168 @@ class _MyDialogState extends State<AddDialog> {
                   'societyID': widget.selectedSociety,
                   'position': 'Member'
                 });
+                if (widget.addFunction != null) {
+                  widget.addFunction!();
+                }
+                Navigator.of(context).pop();
+              } else {
+                setState(() {
+                  errorMessage = 'Student already registered';
+                });
+              }
+            } else {
+              setState(() {
+                errorMessage = 'Student not found';
+              });
+            }
+          },
+          child: const Text('OK'),
+        ),
+      ],
+    );
+  }
+}
 
+class EditDialog extends StatefulWidget {
+  final String selectedSociety;
+  final VoidCallback? editFunction;
+
+  EditDialog({required this.selectedSociety, this.editFunction});
+  @override
+  _EditDialogState createState() => _EditDialogState();
+}
+
+class _EditDialogState extends State<EditDialog> {
+  TextEditingController name = TextEditingController();
+  TextEditingController id = TextEditingController();
+  String? errorMessage;
+  bool found = false;
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Edit Position'),
+      content: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CustomTextField(
+                controller: id,
+                errorText: errorMessage,
+                hintText: 'Enter student ID',
+                validator: (value) {
+                  if (value!.isEmpty) {
+                    return 'Please enter student ID';
+                  } else if (!RegExp(r'^\d{2}[A-Z]{3}\d{5}$').hasMatch(value)) {
+                    return 'Invalid student ID';
+                  }
+                  return null;
+                },
+                onChanged: (value) async {
+                  DocumentSnapshot<Map<String, dynamic>> student =
+                      await FirebaseFirestore.instance
+                          .collection('user')
+                          .doc(id.text)
+                          .get();
+
+                  if (student.exists) {
+                    Map<String, dynamic> studentData = student.data()!;
+                    name.text = studentData['name'];
+                    found = true;
+                  } else {
+                    name.text = '';
+                    found = false;
+                  }
+                },
+              ),
+              const SizedBox(height: 10),
+              CustomTextField(
+                controller: name,
+                hintText: 'Associated Student Name',
+                enabled: false,
+              ),
+              const SizedBox(height: 10),
+              CustomTextField(
+                controller: name,
+                hintText: 'Position',
+                enabled: false,
+              ),
+              CustomTextField(
+                controller: id,
+                errorText: errorMessage,
+                hintText: 'Enter student ID',
+                validator: (value) {
+                  if (value!.isEmpty) {
+                    return 'Please enter student ID';
+                  } else if (!RegExp(r'^\d{2}[A-Z]{3}\d{5}$').hasMatch(value)) {
+                    return 'Invalid student ID';
+                  }
+                  return null;
+                },
+                onChanged: (value) async {
+                  DocumentSnapshot<Map<String, dynamic>> student =
+                      await FirebaseFirestore.instance
+                          .collection('user')
+                          .doc(id.text)
+                          .get();
+
+                  if (student.exists) {
+                    Map<String, dynamic> studentData = student.data()!;
+                    name.text = studentData['name'];
+                    found = true;
+                  } else {
+                    name.text = '';
+                    found = false;
+                  }
+                },
+              ),
+              const SizedBox(height: 10),
+              CustomTextField(
+                controller: name,
+                hintText: 'Associated Student Name',
+                enabled: false,
+              ),
+              const SizedBox(height: 10),
+              CustomTextField(
+                controller: name,
+                hintText: 'Position',
+                enabled: false,
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () async {
+            setState(() {
+              errorMessage = null;
+            });
+
+            if (_formKey.currentState!.validate() && found) {
+              QuerySnapshot<Map<String, dynamic>> existingMembers =
+                  await FirebaseFirestore.instance
+                      .collection('member')
+                      .where('studentID', isEqualTo: id.text)
+                      .where('societyID', isEqualTo: widget.selectedSociety)
+                      .get();
+              if (existingMembers.docs.isEmpty) {
+                await FirebaseFirestore.instance.collection('member').add({
+                  'studentID': id.text,
+                  'societyID': widget.selectedSociety,
+                  'position': 'Member'
+                });
+                if (widget.editFunction != null) {
+                  widget.editFunction!();
+                }
                 Navigator.of(context).pop();
               } else {
                 setState(() {
