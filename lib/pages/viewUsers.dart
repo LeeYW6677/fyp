@@ -11,7 +11,6 @@ class ViewUsers extends StatefulWidget {
 
 class _ViewUsersState extends State<ViewUsers> {
   final society = TextEditingController();
-  late List<Map<String, dynamic>> _members = [];
 
   @override
   Widget build(BuildContext context) {

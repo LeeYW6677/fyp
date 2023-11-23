@@ -35,7 +35,6 @@ class _RegisterState extends State<Register> {
   String? idErrorText;
   String? icErrorText;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   Future<void> signUp() async {
     final DocumentReference studentRef =

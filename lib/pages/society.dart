@@ -472,7 +472,16 @@ class _SocietyState extends State<Society> {
                                                     width: 25,
                                                   ),
                                                   CustomButton(
-                                                    onPressed: () {},
+                                                    onPressed: () {
+                                                      showDialog(
+                                                          context: context,
+                                                          builder: (_) {
+                                                            return EditDialog(
+                                                              selectedSociety:
+                                                                  selectedSociety,
+                                                            );
+                                                          });
+                                                    },
                                                     text: 'Edit',
                                                     width: 100,
                                                   ),
