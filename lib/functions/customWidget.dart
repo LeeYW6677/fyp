@@ -11,7 +11,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fyp/pages/login.dart';
 import 'package:fyp/pages/profile.dart';
 import 'package:fyp/functions/responsive.dart';
-import 'dart:html' as html;
 
 class CustomButton extends StatelessWidget {
   final VoidCallback? onPressed;
