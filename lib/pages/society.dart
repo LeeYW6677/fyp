@@ -429,6 +429,13 @@ class _SocietyState extends State<Society> {
                                                               .size
                                                               .width,
                                                       child: CustomDataTable(
+                                                        context: context,
+                                                        selectedSociety:
+                                                            selectedSociety,
+                                                        fetchSocietyDetails:
+                                                            fetchSocietyDetails,
+                                                        highcomm: highcomm,
+                                                        lowcomm: lowcomm,
                                                         columns: const [
                                                           DataColumn(
                                                             label: Text('Name'),
@@ -490,11 +497,21 @@ class _SocietyState extends State<Society> {
 class CustomDataTable extends StatefulWidget {
   final List<DataColumn> columns;
   final _MembersDataSource source;
+  final String selectedSociety;
+  final VoidCallback fetchSocietyDetails;
+  final List<Map<String, dynamic>> highcomm;
+  final List<Map<String, dynamic>> lowcomm;
+  final BuildContext context;
 
   const CustomDataTable({
     Key? key,
     required this.columns,
     required this.source,
+    required this.selectedSociety,
+    required this.fetchSocietyDetails,
+    required this.highcomm,
+    required this.lowcomm,
+    required this.context,
   }) : super(key: key);
 
   @override
@@ -593,18 +610,19 @@ class _CustomDataTableState extends State<CustomDataTable> {
           sortColumnIndex: _sortColumnIndex,
           sortAscending: _sortAscending,
         ),
+        const SizedBox(height: 10,),
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             CustomButton(
               onPressed: () {
                 showDialog(
-                    context: context,
+                    context: widget.context,
                     builder: (_) {
                       return AddDialog(
-                        selectedSociety: Society.of(context)!.selectedSociety,
+                        selectedSociety: widget.selectedSociety,
                         function: () {
-                          Society.of(context)!.fetchSocietyDetails();
+                          widget.fetchSocietyDetails();
                         },
                       );
                     });
@@ -619,14 +637,14 @@ class _CustomDataTableState extends State<CustomDataTable> {
             CustomButton(
               onPressed: () {
                 showDialog(
-                    context: context,
+                    context: widget.context,
                     builder: (_) {
                       return EditDialog(
-                        selectedSociety: Society.of(context)!.selectedSociety,
-                        highcomm: Society.of(context)!.highcomm,
-                        lowcomm: Society.of(context)!.lowcomm,
+                        selectedSociety: widget.selectedSociety,
+                        highcomm: widget.highcomm,
+                        lowcomm: widget.lowcomm,
                         function: () {
-                          Society.of(context)!.fetchSocietyDetails();
+                          widget.fetchSocietyDetails();
                         },
                       );
                     });
@@ -639,9 +657,33 @@ class _CustomDataTableState extends State<CustomDataTable> {
             ),
             CustomButton(
               onPressed: () {
-                widget.source.deleteSelectedRows();
+                List<String> selectedStudentIDs =
+                    widget.source.fetchSelectedRows();
+                if (selectedStudentIDs.isEmpty) {
+                  ScaffoldMessenger.of(widget.context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                          'Unable to delete member(s) that hold position.'),
+                      width: 225.0,
+                      behavior: SnackBarBehavior.floating,
+                      duration: Duration(seconds: 3),
+                    ),
+                  );
+                } else {
+                  showDialog(
+                      context: widget.context,
+                      builder: (_) {
+                        return DeleteDialog(
+                          selectedStudentIDs: selectedStudentIDs,
+                          selectedSociety: widget.selectedSociety,
+                          function: () {
+                            widget.fetchSocietyDetails();
+                          },
+                        );
+                      });
+                }
               },
-              text: 'Delete',
+              text: 'Remove',
               buttonColor: Colors.red,
               width: 100,
             )
@@ -751,15 +793,46 @@ class _MembersDataSource extends DataTableSource {
     notifyListeners();
   }
 
-  void deleteSelectedRows() {
+  List<String> fetchSelectedRows() {
+    List<String> selectedStudentIDs = [];
+    bool found = false;
+    for (int index in selectedRows) {
+      if (index < displayedMembers.length) {
+        String position = displayedMembers[index]['position'];
+        if (position == 'Member') {
+          selectedStudentIDs.add(displayedMembers[index]['studentID']);
+        } else {
+          found = true;
+        }
+      }
+    }
+    if (found) {
+      return [];
+    } else {
+      return selectedStudentIDs;
+    }
+  }
+
+  void deleteSelectedRows(String selectedSociety) async {
     for (int index in selectedRows) {
       if (index < displayedMembers.length) {
         String studentID = displayedMembers[index]['studentID'];
-        print('Deleting student with ID: $studentID');
+        String societyID = selectedSociety;
+
+        QuerySnapshot<Map<String, dynamic>> querySnapshot =
+            await FirebaseFirestore.instance
+                .collection('member')
+                .where('studentID', isEqualTo: studentID)
+                .where('societyID', isEqualTo: societyID)
+                .get();
+
+        for (QueryDocumentSnapshot<Map<String, dynamic>> docSnapshot
+            in querySnapshot.docs) {
+          await docSnapshot.reference.delete();
+        }
       }
     }
     selectedRows.clear();
-    // Notify listeners to update the UI
     notifyListeners();
   }
 }
@@ -906,7 +979,7 @@ class _EditDialogState extends State<EditDialog> {
     String selectedID1 = widget.lowcomm[0]['studentID'].toString();
     String selectedID2 = widget.highcomm[0]['studentID'].toString();
     return AlertDialog(
-      title: const Text('Promote'),
+      title: const Text('Promote Member'),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1025,6 +1098,62 @@ class _EditDialogState extends State<EditDialog> {
               );
             }
           },
+          child: const Text('OK'),
+        ),
+      ],
+    );
+  }
+}
+
+class DeleteDialog extends StatefulWidget {
+  final String selectedSociety;
+  final VoidCallback? function;
+  final List<String> selectedStudentIDs;
+
+  DeleteDialog({
+    required this.selectedSociety,
+    this.function,
+    required this.selectedStudentIDs,
+  });
+  @override
+  _DeleteDialogState createState() => _DeleteDialogState();
+}
+
+class _DeleteDialogState extends State<DeleteDialog> {
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Remove Member'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Are you sure you want to delete the following members?',
+              style: TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'Members to be deleted:',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 5),
+            Text(
+              widget.selectedStudentIDs.join('\n'),
+              style: const TextStyle(fontSize: 14),
+            ),
+          ],
+        ),
+      ),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () async {},
           child: const Text('OK'),
         ),
       ],
