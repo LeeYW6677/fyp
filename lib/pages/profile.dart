@@ -93,7 +93,7 @@ class _ProfileState extends State<Profile> {
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text('Profile updated successfully!'),
             width: 225.0,
             behavior: SnackBarBehavior.floating,
@@ -102,7 +102,7 @@ class _ProfileState extends State<Profile> {
         );
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text('Failed to update profile. Please try again.'),
             width: 225.0,
             behavior: SnackBarBehavior.floating,

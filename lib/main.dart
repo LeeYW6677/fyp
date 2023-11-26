@@ -5,7 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:fyp/pages/home.dart';
 import 'package:fyp/pages/login.dart';
 import 'package:fyp/functions/firebase_options.dart';
-import 'package:fyp/pages/society.dart';
+import 'package:fyp/pages/studentEvent.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,7 +43,7 @@ class _SocietyManagementSystemState extends State<SocietyManagementSystem> {
           thumbVisibility: MaterialStateProperty.all<bool>(true),
         ),
       ),
-      home: user != null ? const Society() : const Login(),
+      home: user != null ? const Home() : const Login(),
     );
   }
 }

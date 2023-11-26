@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/pages/login.dart';
@@ -57,14 +58,15 @@ class _RegisterState extends State<Register> {
         try {
           final newStudent =
               FirebaseFirestore.instance.collection('user').doc(id.text);
+          FirebaseApp app = await Firebase.initializeApp(
+              name: 'Default', options: Firebase.app().options);
           UserCredential userCredential =
-              await FirebaseAuth.instance.createUserWithEmailAndPassword(
-            email: email.text,
-            password: password.text,
-          );
+              await FirebaseAuth.instanceFor(app: app)
+                  .createUserWithEmailAndPassword(
+                      email: email.text, password: password.text);
 
+          await app.delete();
           User? user = userCredential.user;
-          await user?.sendEmailVerification();
 
           if (user != null) {
             newStudent.set({

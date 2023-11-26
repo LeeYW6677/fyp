@@ -33,7 +33,7 @@ class _ResetPasswordState extends State<ResetPassword> {
         await user.updatePassword(newpwd.text);
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text('Password updated successfully!'),
             duration: Duration(seconds: 3),
             width: 250.0,

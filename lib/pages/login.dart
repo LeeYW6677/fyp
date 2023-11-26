@@ -34,46 +34,50 @@ class _LoginState extends State<Login> {
         );
       },
     );
-
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: email.text,
-        password: password.text,
-      );
+      errorMessage = null;
       QuerySnapshot userQuery = await FirebaseFirestore.instance
           .collection('user')
           .where('email', isEqualTo: email.text)
           .limit(1)
           .get();
-
-      if (userQuery.docs.first.id.startsWith('A')) {
-        role = 'advisor';
-        if (userQuery.docs.first['ic'] == '') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => AdvisorFirstLogin(userEmail: email.text),
-            ),
-          );
+      if (userQuery.docs.first['status']) {
+        await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: email.text,
+          password: password.text,
+        );
+        if (userQuery.docs.first.id.startsWith('A')) {
+          role = 'advisor';
+          if (userQuery.docs.first['ic'] == '') {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => AdvisorFirstLogin(userEmail: email.text),
+              ),
+            );
+          }
+        } else if (userQuery.docs.first.id.startsWith('B')) {
+          role = 'branch head';
+        } else {
+          role = 'student';
         }
-      } else if (userQuery.docs.first.id.startsWith('B')) {
-        role = 'branch head';
+
+        Navigator.pop(context);
+        storage.setItem('name', userQuery.docs.first['name']);
+        storage.setItem('id', userQuery.docs.first.id);
+        storage.setItem('role', role);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const Home(),
+          ),
+        );
       } else {
-        role = 'student';
+        Navigator.pop(context);
+        setState(() {
+          errorMessage = 'Your account has been disabled.';
+        });
       }
-
-      Navigator.pop(context);
-      storage.setItem('name', userQuery.docs.first['name']);
-      storage.setItem('id', userQuery.docs.first.id);
-      storage.setItem('role', role);
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const Home(),
-        ),
-      );
-
-      errorMessage = null;
     } on FirebaseAuthException catch (e) {
       Navigator.pop(context);
       setState(() {

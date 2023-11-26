@@ -1,10 +1,11 @@
 import 'package:email_validator/email_validator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
-import 'package:fyp/pages/society.dart';
+import 'package:fyp/pages/advisor.dart';
 
 class RegisterAdvisor extends StatefulWidget {
   const RegisterAdvisor({
@@ -37,19 +38,21 @@ class _RegisterAdvisorState extends State<RegisterAdvisor> {
       try {
         final newAdvisor =
             FirebaseFirestore.instance.collection('user').doc(id.text);
-        final authResult =
-            await FirebaseAuth.instance.createUserWithEmailAndPassword(
-          email: email.text,
-          password: 'tarumt12345',
-        );
+        FirebaseApp app = await Firebase.initializeApp(
+            name: 'Default', options: Firebase.app().options);
+          UserCredential userCredential = await FirebaseAuth.instanceFor(
+                  app: app)
+              .createUserWithEmailAndPassword(email: email.text, password: 'tarumt12345');
 
-        final user = authResult.user;
+        await app.delete();
+        final user = userCredential.user;
         if (user != null) {
           newAdvisor.set({
             'name': name.text,
             'email': email.text,
             'id': id.text,
             'ic': '',
+            'status': true,
           });
         }
 
@@ -63,7 +66,7 @@ class _RegisterAdvisorState extends State<RegisterAdvisor> {
           ),
         );
       } catch (error) {
-        emailErrorText = 'Advisor ID ${id.text} already exits';
+        emailErrorText = 'The email ${id.text} already exits';
       }
     }
   }
@@ -92,8 +95,8 @@ class _RegisterAdvisorState extends State<RegisterAdvisor> {
               child: SingleChildScrollView(
                 child: Column(children: [
                   const NavigationMenu(
-                    buttonTexts: ['Society', 'Register'],
-                    destination: [Society(), RegisterAdvisor()],
+                    buttonTexts: ['Advisor', 'Register'],
+                    destination: [Advisor(), RegisterAdvisor()],
                   ),
                   Padding(
                       padding: const EdgeInsets.all(16.0),
@@ -101,7 +104,7 @@ class _RegisterAdvisorState extends State<RegisterAdvisor> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              'Register Member',
+                              'Register Advisor',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 20,
@@ -136,10 +139,10 @@ class _RegisterAdvisorState extends State<RegisterAdvisor> {
                                               flex: 4,
                                               child: CustomTextField(
                                                 controller: name,
-                                                hintText: 'Enter your name',
+                                                hintText: 'Enter advisor name',
                                                 validator: (value) {
                                                   if (value!.isEmpty) {
-                                                    return 'Please enter your name';
+                                                    return 'Please enter advisor name';
                                                   }
                                                   return null;
                                                 },
@@ -187,12 +190,13 @@ class _RegisterAdvisorState extends State<RegisterAdvisor> {
                                               child: CustomTextField(
                                                 controller: id,
                                                 errorText: idErrorText,
-                                                hintText:
-                                                    'Enter your advisor ID',
+                                                hintText: 'Enter advisor ID',
                                                 validator: (value) {
                                                   if (value!.isEmpty) {
-                                                    return 'Please enter your advisor ID';
-                                                  } else if (!RegExp(r'^A\d{3}$').hasMatch(value)) {
+                                                    return 'Please enter advisor ID';
+                                                  } else if (!RegExp(
+                                                          r'^A\d{3}$')
+                                                      .hasMatch(value)) {
                                                     return 'Invalid advisor ID. Format: A001';
                                                   }
                                                   return null;
@@ -240,11 +244,11 @@ class _RegisterAdvisorState extends State<RegisterAdvisor> {
                                               flex: 4,
                                               child: CustomTextField(
                                                 controller: email,
-                                                hintText: 'Enter your email',
+                                                hintText: 'Enter advisor email',
                                                 errorText: emailErrorText,
                                                 validator: (value) {
                                                   if (value!.isEmpty) {
-                                                    return 'Please enter your email';
+                                                    return 'Please enter advisor email';
                                                   } else if (!EmailValidator
                                                       .validate(value)) {
                                                     return 'Invalid email';

@@ -2,26 +2,27 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
-import 'package:fyp/pages/addSociety.dart';
 import 'package:fyp/pages/viewEvent.dart';
+import 'package:localstorage/localstorage.dart';
 
-class Society extends StatefulWidget {
-  const Society({super.key});
+class StudentSociety extends StatefulWidget {
+  const StudentSociety({super.key});
 
   @override
-  State<Society> createState() => _SocietyState();
+  State<StudentSociety> createState() => _StudentSocietyState();
 
-  static _SocietyState? of(BuildContext context) {
-    return context.findAncestorStateOfType<_SocietyState>();
+  static _StudentSocietyState? of(BuildContext context) {
+    return context.findAncestorStateOfType<_StudentSocietyState>();
   }
 }
 
-class _SocietyState extends State<Society> {
+class _StudentSocietyState extends State<StudentSociety> {
   final society = TextEditingController();
+  final LocalStorage storage = LocalStorage('user');
   String selectedSociety = '';
+  String position = '';
   List<Map<String, dynamic>> advisorList = [];
   List<Map<String, dynamic>> coAdvisorList = [];
-   List<Map<String, dynamic>> allAdvisor = [];
   List<Map<String, dynamic>> _members = [];
   List<Map<String, dynamic>> highcomm = [];
   List<Map<String, dynamic>> lowcomm = [];
@@ -40,17 +41,40 @@ class _SocietyState extends State<Society> {
   Future<void> getData() async {
     try {
       final FirebaseFirestore firestore = FirebaseFirestore.instance;
+      QuerySnapshot societySnapshot;
 
-      final QuerySnapshot societySnapshot =
-          await firestore.collection('society').get();
-
-      societyIDs = societySnapshot.docs
-          .map((doc) => doc['societyID'].toString())
-          .toSet()
-          .toList();
+      if (storage.getItem('role') == 'student') {
+        societySnapshot = await firestore
+            .collection('member')
+            .where('position', isNotEqualTo: 'Member')
+            .where('studentID', isEqualTo: storage.getItem('id'))
+            .get();
+        if (societySnapshot.docs.isNotEmpty) {
+          societyIDs = societySnapshot.docs
+              .map((doc) => doc['societyID'].toString())
+              .toSet()
+              .toList();
+        } else {
+          return;
+        }
+      } else {
+        DocumentSnapshot<Map<String, dynamic>> documentSnapshot =
+            await FirebaseFirestore.instance
+                .collection('user')
+                .doc(storage.getItem('id'))
+                .get();
+        if (documentSnapshot.exists) {
+          societyIDs.add(documentSnapshot.get('societyID'));
+        }
+      }
       selectedSociety = societyIDs[0];
+      // Fetch society names
+      final QuerySnapshot societyNamesSnapshot = await firestore
+          .collection('society')
+          .where('societyID', whereIn: societyIDs)
+          .get();
 
-      societyNames = societySnapshot.docs
+      societyNames = societyNamesSnapshot.docs
           .map((doc) => doc['societyName'].toString())
           .toList();
       fetchSocietyDetails();
@@ -67,6 +91,7 @@ class _SocietyState extends State<Society> {
   }
 
   Future<void> fetchSocietyDetails() async {
+    Map<String, dynamic> userData = {};
     try {
       final FirebaseFirestore firestore = FirebaseFirestore.instance;
       // Fetch advisor data
@@ -87,9 +112,6 @@ class _SocietyState extends State<Society> {
         }
       }
 
-      allAdvisor.addAll(advisorList);
-      allAdvisor.addAll(coAdvisorList);
-
       // Fetch member data
       final QuerySnapshot<Map<String, dynamic>> membersSnapshot =
           await FirebaseFirestore.instance
@@ -108,13 +130,15 @@ class _SocietyState extends State<Society> {
                 .get();
 
         if (memberDetails.exists) {
-          final Map<String, dynamic> userData = memberDetails.data()!;
+          userData = memberDetails.data()!;
           userData['studentID'] = memberDocSnapshot['studentID'];
           userData['position'] = memberDocSnapshot['position'];
-          return userData;
+          if (userData['studentID'] == storage.getItem('id')) {
+            position = userData['position'];
+          }
         }
 
-        return <String, dynamic>{};
+        return userData;
       }));
 
       //arrange members
@@ -150,6 +174,8 @@ class _SocietyState extends State<Society> {
     }
   }
 
+
+
   String getSocietyNameById(String societyID) {
     int index = societyIDs.indexOf(societyID);
     if (index != -1 && index < societyNames.length) {
@@ -171,7 +197,6 @@ class _SocietyState extends State<Society> {
       drawer: !Responsive.isDesktop(context)
           ? const CustomDrawer(
               index: 2,
-              page: 'Society',
             )
           : null,
       body: SafeArea(
@@ -182,7 +207,6 @@ class _SocietyState extends State<Society> {
               const Expanded(
                 child: CustomDrawer(
                   index: 2,
-                  page: 'Society',
                 ),
               ),
             Expanded(
@@ -191,7 +215,7 @@ class _SocietyState extends State<Society> {
                 child: Column(children: [
                   const NavigationMenu(
                     buttonTexts: ['Society'],
-                    destination: [Society()],
+                    destination: [StudentSociety()],
                   ),
                   Padding(
                       padding: const EdgeInsets.all(16.0),
@@ -237,7 +261,7 @@ class _SocietyState extends State<Society> {
                                           child: Text(societyName),
                                         );
                                       }).toList(),
-                                    )),
+                                    ))
                               ],
                             ),
                             Row(
@@ -248,26 +272,8 @@ class _SocietyState extends State<Society> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) =>
-                                            const AddSociety(),
-                                      ),
-                                    );
-                                  },
-                                  text: 'Add Society',
-                                  width: 100,
-                                  buttonColor: Colors.green,
-                                ),
-                                const SizedBox(
-                                  width: 15,
-                                ),
-                                CustomButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
                                         builder: (context) => ViewEvent(
-                                          selectedSociety: selectedSociety,
-                                        ),
+                                            selectedSociety: selectedSociety),
                                       ),
                                     );
                                   },
@@ -445,35 +451,10 @@ class _SocietyState extends State<Society> {
                                                   );
                                                 }
                                               }),
-                                              Padding(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        vertical: 20),
-                                                child: Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.end,
-                                                  children: [
-                                                    CustomButton(
-                                                      onPressed: () {
-                                                        showDialog(
-                                                            context: context,
-                                                            builder: (_) {
-                                                              return ChangeDialog(
-                                                                original:
-                                                                    allAdvisor,
-                                                                selectedSociety:
-                                                                    selectedSociety,
-                                                                function: () {
-                                                                  fetchSocietyDetails();
-                                                                },
-                                                              );
-                                                            });
-                                                      },
-                                                      text: 'Change Advisor',
-                                                      width: 150,
-                                                    ),
-                                                  ],
-                                                ),
+                                              const Row(
+                                                children: [
+                                                  SizedBox(height: 10),
+                                                ],
                                               ),
                                               Row(
                                                 children: [
@@ -484,6 +465,7 @@ class _SocietyState extends State<Society> {
                                                               .size
                                                               .width,
                                                       child: CustomDataTable(
+                                                        position: position,
                                                         context: context,
                                                         selectedSociety:
                                                             selectedSociety,
@@ -533,7 +515,7 @@ class _SocietyState extends State<Society> {
                                                             300,
                                                     alignment: Alignment.center,
                                                     child: const Text(
-                                                        'You have not joined any society.'))),
+                                                        'You have not joined any society or you are unauthorized to view member details.'))),
                                           ],
                                         )),
                             ),
@@ -557,6 +539,7 @@ class CustomDataTable extends StatefulWidget {
   final List<Map<String, dynamic>> highcomm;
   final List<Map<String, dynamic>> lowcomm;
   final BuildContext context;
+  final String position;
 
   const CustomDataTable({
     Key? key,
@@ -567,6 +550,7 @@ class CustomDataTable extends StatefulWidget {
     required this.highcomm,
     required this.lowcomm,
     required this.context,
+    required this.position,
   }) : super(key: key);
 
   @override
@@ -582,6 +566,7 @@ class _CustomDataTableState extends State<CustomDataTable> {
 
   @override
   Widget build(BuildContext context) {
+    final LocalStorage storage = LocalStorage('user');
     return Column(
       children: [
         Row(
@@ -668,93 +653,97 @@ class _CustomDataTableState extends State<CustomDataTable> {
         const SizedBox(
           height: 10,
         ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            CustomButton(
-              onPressed: () {
-                showDialog(
-                    context: widget.context,
-                    builder: (_) {
-                      return AddDialog(
-                        selectedSociety: widget.selectedSociety,
-                        function: () {
-                          widget.fetchSocietyDetails();
-                        },
-                      );
-                    });
-              },
-              text: 'Add',
-              buttonColor: Colors.green,
-              width: 100,
-            ),
-            const SizedBox(
-              width: 25,
-            ),
-            CustomButton(
-              onPressed: () {
-                showDialog(
-                    context: widget.context,
-                    builder: (_) {
-                      return EditDialog(
-                        selectedSociety: widget.selectedSociety,
-                        highcomm: widget.highcomm,
-                        lowcomm: widget.lowcomm,
-                        function: () {
-                          widget.fetchSocietyDetails();
-                        },
-                      );
-                    });
-              },
-              text: 'Promote',
-              width: 100,
-            ),
-            const SizedBox(
-              width: 25,
-            ),
-            CustomButton(
-              onPressed: () {
-                List<String> selectedStudentIDs =
-                    widget.source.fetchSelectedRows();
-                if (selectedStudentIDs.isEmpty) {
-                  ScaffoldMessenger.of(widget.context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                          'Unable to delete member(s) that hold position.'),
-                      width: 325.0,
-                      behavior: SnackBarBehavior.floating,
-                      duration: Duration(seconds: 3),
-                    ),
-                  );
-                } else if (selectedStudentIDs[0] == 'No rows selected.') {
-                  ScaffoldMessenger.of(widget.context).showSnackBar(
-                    SnackBar(
-                      content: Text(selectedStudentIDs[0]),
-                      width: 150.0,
-                      behavior: SnackBarBehavior.floating,
-                      duration: const Duration(seconds: 3),
-                    ),
-                  );
-                } else {
+        if (storage.getItem('role') == 'advisor' ||
+            widget.position.contains('President'))
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              CustomButton(
+                onPressed: () {
                   showDialog(
                       context: widget.context,
                       builder: (_) {
-                        return DeleteDialog(
-                          selectedStudentIDs: selectedStudentIDs,
+                        return AddDialog(
                           selectedSociety: widget.selectedSociety,
                           function: () {
                             widget.fetchSocietyDetails();
                           },
                         );
                       });
-                }
-              },
-              text: 'Remove',
-              buttonColor: Colors.red,
-              width: 100,
-            )
-          ],
-        )
+                },
+                text: 'Add',
+                buttonColor: Colors.green,
+                width: 100,
+              ),
+              if (storage.getItem('role') == 'advisor')
+                const SizedBox(
+                  width: 25,
+                ),
+              if (storage.getItem('role') == 'advisor')
+                CustomButton(
+                  onPressed: () {
+                    showDialog(
+                        context: widget.context,
+                        builder: (_) {
+                          return EditDialog(
+                            selectedSociety: widget.selectedSociety,
+                            highcomm: widget.highcomm,
+                            lowcomm: widget.lowcomm,
+                            function: () {
+                              widget.fetchSocietyDetails();
+                            },
+                          );
+                        });
+                  },
+                  text: 'Promote',
+                  width: 100,
+                ),
+              const SizedBox(
+                width: 25,
+              ),
+              CustomButton(
+                onPressed: () {
+                  List<String> selectedStudentIDs =
+                      widget.source.fetchSelectedRows();
+                  if (selectedStudentIDs.isEmpty) {
+                    ScaffoldMessenger.of(widget.context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                            'Unable to delete member(s) that hold position.'),
+                        width: 325.0,
+                        behavior: SnackBarBehavior.floating,
+                        duration: Duration(seconds: 3),
+                      ),
+                    );
+                  } else if (selectedStudentIDs[0] == 'No rows selected.') {
+                    ScaffoldMessenger.of(widget.context).showSnackBar(
+                      SnackBar(
+                        content: Text(selectedStudentIDs[0]),
+                        width: 150.0,
+                        behavior: SnackBarBehavior.floating,
+                        duration: const Duration(seconds: 3),
+                      ),
+                    );
+                  } else {
+                    showDialog(
+                        context: widget.context,
+                        builder: (_) {
+                          return DeleteDialog(
+                            selectedStudentIDs: selectedStudentIDs,
+                            selectedSociety: widget.selectedSociety,
+                            function: () {
+                              widget.fetchSocietyDetails();
+                            },
+                          );
+                        });
+                  }
+                },
+                text: 'Remove',
+                buttonColor: Colors.red,
+                width: 100,
+              )
+            ],
+          )
       ],
     );
   }
@@ -879,6 +868,29 @@ class _MembersDataSource extends DataTableSource {
     } else {
       return selectedStudentIDs;
     }
+  }
+
+  void deleteSelectedRows(String selectedSociety) async {
+    for (int index in selectedRows) {
+      if (index < displayedMembers.length) {
+        String studentID = displayedMembers[index]['studentID'];
+        String societyID = selectedSociety;
+
+        QuerySnapshot<Map<String, dynamic>> querySnapshot =
+            await FirebaseFirestore.instance
+                .collection('member')
+                .where('studentID', isEqualTo: studentID)
+                .where('societyID', isEqualTo: societyID)
+                .get();
+
+        for (QueryDocumentSnapshot<Map<String, dynamic>> docSnapshot
+            in querySnapshot.docs) {
+          await docSnapshot.reference.delete();
+        }
+      }
+    }
+    selectedRows.clear();
+    notifyListeners();
   }
 }
 
@@ -1218,181 +1230,6 @@ class _DeleteDialogState extends State<DeleteDialog> {
               });
             }
             Navigator.pop(context);
-          },
-          child: const Text('OK'),
-        ),
-      ],
-    );
-  }
-}
-
-class ChangeDialog extends StatefulWidget {
-  final String selectedSociety;
-  final VoidCallback? function;
-  final List<Map<String, dynamic>> original;
-
-  ChangeDialog({
-    required this.selectedSociety,
-    this.function,
-    required this.original,
-  });
-  @override
-  _ChangeDialogState createState() => _ChangeDialogState();
-}
-
-class _ChangeDialogState extends State<ChangeDialog> {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  TextEditingController position = TextEditingController();
-  TextEditingController id1 = TextEditingController();
-  TextEditingController id2 = TextEditingController();
-  TextEditingController name1 = TextEditingController();
-  TextEditingController name2 = TextEditingController();
-  String? errorMessage;
-  bool found = false;
-  String? selectedID;
-  @override
-  Widget build(BuildContext context) {
-    name2.text = widget.original[0]['name'].toString();
-    position.text = widget.original[0]['position'].toString();
-    selectedID = widget.original[0]['id'].toString();
-    return AlertDialog(
-      title: const Text('Change Advisor'),
-      content: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('New Advisor'),
-              const SizedBox(height: 10),
-              CustomTextField(
-                  errorText: errorMessage,
-                  controller: id1,
-                  hintText: 'Enter Advisor ID',
-                  validator: (value) {
-                    if (value!.isEmpty) {
-                      return 'Please enter advisor ID';
-                    } else if (!RegExp(r'^A\d{3}').hasMatch(value)) {
-                      return 'Invalid advisor ID';
-                    }
-                    return null;
-                  },
-                  onChanged: (value) async {
-                    if (RegExp(r'^A\d{3}').hasMatch(value)) {
-                      DocumentSnapshot<Map<String, dynamic>> advisor =
-                          await FirebaseFirestore.instance
-                              .collection('user')
-                              .doc(id1.text)
-                              .get();
-
-                      if (advisor.exists) {
-                        Map<String, dynamic> advisorData = advisor.data()!;
-                        if (advisorData['ic'] != '') {
-                          name1.text = advisorData['name'];
-                          found = true;
-                        }
-                      } else {
-                        name1.text = '';
-                        found = false;
-                      }
-                    } else {
-                      name1.text = '';
-                      found = false;
-                    }
-                  }),
-              const SizedBox(height: 10),
-              CustomTextField(
-                controller: name1,
-                hintText: 'Associated Advisor Name',
-                enabled: false,
-              ),
-              const SizedBox(height: 50),
-              const Text('Current Advisor'),
-              const SizedBox(height: 10),
-              CustomDDL<String>(
-                value: selectedID,
-                controller: id2,
-                hintText: 'Select advisor ID',
-                dropdownItems: widget.original.map((advisor) {
-                  String advisorID = advisor['id'];
-                  return DropdownMenuItem<String>(
-                    value: advisorID,
-                    child: Text(advisorID),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  int index = widget.original
-                      .indexWhere((advisor) => advisor['id'] == id2.text);
-                  name2.text = widget.original[index]['name'].toString();
-                  position.text = widget.original[index]['position'].toString();
-                },
-              ),
-              const SizedBox(height: 10),
-              CustomTextField(
-                controller: name2,
-                hintText: 'Advisor Name',
-                enabled: false,
-              ),
-              const SizedBox(height: 10),
-              CustomTextField(
-                controller: position,
-                hintText: 'Advisor Position',
-                enabled: false,
-              ),
-            ],
-          ),
-        ),
-      ),
-      actions: <Widget>[
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          child: const Text('Cancel'),
-        ),
-        TextButton(
-          onPressed: () async {
-            setState(() {
-              errorMessage = null;
-            });
-
-            if (_formKey.currentState!.validate() && found) {
-              DocumentReference<Map<String, dynamic>> newAdvisorRef =
-                  FirebaseFirestore.instance.collection('user').doc(id1.text);
-
-              DocumentReference<Map<String, dynamic>> currentAdvisorRef =
-                  FirebaseFirestore.instance.collection('user').doc(selectedID);
-
-              DocumentSnapshot<Map<String, dynamic>> newAdvisorSnapshot =
-                  await newAdvisorRef.get();
-
-              Map<String, dynamic> newAdvisorData = newAdvisorSnapshot.data()!;
-
-              if (newAdvisorData['societyID'] == '' &&
-                  newAdvisorData['position'] == '') {
-                await newAdvisorRef.update({
-                  'societyID': widget.selectedSociety,
-                  'position': position.text,
-                });
-
-                await currentAdvisorRef.update({
-                  'societyID': '',
-                  'position': '',
-                });
-                if (widget.function != null) {
-                  widget.function!();
-                }
-                Navigator.pop(context);
-              } else {
-                setState(() {
-                  errorMessage = 'This advisor is unavailable';
-                });
-              }
-            } else {
-              setState(() {
-                errorMessage = 'Advisor not found';
-              });
-            }
           },
           child: const Text('OK'),
         ),

@@ -37,7 +37,6 @@ class _AdvisorProfileState extends State<AdvisorProfile> {
   }
 
   Future<void> getData() async {
-
     User? user = FirebaseAuth.instance.currentUser;
     String? userEmail = user?.email;
 
@@ -103,7 +102,7 @@ class _AdvisorProfileState extends State<AdvisorProfile> {
         }
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text('Profile updated successfully!'),
             width: 225.0,
             behavior: SnackBarBehavior.floating,
@@ -112,7 +111,7 @@ class _AdvisorProfileState extends State<AdvisorProfile> {
         );
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text('Failed to update profile. Please try again.'),
             width: 225.0,
             behavior: SnackBarBehavior.floating,
@@ -125,7 +124,6 @@ class _AdvisorProfileState extends State<AdvisorProfile> {
 
   @override
   Widget build(BuildContext context) {
-     
     return Scaffold(
       appBar: const Header(),
       drawer: !Responsive.isDesktop(context) ? const CustomDrawer() : null,
@@ -134,7 +132,7 @@ class _AdvisorProfileState extends State<AdvisorProfile> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (Responsive.isDesktop(context))
-              const Expanded(
+               const Expanded(
                 child: CustomDrawer(),
               ),
             Expanded(

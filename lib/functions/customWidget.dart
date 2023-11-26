@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:fyp/pages/advisor.dart';
 import 'package:fyp/pages/advisorProfile.dart';
 import 'package:fyp/pages/home.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:fyp/pages/society.dart';
+import 'package:fyp/pages/student.dart';
+import 'package:fyp/pages/studentEvent.dart';
+import 'package:fyp/pages/studentSociety.dart';
 import 'package:intl/intl.dart';
 import 'package:localstorage/localstorage.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -102,106 +106,226 @@ class _CustomDDLState<T> extends State<CustomDDL<T>> {
 
 class CustomDrawer extends StatelessWidget {
   final int index;
+  final String page;
 
   const CustomDrawer({
     Key? key,
     this.index = 0,
+    this.page = '',
   }) : super(key: key);
+
+  Future<String> getData() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    String? userEmail = user?.email;
+
+    FirebaseFirestore firestore = FirebaseFirestore.instance;
+    QuerySnapshot data = await firestore
+        .collection('user')
+        .where('email', isEqualTo: userEmail)
+        .limit(1)
+        .get();
+    if (data.docs.isNotEmpty) {
+      QueryDocumentSnapshot documentSnapshot = data.docs.first;
+
+      String docId = documentSnapshot.id;
+      if (docId.startsWith('B')) {
+        return 'branch head';
+      }
+    }
+    return '';
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Drawer(
-      child: Column(
-        children: [
-          ListTile(
-              leading: Icon(
-                Icons.dashboard,
-                color: index == 1 ? Colors.white : Colors.black,
-              ),
-              title: Text(
-                'Dashboard',
-                style: TextStyle(
-                  color: index == 1 ? Colors.white : Colors.black,
-                ),
-              ),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const Home(),
+    return FutureBuilder<String>(
+        future: getData(),
+        builder: (context, snapshot) {
+          String role = snapshot.data ?? '';
+          return Drawer(
+            child: Column(
+              children: [
+                ListTile(
+                    leading: Icon(
+                      Icons.dashboard,
+                      color: index == 1 ? Colors.white : Colors.black,
+                    ),
+                    title: Text(
+                      'Dashboard',
+                      style: TextStyle(
+                        color: index == 1 ? Colors.white : Colors.black,
+                      ),
+                    ),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const Home(),
+                        ),
+                      );
+                    },
+                    tileColor: index == 1 ? Colors.blue : null,
+                    shape: const Border(
+                      bottom: BorderSide(
+                        color: Color.fromARGB(255, 219, 219, 219),
+                      ),
+                    )),
+                if (role != 'branch head')
+                  ListTile(
+                      leading: Icon(
+                        Icons.people,
+                        color: index == 2 ? Colors.white : Colors.black,
+                      ),
+                      title: Text(
+                        'Society',
+                        style: TextStyle(
+                          color: index == 2 ? Colors.white : Colors.black,
+                        ),
+                      ),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const StudentSociety(),
+                          ),
+                        );
+                      },
+                      tileColor: index == 2 ? Colors.blue : Colors.white,
+                      shape: const Border(
+                        bottom: BorderSide(
+                          color: Color.fromARGB(255, 219, 219, 219),
+                        ),
+                      )),
+                if (role == 'branch head')
+                  ExpansionTile(
+                    collapsedBackgroundColor: index == 2 ? Colors.blue : null,
+                    backgroundColor: index == 2 ? Colors.blue : null,
+                    iconColor: index == 2 ? Colors.white : Colors.black,
+                    collapsedIconColor:
+                        index == 2 ? Colors.white : Colors.black,
+                    leading: Icon(
+                      Icons.people,
+                      color: index == 2 ? Colors.white : Colors.black,
+                    ),
+                    title: Text(
+                      'Users',
+                      style: TextStyle(
+                        color: index == 2 ? Colors.white : Colors.black,
+                      ),
+                    ),
+                    shape: const Border(
+                      bottom: BorderSide(
+                        color: Color.fromARGB(255, 219, 219, 219),
+                      ),
+                    ),
+                    children: <Widget>[
+                      Container(
+                        color: Colors.grey[300],
+                        child: ListTile(
+                          tileColor: Colors.white,
+                          title: Text(
+                            'Student',
+                            style: TextStyle(
+                                color: page == 'Student' ? Colors.blue : null),
+                          ),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const Student(),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      Container(
+                        color: Colors.grey[300],
+                        child: ListTile(
+                          tileColor: Colors.white,
+                          title: Text(
+                            'Advisor',
+                            style: TextStyle(
+                                color: page == 'Advisor' ? Colors.blue : null),
+                          ),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const Advisor(),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      Container(
+                        color: Colors.grey[300],
+                        child: ListTile(
+                          tileColor: Colors.white,
+                          title: Text(
+                            'Society',
+                            style: TextStyle(
+                                color: page == 'Society' ? Colors.blue : null),
+                          ),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const Society(),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                   ),
-                );
-              },
-              tileColor: index == 1 ? Colors.blue : null,
-              shape: const Border(
-                bottom: BorderSide(
-                  color: Color.fromARGB(255, 219, 219, 219),
-                ),
-              )),
-          ListTile(
-              leading: Icon(
-                Icons.people,
-                color: index == 2 ? Colors.white : Colors.black,
-              ),
-              title: Text(
-                'Society',
-                style: TextStyle(
-                  color: index == 2 ? Colors.white : Colors.black,
-                ),
-              ),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const Society(),
-                  ),
-                );
-              },
-              tileColor: index == 2 ? Colors.blue : null,
-              shape: const Border(
-                bottom: BorderSide(
-                  color: Color.fromARGB(255, 219, 219, 219),
-                ),
-              )),
-          ListTile(
-              leading: Icon(
-                Icons.event,
-                color: index == 3 ? Colors.white : Colors.black,
-              ),
-              title: Text(
-                'Event',
-                style: TextStyle(
-                  color: index == 3 ? Colors.white : Colors.black,
-                ),
-              ),
-              onTap: () {},
-              tileColor: index == 3 ? Colors.blue : null,
-              shape: const Border(
-                bottom: BorderSide(
-                  color: Color.fromARGB(255, 219, 219, 219),
-                ),
-              )),
-          ListTile(
-              leading: Icon(
-                Icons.money,
-                color: index == 4 ? Colors.white : Colors.black,
-              ),
-              title: Text(
-                'Claim',
-                style: TextStyle(
-                  color: index == 4 ? Colors.white : Colors.black,
-                ),
-              ),
-              onTap: () {},
-              tileColor: index == 4 ? Colors.blue : null,
-              shape: const Border(
-                bottom: BorderSide(
-                  color: Color.fromARGB(255, 219, 219, 219),
-                ),
-              )),
-        ],
-      ),
-    );
+                if (role != 'branch head')
+                  ListTile(
+                      leading: Icon(
+                        Icons.event,
+                        color: index == 3 ? Colors.white : Colors.black,
+                      ),
+                      title: Text(
+                        'Event',
+                        style: TextStyle(
+                          color: index == 3 ? Colors.white : Colors.black,
+                        ),
+                      ),
+                      onTap: () {
+                        Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const StudentEvent(),
+                              ),
+                            );
+                      },
+                      tileColor: index == 3 ? Colors.blue : null,
+                      shape: const Border(
+                        bottom: BorderSide(
+                          color: Color.fromARGB(255, 219, 219, 219),
+                        ),
+                      )),
+                if (role != 'branch head')
+                  ListTile(
+                      leading: Icon(
+                        Icons.money,
+                        color: index == 4 ? Colors.white : Colors.black,
+                      ),
+                      title: Text(
+                        'Claim',
+                        style: TextStyle(
+                          color: index == 4 ? Colors.white : Colors.black,
+                        ),
+                      ),
+                      onTap: () {},
+                      tileColor: index == 4 ? Colors.blue : null,
+                      shape: const Border(
+                        bottom: BorderSide(
+                          color: Color.fromARGB(255, 219, 219, 219),
+                        ),
+                      )),
+              ],
+            ),
+          );
+        });
   }
 }
 
@@ -264,7 +388,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
         hintText: widget.hintText,
         errorText: widget.errorText,
         filled: true,
-        fillColor: widget.enabled? Colors.white : Colors.grey[300],
+        fillColor: widget.enabled ? Colors.white : Colors.grey[300],
         enabledBorder: const OutlineInputBorder(
           borderSide: BorderSide(width: 1, color: Colors.grey),
         ),
@@ -286,7 +410,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
             color: Colors.red,
           ),
         ),
-        disabledBorder: const OutlineInputBorder(         
+        disabledBorder: const OutlineInputBorder(
             borderSide: BorderSide(width: 1, color: Colors.grey)),
         prefixIcon: widget.icon,
         suffixIcon: widget.hiding
@@ -449,7 +573,7 @@ class Header extends StatelessWidget implements PreferredSizeWidget {
             ],
           ),
           actions: [
-            if (!Responsive.isMobile(context))
+            if (Responsive.isDesktop(context))
               Center(
                 child: Text('Welcome,\n' + name, textAlign: TextAlign.center),
               ),
