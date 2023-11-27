@@ -270,7 +270,7 @@ class _AddEventState extends State<AddEvent> {
                                           style: TextStyle(
                                             fontSize: 16,
                                           ),
-                                        ),
+                                        ),  
                                       ),
                                       Expanded(
                                         flex: 4,
@@ -325,7 +325,7 @@ class _AddEventState extends State<AddEvent> {
                                       Expanded(
                                         flex: 4,
                                         child: Text(
-                                          coAdvisorList.isNotEmpty
+                                           coAdvisorList.isNotEmpty
                                               ? coAdvisorList[1]['name']
                                               : '',
                                           style: const TextStyle(

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
 import 'package:fyp/pages/addEvent.dart';
-import 'package:fyp/pages/preEvent.dart';
+import 'package:fyp/pages/proposal.dart';
 import 'package:fyp/pages/society.dart';
 import 'package:intl/intl.dart';
 
@@ -45,7 +45,7 @@ class _ViewEventState extends State<ViewEvent> {
             await firestore
                 .collection('committee')
                 .where('eventID', isEqualTo: eventId)
-                .where('position', isEqualTo: 'President')
+                .where('position', isEqualTo:   'President')
                 .get();
 
         for (var committeeDocSnapshot in committeeSnapshot.docs) {
@@ -198,7 +198,7 @@ class _ViewEventState extends State<ViewEvent> {
                                     ),
                                   ),
                                   Container(
-                                    height: MediaQuery.of(context).size.height - 175,
+                                    height: 2000,
                                     decoration: BoxDecoration(
                                       color: Colors.white,
                                       border: Border.all(
@@ -563,7 +563,7 @@ class _EventDataSource extends DataTableSource {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const PreEvent(),
+                    builder: (context) => Proposal(selectedEvent: event['eventID']),
                   ),
                 );
               },
@@ -662,7 +662,7 @@ class _EventDataSource2 extends DataTableSource {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const PreEvent(),
+                    builder: (context) => Proposal(selectedEvent: event['eventID']),
                   ),
                 );
               },

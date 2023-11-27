@@ -21,7 +21,7 @@ class _SocietyState extends State<Society> {
   String selectedSociety = '';
   List<Map<String, dynamic>> advisorList = [];
   List<Map<String, dynamic>> coAdvisorList = [];
-   List<Map<String, dynamic>> allAdvisor = [];
+  List<Map<String, dynamic>> allAdvisor = [];
   List<Map<String, dynamic>> _members = [];
   List<Map<String, dynamic>> highcomm = [];
   List<Map<String, dynamic>> lowcomm = [];
@@ -290,252 +290,234 @@ class _SocietyState extends State<Society> {
                                       width: 1.0,
                                     ),
                                   ),
-                                  child: societyIDs.isNotEmpty
-                                      ? Padding(
-                                          padding: const EdgeInsets.all(16.0),
-                                          child: Column(
-                                            children: [
-                                              LayoutBuilder(builder:
-                                                  (context, constraints) {
-                                                if (!Responsive.isMobile(
-                                                    context)) {
-                                                  return Column(
-                                                    children: [
-                                                      Row(
-                                                        children: [
-                                                          const Expanded(
-                                                            flex: 2,
-                                                            child: Text(
-                                                              'Advisor:',
-                                                              style: TextStyle(
-                                                                fontSize: 16,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                          Expanded(
-                                                            flex: 4,
-                                                            child: Text(
-                                                              advisorList[0]['name'],
-                                                              style:
-                                                                  const TextStyle(
-                                                                fontSize: 16,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                          const Expanded(
-                                                            flex: 2,
-                                                            child: Text(
-                                                              'Co-Advisor:',
-                                                              style: TextStyle(
-                                                                fontSize: 16,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                          Expanded(
-                                                            flex: 4,
-                                                            child: Text(
-                                                              coAdvisorList[0]['name'],
-                                                              style:
-                                                                  const TextStyle(
-                                                                fontSize: 16,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                      const SizedBox(
-                                                        height: 5,
-                                                      ),
-                                                      Row(
-                                                        children: [
-                                                          Expanded(
-                                                            flex: 2,
-                                                            child: Container(),
-                                                          ),
-                                                          Expanded(
-                                                            flex: 4,
-                                                            child: Container(),
-                                                          ),
-                                                          Expanded(
-                                                            flex: 2,
-                                                            child: Container(),
-                                                          ),
-                                                          Expanded(
-                                                            flex: 4,
-                                                            child: Text(
-                                                              coAdvisorList[1]['name'],
-                                                              style:
-                                                                  const TextStyle(
-                                                                fontSize: 16,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      )
-                                                    ],
-                                                  );
-                                                } else {
-                                                  return Column(
-                                                    children: [
-                                                      Row(
-                                                        children: [
-                                                          const Expanded(
-                                                            flex: 2,
-                                                            child: Text(
-                                                              'Advisor:',
-                                                              style: TextStyle(
-                                                                fontSize: 16,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                          Expanded(
-                                                            flex: 4,
-                                                            child: Text(
-                                                              advisorList[0]['name'],
-                                                              style:
-                                                                  const TextStyle(
-                                                                fontSize: 16,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                      Row(
-                                                        children: [
-                                                          const Expanded(
-                                                            flex: 2,
-                                                            child: Text(
-                                                              'Co-Advisor:',
-                                                              style: TextStyle(
-                                                                fontSize: 16,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                          Expanded(
-                                                            flex: 4,
-                                                            child: Text(
-                                                              coAdvisorList[0]['name'],
-                                                              style:
-                                                                  const TextStyle(
-                                                                fontSize: 16,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                      Row(
-                                                        children: [
-                                                          Expanded(
-                                                            flex: 2,
-                                                            child: Container(),
-                                                          ),
-                                                          Expanded(
-                                                            flex: 4,
-                                                            child: Text(
-                                                              coAdvisorList[1]['name'],
-                                                              style:
-                                                                  const TextStyle(
-                                                                fontSize: 16,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      )
-                                                    ],
-                                                  );
-                                                }
-                                              }),
-                                              Padding(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        vertical: 20),
-                                                child: Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.end,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(16.0),
+                                    child: Column(
+                                      children: [
+                                        LayoutBuilder(
+                                            builder: (context, constraints) {
+                                          if (!Responsive.isMobile(context)) {
+                                            return Column(
+                                              children: [
+                                                Row(
                                                   children: [
-                                                    CustomButton(
-                                                      onPressed: () {
-                                                        showDialog(
-                                                            context: context,
-                                                            builder: (_) {
-                                                              return ChangeDialog(
-                                                                original:
-                                                                    allAdvisor,
-                                                                selectedSociety:
-                                                                    selectedSociety,
-                                                                function: () {
-                                                                  fetchSocietyDetails();
-                                                                },
-                                                              );
-                                                            });
-                                                      },
-                                                      text: 'Change Advisor',
-                                                      width: 150,
+                                                    const Expanded(
+                                                      flex: 2,
+                                                      child: Text(
+                                                        'Advisor:',
+                                                        style: TextStyle(
+                                                          fontSize: 16,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    Expanded(
+                                                      flex: 4,
+                                                      child: Text(
+                                                        advisorList.isNotEmpty
+                                                            ? advisorList[0]
+                                                                ['name']
+                                                            : '',
+                                                        style: const TextStyle(
+                                                          fontSize: 16,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    const Expanded(
+                                                      flex: 2,
+                                                      child: Text(
+                                                        'Co-Advisor:',
+                                                        style: TextStyle(
+                                                          fontSize: 16,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    Expanded(
+                                                      flex: 4,
+                                                      child: Text(
+                                                        coAdvisorList.isNotEmpty
+                                                            ? coAdvisorList[0]
+                                                                ['name']
+                                                            : '',
+                                                        style: const TextStyle(
+                                                          fontSize: 16,
+                                                        ),
+                                                      ),
                                                     ),
                                                   ],
                                                 ),
-                                              ),
-                                              Row(
-                                                children: [
-                                                  Expanded(
-                                                    child: SizedBox(
-                                                      width:
-                                                          MediaQuery.of(context)
-                                                              .size
-                                                              .width,
-                                                      child: CustomDataTable(
-                                                        context: context,
-                                                        selectedSociety:
-                                                            selectedSociety,
-                                                        fetchSocietyDetails:
-                                                            fetchSocietyDetails,
-                                                        highcomm: highcomm,
-                                                        lowcomm: lowcomm,
-                                                        columns: const [
-                                                          DataColumn(
-                                                            label: Text('Name'),
-                                                          ),
-                                                          DataColumn(
-                                                              label: Text(
-                                                                  'Student ID')),
-                                                          DataColumn(
-                                                              label: Text(
-                                                                  'Email')),
-                                                          DataColumn(
-                                                              label: Text(
-                                                                  'IC No.')),
-                                                          DataColumn(
-                                                              label: Text(
-                                                                  'Contact')),
-                                                          DataColumn(
-                                                              label: Text(
-                                                                  'Position')),
-                                                        ],
-                                                        source:
-                                                            _MembersDataSource(
-                                                                _members),
+                                                const SizedBox(
+                                                  height: 5,
+                                                ),
+                                                Row(
+                                                  children: [
+                                                    Expanded(
+                                                      flex: 2,
+                                                      child: Container(),
+                                                    ),
+                                                    Expanded(
+                                                      flex: 4,
+                                                      child: Container(),
+                                                    ),
+                                                    Expanded(
+                                                      flex: 2,
+                                                      child: Container(),
+                                                    ),
+                                                    Expanded(
+                                                      flex: 4,
+                                                      child: Text(
+                                                        coAdvisorList.isNotEmpty
+                                                            ? coAdvisorList[1]
+                                                                ['name']
+                                                            : '',
+                                                        style: const TextStyle(
+                                                          fontSize: 16,
+                                                        ),
                                                       ),
                                                     ),
-                                                  ),
-                                                ],
+                                                  ],
+                                                )
+                                              ],
+                                            );
+                                          } else {
+                                            return Column(
+                                              children: [
+                                                Row(
+                                                  children: [
+                                                    const Expanded(
+                                                      flex: 2,
+                                                      child: Text(
+                                                        'Advisor:',
+                                                        style: TextStyle(
+                                                          fontSize: 16,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    Expanded(
+                                                      flex: 4,
+                                                      child: Text(
+                                                        advisorList[0]['name'],
+                                                        style: const TextStyle(
+                                                          fontSize: 16,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                Row(
+                                                  children: [
+                                                    const Expanded(
+                                                      flex: 2,
+                                                      child: Text(
+                                                        'Co-Advisor:',
+                                                        style: TextStyle(
+                                                          fontSize: 16,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    Expanded(
+                                                      flex: 4,
+                                                      child: Text(
+                                                        coAdvisorList[0]
+                                                            ['name'],
+                                                        style: const TextStyle(
+                                                          fontSize: 16,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                Row(
+                                                  children: [
+                                                    Expanded(
+                                                      flex: 2,
+                                                      child: Container(),
+                                                    ),
+                                                    Expanded(
+                                                      flex: 4,
+                                                      child: Text(
+                                                        coAdvisorList[1]
+                                                            ['name'],
+                                                        style: const TextStyle(
+                                                          fontSize: 16,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                )
+                                              ],
+                                            );
+                                          }
+                                        }),
+                                        Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                              vertical: 20),
+                                          child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.end,
+                                            children: [
+                                              CustomButton(
+                                                onPressed: () {
+                                                  showDialog(
+                                                      context: context,
+                                                      builder: (_) {
+                                                        return ChangeDialog(
+                                                          original: allAdvisor,
+                                                          selectedSociety:
+                                                              selectedSociety,
+                                                          function: () {
+                                                            fetchSocietyDetails();
+                                                          },
+                                                        );
+                                                      });
+                                                },
+                                                text: 'Change Advisor',
+                                                width: 150,
                                               ),
                                             ],
                                           ),
-                                        )
-                                      : Column(
+                                        ),
+                                        Row(
                                           children: [
-                                            Center(
-                                                child: Container(
-                                                    height:
-                                                        MediaQuery.of(context)
-                                                                .size
-                                                                .height -
-                                                            300,
-                                                    alignment: Alignment.center,
-                                                    child: const Text(
-                                                        'You have not joined any society.'))),
+                                            Expanded(
+                                              child: SizedBox(
+                                                width: MediaQuery.of(context)
+                                                    .size
+                                                    .width,
+                                                child: CustomDataTable(
+                                                  context: context,
+                                                  selectedSociety:
+                                                      selectedSociety,
+                                                  fetchSocietyDetails:
+                                                      fetchSocietyDetails,
+                                                  highcomm: highcomm,
+                                                  lowcomm: lowcomm,
+                                                  columns: const [
+                                                    DataColumn(
+                                                      label: Text('Name'),
+                                                    ),
+                                                    DataColumn(
+                                                        label:
+                                                            Text('Student ID')),
+                                                    DataColumn(
+                                                        label: Text('Email')),
+                                                    DataColumn(
+                                                        label: Text('IC No.')),
+                                                    DataColumn(
+                                                        label: Text('Contact')),
+                                                    DataColumn(
+                                                        label:
+                                                            Text('Position')),
+                                                  ],
+                                                  source: _MembersDataSource(
+                                                      _members),
+                                                ),
+                                              ),
+                                            ),
                                           ],
-                                        )),
+                                        ),
+                                      ],
+                                    ),
+                                  )),
                             ),
                           ]))
                 ]),

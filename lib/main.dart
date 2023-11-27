@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:fyp/pages/home.dart';
 import 'package:fyp/pages/login.dart';
 import 'package:fyp/functions/firebase_options.dart';
+import 'package:fyp/pages/proposal.dart';
+import 'package:fyp/pages/schedule.dart';
 import 'package:fyp/pages/studentEvent.dart';
 
 
@@ -43,7 +45,7 @@ class _SocietyManagementSystemState extends State<SocietyManagementSystem> {
           thumbVisibility: MaterialStateProperty.all<bool>(true),
         ),
       ),
-      home: user != null ? const Home() : const Login(),
+      home: user != null ? const Schedule(selectedEvent: 'E001',) : const Login(),
     );
   }
 }

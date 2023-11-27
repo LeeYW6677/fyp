@@ -342,6 +342,7 @@ class CustomTextField extends StatefulWidget {
   final VoidCallback? onTap;
   final void Function(String)? onChanged;
   final Icon? suffixIcon;
+  final int maxLine;
 
   const CustomTextField({
     Key? key,
@@ -357,6 +358,7 @@ class CustomTextField extends StatefulWidget {
     this.onTap,
     this.onChanged,
     this.suffixIcon,
+    this.maxLine = 1,
   }) : super(key: key);
 
   @override
@@ -376,6 +378,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
   Widget build(BuildContext context) {
     return TextFormField(
       style: const TextStyle(color: Colors.black),
+      maxLines: widget.maxLine,
       onTap: widget.onTap,
       enabled: widget.enabled,
       controller: widget.controller,
@@ -383,7 +386,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
       onChanged: widget.onChanged,
       decoration: InputDecoration(
         contentPadding:
-            const EdgeInsets.symmetric(horizontal: 10.0, vertical: 0),
+            EdgeInsets.symmetric(horizontal: 10.0, vertical: widget.maxLine!=1 ? 15.0 : 0),
         prefixText: widget.prefixText,
         hintText: widget.hintText,
         errorText: widget.errorText,

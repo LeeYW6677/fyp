@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
-import 'package:fyp/pages/preEvent.dart';
+import 'package:fyp/pages/proposal.dart';
 import 'package:intl/intl.dart';
 import 'package:localstorage/localstorage.dart';
 
@@ -212,8 +212,7 @@ class _StudentEventState extends State<StudentEvent> {
                                     ),
                                   ),
                                   Container(
-                                    height: MediaQuery.of(context).size.height -
-                                        175,
+                                    height: 2000,
                                     decoration: BoxDecoration(
                                       color: Colors.white,
                                       border: Border.all(
@@ -557,7 +556,7 @@ class _EventDataSource extends DataTableSource {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const PreEvent(),
+                    builder: (context) => Proposal(selectedEvent: event['eventID'].toString()),
                   ),
                 );
               },
@@ -655,7 +654,7 @@ class _EventDataSource2 extends DataTableSource {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const PreEvent(),
+                    builder: (context) => Proposal(selectedEvent: event['eventID'],),
                   ),
                 );
               },
