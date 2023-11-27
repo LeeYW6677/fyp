@@ -77,7 +77,7 @@ class _CustomDDLState<T> extends State<CustomDDL<T>> {
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField<T>(
-      isDense: true,
+      isExpanded: true,
       value: widget.value,
       focusColor: Colors.white,
       onChanged: (T? newValue) {

@@ -174,8 +174,6 @@ class _StudentSocietyState extends State<StudentSociety> {
     }
   }
 
-
-
   String getSocietyNameById(String societyID) {
     int index = societyIDs.indexOf(societyID);
     if (index != -1 && index < societyNames.length) {
@@ -185,6 +183,7 @@ class _StudentSocietyState extends State<StudentSociety> {
     }
   }
 
+  @override
   void initState() {
     super.initState();
     getData();
@@ -258,7 +257,8 @@ class _StudentSocietyState extends State<StudentSociety> {
 
                                         return DropdownMenuItem<String>(
                                           value: societyID,
-                                          child: Text(societyName),
+                                          child: Text(societyName,
+                                              overflow: TextOverflow.ellipsis),
                                         );
                                       }).toList(),
                                     ))
@@ -321,7 +321,11 @@ class _StudentSocietyState extends State<StudentSociety> {
                                                           Expanded(
                                                             flex: 4,
                                                             child: Text(
-                                                              advisorList[0]['name'],
+                                                              advisorList
+                                                                      .isNotEmpty
+                                                                  ? advisorList[
+                                                                      0]['name']
+                                                                  : '',
                                                               style:
                                                                   const TextStyle(
                                                                 fontSize: 16,
@@ -340,7 +344,11 @@ class _StudentSocietyState extends State<StudentSociety> {
                                                           Expanded(
                                                             flex: 4,
                                                             child: Text(
-                                                              coAdvisorList[0]['name'],
+                                                              coAdvisorList
+                                                                      .isNotEmpty
+                                                                  ? coAdvisorList[
+                                                                      0]['name']
+                                                                  : '',
                                                               style:
                                                                   const TextStyle(
                                                                 fontSize: 16,
@@ -369,7 +377,11 @@ class _StudentSocietyState extends State<StudentSociety> {
                                                           Expanded(
                                                             flex: 4,
                                                             child: Text(
-                                                              coAdvisorList[1]['name'],
+                                                              coAdvisorList
+                                                                      .isNotEmpty
+                                                                  ? coAdvisorList[
+                                                                      1]['name']
+                                                                  : '',
                                                               style:
                                                                   const TextStyle(
                                                                 fontSize: 16,
@@ -397,7 +409,11 @@ class _StudentSocietyState extends State<StudentSociety> {
                                                           Expanded(
                                                             flex: 4,
                                                             child: Text(
-                                                              advisorList[0]['name'],
+                                                              advisorList
+                                                                      .isNotEmpty
+                                                                  ? advisorList[
+                                                                      0]['name']
+                                                                  : '',
                                                               style:
                                                                   const TextStyle(
                                                                 fontSize: 16,
@@ -420,7 +436,11 @@ class _StudentSocietyState extends State<StudentSociety> {
                                                           Expanded(
                                                             flex: 4,
                                                             child: Text(
-                                                              coAdvisorList[0]['name'],
+                                                              coAdvisorList
+                                                                      .isNotEmpty
+                                                                  ? coAdvisorList[
+                                                                      0]['name']
+                                                                  : '',
                                                               style:
                                                                   const TextStyle(
                                                                 fontSize: 16,
@@ -438,7 +458,11 @@ class _StudentSocietyState extends State<StudentSociety> {
                                                           Expanded(
                                                             flex: 4,
                                                             child: Text(
-                                                              coAdvisorList[1]['name'],
+                                                              coAdvisorList
+                                                                      .isNotEmpty
+                                                                  ? coAdvisorList[
+                                                                      1]['name']
+                                                                  : '',
                                                               style:
                                                                   const TextStyle(
                                                                 fontSize: 16,
@@ -682,18 +706,30 @@ class _CustomDataTableState extends State<CustomDataTable> {
               if (storage.getItem('role') == 'advisor')
                 CustomButton(
                   onPressed: () {
-                    showDialog(
-                        context: widget.context,
-                        builder: (_) {
-                          return EditDialog(
-                            selectedSociety: widget.selectedSociety,
-                            highcomm: widget.highcomm,
-                            lowcomm: widget.lowcomm,
-                            function: () {
-                              widget.fetchSocietyDetails();
-                            },
-                          );
-                        });
+                    if (widget.lowcomm.isNotEmpty) {
+                      showDialog(
+                          context: widget.context,
+                          builder: (_) {
+                            return EditDialog(
+                              selectedSociety: widget.selectedSociety,
+                              highcomm: widget.highcomm,
+                              lowcomm: widget.lowcomm,
+                              function: () {
+                                widget.fetchSocietyDetails();
+                              },
+                            );
+                          });
+                    } else {
+                      ScaffoldMessenger.of(widget.context).showSnackBar(
+                        const SnackBar(
+                          content:
+                              Text('There is no available member to promote.'),
+                          width: 300.0,
+                          behavior: SnackBarBehavior.floating,
+                          duration: Duration(seconds: 3),
+                        ),
+                      );
+                    }
                   },
                   text: 'Promote',
                   width: 100,

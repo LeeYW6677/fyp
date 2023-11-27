@@ -45,7 +45,7 @@ class _ViewEventState extends State<ViewEvent> {
             await firestore
                 .collection('committee')
                 .where('eventID', isEqualTo: eventId)
-                .where('position', isEqualTo:   'President')
+                .where('position', isEqualTo: 'President')
                 .get();
 
         for (var committeeDocSnapshot in committeeSnapshot.docs) {
@@ -197,94 +197,73 @@ class _ViewEventState extends State<ViewEvent> {
                                       ],
                                     ),
                                   ),
-                                  Container(
-                                    height: 2000,
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      border: Border.all(
-                                          width: 1.0, color: Colors.grey),
-                                    ),
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(16.0),
-                                      child: TabBarView(
-                                        children: [
-                                          Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.end,
-                                            children: [
-                                              CustomDataTable(
-                                                  columns: const [
-                                                    DataColumn(
-                                                      label: Text('Name'),
-                                                    ),
-                                                    DataColumn(
-                                                        label: Text(
-                                                            'President')),
-                                                    DataColumn(
-                                                        label: Text('Date')),
-                                                    DataColumn(
-                                                        label:
-                                                            Text('Action')),
-                                                  ],
-                                                  source: _EventDataSource(
-                                                      ongoingEvents, context),
-                                                  refresh: getData,
-                                                  context: context),
-                                              const SizedBox(
-                                                height: 15,
-                                              ),
-                                              CustomButton(
-                                                onPressed: () {
-                                                  Navigator.push(
-                                                    context,
-                                                    MaterialPageRoute(
-                                                      builder: (context) =>
-                                                          AddEvent(
-                                                        selectedSociety: widget
-                                                            .selectedSociety,
-                                                      ),
-                                                    ),
-                                                  );
-                                                },
-                                                buttonColor: Colors.green,
-                                                text: 'Add Event',
-                                                width: 150,
-                                              ),
-                                              const SizedBox(
-                                                height: 15,
-                                              ),
-                                            ],
-                                          ),
-                                          Column(
-                                            children: [
-                                              CustomDataTable2(
-                                                  columns: const [
-                                                    DataColumn(
-                                                      label: Text('Name'),
-                                                    ),
-                                                    DataColumn(
-                                                        label: Text(
-                                                            'President')),
-                                                    DataColumn(
-                                                        label:
-                                                            Text('Advisor')),
-                                                    DataColumn(
-                                                        label: Text('Date')),
-                                                    DataColumn(
-                                                        label:
-                                                            Text('Action')),
-                                                  ],
-                                                  source: _EventDataSource2(
-                                                      completedEvents,
-                                                      context),
-                                                  refresh: getData,
-                                                  context: context),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
+                                 Container(
+                                  height:2000,
+  decoration: BoxDecoration(
+    color: Colors.white,
+    border: Border.all(width: 1.0, color: Colors.grey),
+  ),
+  child: Padding(
+    padding: const EdgeInsets.all(16.0),
+    child: TabBarView(
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            CustomDataTable(
+              columns: const [
+                DataColumn(label: Text('Name')),
+                DataColumn(label: Text('President')),
+                DataColumn(label: Text('Date')),
+                DataColumn(label: Text('Action')),
+              ],
+              source: _EventDataSource(ongoingEvents, context),
+              refresh: getData,
+              context: context,
+            ),
+            const SizedBox(
+              height: 15,
+            ),
+            CustomButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AddEvent(
+                      selectedSociety: widget.selectedSociety,
+                    ),
+                  ),
+                );
+              },
+              buttonColor: Colors.green,
+              text: 'Add Event',
+              width: 150,
+            ),
+            const SizedBox(
+              height: 15,
+            ),
+          ],
+        ),
+        Column(
+          children: [
+            CustomDataTable2(
+              columns: const [
+                DataColumn(label: Text('Name')),
+                DataColumn(label: Text('President')),
+                DataColumn(label: Text('Date')),
+                DataColumn(label: Text('Action')),
+              ],
+              source: _EventDataSource2(completedEvents, context),
+              refresh: getData,
+              context: context,
+            ),
+          ],
+        ),
+      ],
+    ),
+  ),
+),
+
                                 ],
                               ),
                             )
@@ -563,7 +542,8 @@ class _EventDataSource extends DataTableSource {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => Proposal(selectedEvent: event['eventID']),
+                    builder: (context) =>
+                        Proposal(selectedEvent: event['eventID']),
                   ),
                 );
               },
@@ -582,7 +562,6 @@ class _EventDataSource extends DataTableSource {
           ],
         )),
       ],
-      
     );
   }
 
@@ -653,7 +632,6 @@ class _EventDataSource2 extends DataTableSource {
       cells: [
         DataCell(Text(event['eventName'].toString())),
         DataCell(Text(event['president'].toString())),
-        DataCell(Text(event['advisorName'].toString())),
         DataCell(Text(DateFormat('dd-MM-yyyy').format(event['date'].toDate()))),
         DataCell(Row(
           children: [
@@ -662,7 +640,8 @@ class _EventDataSource2 extends DataTableSource {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => Proposal(selectedEvent: event['eventID']),
+                    builder: (context) =>
+                        Proposal(selectedEvent: event['eventID']),
                   ),
                 );
               },
@@ -681,7 +660,6 @@ class _EventDataSource2 extends DataTableSource {
           ],
         )),
       ],
-      
     );
   }
 

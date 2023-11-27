@@ -61,7 +61,7 @@ class _AdvisorState extends State<Advisor> {
       );
     }
   }
-
+  
   @override
   void initState() {
     super.initState();
@@ -70,136 +70,144 @@ class _AdvisorState extends State<Advisor> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: const Header(),
-      drawer: !Responsive.isDesktop(context)
-          ? const CustomDrawer(
-              index: 2,
-              page: 'Advisor',
-            )
-          : null,
-      body: SafeArea(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (Responsive.isDesktop(context))
-              const Expanded(
-                child: CustomDrawer(
-                  index: 2,
-                  page: 'Advisor',
-                ),
-              ),
-            Expanded(
-              flex: 5,
-              child: SingleChildScrollView(
-                child: Column(children: [
-                  const NavigationMenu(
-                    buttonTexts: ['Advisor'],
-                    destination: [Advisor()],
-                  ),
-                  Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Advisor',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 20,
-                              ),
-                            ),
-                            const Divider(
-                              thickness: 0.1,
-                              color: Colors.black,
-                            ),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 20.0),
-                              child: Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    border: Border.all(
-                                      color: Colors.grey,
-                                      width: 1.0,
+          return Scaffold(
+            appBar: const Header(),
+            drawer: !Responsive.isDesktop(context)
+                ? const CustomDrawer(
+                    index: 2,
+                    page: 'Advisor',
+                  )
+                : null,
+            body: SafeArea(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (Responsive.isDesktop(context))
+                    const Expanded(
+                      child: CustomDrawer(
+                        index: 2,
+                        page: 'Advisor',
+                      ),
+                    ),
+                  Expanded(
+                    flex: 5,
+                    child: SingleChildScrollView(
+                      child: Column(children: [
+                        const NavigationMenu(
+                          buttonTexts: ['Advisor'],
+                          destination: [Advisor()],
+                        ),
+                        Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Advisor',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20,
                                     ),
                                   ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(16.0),
-                                    child: Column(
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: SizedBox(
-                                                width: MediaQuery.of(context)
-                                                    .size
-                                                    .width,
-                                                child: CustomDataTable(
-                                                  context: context,
-                                                  columns: const [
-                                                    DataColumn(
-                                                      label: Text('Name'),
-                                                    ),
-                                                    DataColumn(
-                                                        label:
-                                                            Text('Advisor ID')),
-                                                    DataColumn(
-                                                        label: Text('Email')),
-                                                    DataColumn(
-                                                        label: Text('IC No.')),
-                                                    DataColumn(
-                                                        label: Text('Contact')),
-                                                    DataColumn(
-                                                        label:
-                                                            Text('Department')),
-                                                    DataColumn(
-                                                        label: Text('Society')),
-                                                    DataColumn(
-                                                        label:
-                                                            Text('Position')),
-                                                    DataColumn(
-                                                        label: Text('Action')),
-                                                  ],
-                                                  source: _AdvisorDataSource(
-                                                      _advisor, context),
-                                                ),
-                                              ),
-                                            ),
-                                          ],
+                                  const Divider(
+                                    thickness: 0.1,
+                                    color: Colors.black,
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 20.0),
+                                    child: Container(
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          border: Border.all(
+                                            color: Colors.grey,
+                                            width: 1.0,
+                                          ),
                                         ),
-                                        Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.end,
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(16.0),
+                                          child: Column(
                                             children: [
-                                              CustomButton(
-                                                onPressed: () {
-                                                  Navigator.push(
-                                                    context,
-                                                    MaterialPageRoute(
-                                                      builder: (context) =>
-                                                          const RegisterAdvisor(),
+                                              Row(
+                                                children: [
+                                                  Expanded(
+                                                    child: SizedBox(
+                                                      width:
+                                                          MediaQuery.of(context)
+                                                              .size
+                                                              .width,
+                                                      child: CustomDataTable(
+                                                        context: context,
+                                                        columns: const [
+                                                          DataColumn(
+                                                            label: Text('Name'),
+                                                          ),
+                                                          DataColumn(
+                                                              label: Text(
+                                                                  'Advisor ID')),
+                                                          DataColumn(
+                                                              label: Text(
+                                                                  'Email')),
+                                                          DataColumn(
+                                                              label: Text(
+                                                                  'IC No.')),
+                                                          DataColumn(
+                                                              label: Text(
+                                                                  'Contact')),
+                                                          DataColumn(
+                                                              label: Text(
+                                                                  'Department')),
+                                                          DataColumn(
+                                                              label: Text(
+                                                                  'Society')),
+                                                          DataColumn(
+                                                              label: Text(
+                                                                  'Position')),
+                                                          DataColumn(
+                                                              label: Text(
+                                                                  'Action')),
+                                                        ],
+                                                        source:
+                                                            _AdvisorDataSource(
+                                                                _advisor,
+                                                                context),
+                                                      ),
                                                     ),
-                                                  );
-                                                },
-                                                text: 'Add',
-                                                buttonColor: Colors.green,
-                                                width: 100,
+                                                  ),
+                                                ],
                                               ),
-                                            ]),
-                                      ],
-                                    ),
-                                  )),
-                            ),
-                          ]))
-                ]),
+                                              Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.end,
+                                                  children: [
+                                                    CustomButton(
+                                                      onPressed: () {
+                                                        Navigator.push(
+                                                          context,
+                                                          MaterialPageRoute(
+                                                            builder: (context) =>
+                                                                const RegisterAdvisor(),
+                                                          ),
+                                                        );
+                                                      },
+                                                      text: 'Add',
+                                                      buttonColor: Colors.green,
+                                                      width: 100,
+                                                    ),
+                                                  ]),
+                                            ],
+                                          ),
+                                        )),
+                                  ),
+                                ]))
+                      ]),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
-      bottomNavigationBar: const Footer(),
-    );
+            bottomNavigationBar: const Footer(),
+          );
   }
 }
 

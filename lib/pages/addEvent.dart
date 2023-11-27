@@ -27,35 +27,8 @@ class _AddEventState extends State<AddEvent> {
   final vsecretaryID = TextEditingController();
   final vtreasurerName = TextEditingController();
   final vtreasurerID = TextEditingController();
-  List<Map<String, dynamic>> advisorList = [];
-  List<Map<String, dynamic>> coAdvisorList = [];
-  List<Map<String, dynamic>> allAdvisor = [];
-  String advisorname = '';
 
   final GlobalKey<FormState> _formKey1 = GlobalKey<FormState>();
-
-  Future<void> getAdvisor() async {
-    FirebaseFirestore firestore = FirebaseFirestore.instance;
-    final QuerySnapshot<Map<String, dynamic>> advisorSnapshot = await firestore
-        .collection('user')
-        .where('societyID', isEqualTo: widget.selectedSociety)
-        .where('position', whereIn: ['Advisor', 'Co-advisor']).get();
-
-    for (var docSnapshot in advisorSnapshot.docs) {
-      Map<String, dynamic> userData = docSnapshot.data();
-
-      String position = userData['position'];
-      if (position == 'Advisor') {
-        setState(() {
-          advisorList.add(userData);
-        });
-      } else if (position == 'Co-advisor') {
-        setState(() {
-          coAdvisorList.add(userData);
-        });
-      }
-    }
-  }
 
   bool hasDuplicateTextValues() {
     List<String> textValues = [
@@ -89,9 +62,6 @@ class _AddEventState extends State<AddEvent> {
         'eventName': eventName,
         'societyID': widget.selectedSociety,
         'eventStatus': 'Planning',
-        'advisorName': advisorList[0]['name'],
-        'coAdvisorName1': coAdvisorList[0]['name'],
-        'coAdvisorName2': coAdvisorList[1]['name'],
       });
       return eventID;
     } catch (e) {
@@ -146,10 +116,26 @@ class _AddEventState extends State<AddEvent> {
     }
   }
 
-  @override
-  void initState() {
-    super.initState();
-    getAdvisor();
+   Future<void> onTextChanged(String value, TextEditingController controller) async {
+    if (RegExp(r'^\d{2}[A-Z]{3}\d{5}$').hasMatch(value)) {
+      DocumentSnapshot<Map<String, dynamic>> student =
+          await FirebaseFirestore.instance.collection('user').doc(value).get();
+
+      if (student.exists) {
+        Map<String, dynamic> studentData = student.data()!;
+        setState(() {
+          controller.text = studentData['name'];
+        });
+      } else {
+        setState(() {
+          controller.text = '';
+        });
+      }
+    } else {
+      setState(() {
+        controller.text = '';
+      });
+    }
   }
 
   @override
@@ -210,8 +196,6 @@ class _AddEventState extends State<AddEvent> {
                                         child: Padding(
                                           padding: const EdgeInsets.all(8.0),
                                           child: Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
                                             mainAxisAlignment:
                                                 MainAxisAlignment.start,
                                             children: [
@@ -242,96 +226,6 @@ class _AddEventState extends State<AddEvent> {
                                       ),
                                       const Expanded(
                                         child: SizedBox(),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 50),
-                                  const Row(
-                                    children: [
-                                      Text(
-                                        'Advisor Info',
-                                        style: TextStyle(
-                                          color: Colors.blue,
-                                          fontSize: 20,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const Divider(
-                                    thickness: 0.1,
-                                    color: Colors.black,
-                                  ),
-                                  Row(
-                                    children: [
-                                      const Expanded(
-                                        flex: 2,
-                                        child: Text(
-                                          'Advisor:',
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                          ),
-                                        ),  
-                                      ),
-                                      Expanded(
-                                        flex: 4,
-                                        child: Text(
-                                          advisorList.isNotEmpty
-                                              ? advisorList[0]['name']
-                                              : '',
-                                          style: const TextStyle(
-                                            fontSize: 16,
-                                          ),
-                                        ),
-                                      ),
-                                      const Expanded(
-                                        flex: 2,
-                                        child: Text(
-                                          'Co-Advisor:',
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                          ),
-                                        ),
-                                      ),
-                                      Expanded(
-                                        flex: 4,
-                                        child: Text(
-                                          coAdvisorList.isNotEmpty
-                                              ? coAdvisorList[0]['name']
-                                              : '',
-                                          style: const TextStyle(
-                                            fontSize: 16,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(
-                                    height: 5,
-                                  ),
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        flex: 2,
-                                        child: Container(),
-                                      ),
-                                      Expanded(
-                                        flex: 4,
-                                        child: Container(),
-                                      ),
-                                      Expanded(
-                                        flex: 2,
-                                        child: Container(),
-                                      ),
-                                      Expanded(
-                                        flex: 4,
-                                        child: Text(
-                                           coAdvisorList.isNotEmpty
-                                              ? coAdvisorList[1]['name']
-                                              : '',
-                                          style: const TextStyle(
-                                            fontSize: 16,
-                                          ),
-                                        ),
                                       ),
                                     ],
                                   ),
@@ -382,8 +276,6 @@ class _AddEventState extends State<AddEvent> {
                                         child: Padding(
                                           padding: const EdgeInsets.all(8.0),
                                           child: Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
                                             mainAxisAlignment:
                                                 MainAxisAlignment.start,
                                             children: [
@@ -399,35 +291,7 @@ class _AddEventState extends State<AddEvent> {
                                               Expanded(
                                                 flex: 4,
                                                 child: CustomTextField(
-                                                  onChanged: (value) async {
-                                                    if (RegExp(
-                                                            r'^\d{2}[A-Z]{3}\d{5}$')
-                                                        .hasMatch(value)) {
-                                                      DocumentSnapshot<
-                                                              Map<String,
-                                                                  dynamic>>
-                                                          student =
-                                                          await FirebaseFirestore
-                                                              .instance
-                                                              .collection(
-                                                                  'user')
-                                                              .doc(presidentID
-                                                                  .text)
-                                                              .get();
-
-                                                      if (student.exists) {
-                                                        Map<String, dynamic>
-                                                            studentData =
-                                                            student.data()!;
-                                                        presidentName.text =
-                                                            studentData['name'];
-                                                      } else {
-                                                        presidentName.text = '';
-                                                      }
-                                                    } else {
-                                                      presidentName.text = '';
-                                                    }
-                                                  },
+                                                  onChanged: (value) => onTextChanged(value, presidentName),
                                                   validator: (value) {
                                                     if (value!.isEmpty) {
                                                       return 'Please enter student ID';
@@ -450,8 +314,6 @@ class _AddEventState extends State<AddEvent> {
                                         child: Padding(
                                           padding: const EdgeInsets.all(8.0),
                                           child: Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
                                             mainAxisAlignment:
                                                 MainAxisAlignment.start,
                                             children: [
@@ -467,35 +329,7 @@ class _AddEventState extends State<AddEvent> {
                                               Expanded(
                                                 flex: 4,
                                                 child: CustomTextField(
-                                                  onChanged: (value) async {
-                                                    if (RegExp(
-                                                            r'^\d{2}[A-Z]{3}\d{5}$')
-                                                        .hasMatch(value)) {
-                                                      DocumentSnapshot<
-                                                              Map<String,
-                                                                  dynamic>>
-                                                          student =
-                                                          await FirebaseFirestore
-                                                              .instance
-                                                              .collection(
-                                                                  'user')
-                                                              .doc(secretaryID
-                                                                  .text)
-                                                              .get();
-
-                                                      if (student.exists) {
-                                                        Map<String, dynamic>
-                                                            studentData =
-                                                            student.data()!;
-                                                        secretaryName.text =
-                                                            studentData['name'];
-                                                      } else {
-                                                        secretaryName.text = '';
-                                                      }
-                                                    } else {
-                                                      secretaryName.text = '';
-                                                    }
-                                                  },
+                                                  onChanged: (value) => onTextChanged(value, secretaryName),
                                                   validator: (value) {
                                                     if (value!.isEmpty) {
                                                       return 'Please enter student ID';
@@ -518,8 +352,6 @@ class _AddEventState extends State<AddEvent> {
                                         child: Padding(
                                           padding: const EdgeInsets.all(8.0),
                                           child: Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
                                             mainAxisAlignment:
                                                 MainAxisAlignment.start,
                                             children: [
@@ -535,35 +367,7 @@ class _AddEventState extends State<AddEvent> {
                                               Expanded(
                                                 flex: 4,
                                                 child: CustomTextField(
-                                                  onChanged: (value) async {
-                                                    if (RegExp(
-                                                            r'^\d{2}[A-Z]{3}\d{5}$')
-                                                        .hasMatch(value)) {
-                                                      DocumentSnapshot<
-                                                              Map<String,
-                                                                  dynamic>>
-                                                          student =
-                                                          await FirebaseFirestore
-                                                              .instance
-                                                              .collection(
-                                                                  'user')
-                                                              .doc(treasurerID
-                                                                  .text)
-                                                              .get();
-
-                                                      if (student.exists) {
-                                                        Map<String, dynamic>
-                                                            studentData =
-                                                            student.data()!;
-                                                        treasurerName.text =
-                                                            studentData['name'];
-                                                      } else {
-                                                        treasurerName.text = '';
-                                                      }
-                                                    } else {
-                                                      treasurerName.text = '';
-                                                    }
-                                                  },
+                                                  onChanged: (value) => onTextChanged(value, treasurerName),
                                                   validator: (value) {
                                                     if (value!.isEmpty) {
                                                       return 'Please enter student ID';
@@ -590,8 +394,6 @@ class _AddEventState extends State<AddEvent> {
                                         child: Padding(
                                           padding: const EdgeInsets.all(8.0),
                                           child: Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
                                             mainAxisAlignment:
                                                 MainAxisAlignment.start,
                                             children: [
@@ -607,13 +409,13 @@ class _AddEventState extends State<AddEvent> {
                                               Expanded(
                                                 flex: 4,
                                                 child: CustomTextField(
+                                                  enabled: false,
                                                   validator: (value) {
                                                     if (value!.isEmpty) {
                                                       return 'No Student Found';
                                                     }
                                                     return null;
                                                   },
-                                                  enabled: false,
                                                   controller: presidentName,
                                                   hintText:
                                                       'Associated Student Name',
@@ -627,8 +429,6 @@ class _AddEventState extends State<AddEvent> {
                                         child: Padding(
                                           padding: const EdgeInsets.all(8.0),
                                           child: Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
                                             mainAxisAlignment:
                                                 MainAxisAlignment.start,
                                             children: [
@@ -644,13 +444,13 @@ class _AddEventState extends State<AddEvent> {
                                               Expanded(
                                                 flex: 4,
                                                 child: CustomTextField(
+                                                  enabled: false,
                                                   validator: (value) {
                                                     if (value!.isEmpty) {
                                                       return 'No Student Found';
                                                     }
                                                     return null;
                                                   },
-                                                  enabled: false,
                                                   controller: secretaryName,
                                                   hintText:
                                                       'Associated Student Name',
@@ -664,8 +464,6 @@ class _AddEventState extends State<AddEvent> {
                                         child: Padding(
                                           padding: const EdgeInsets.all(8.0),
                                           child: Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
                                             mainAxisAlignment:
                                                 MainAxisAlignment.start,
                                             children: [
@@ -681,13 +479,13 @@ class _AddEventState extends State<AddEvent> {
                                               Expanded(
                                                 flex: 4,
                                                 child: CustomTextField(
+                                                  enabled: false,
                                                   validator: (value) {
                                                     if (value!.isEmpty) {
                                                       return 'No Student Found';
                                                     }
                                                     return null;
                                                   },
-                                                  enabled: false,
                                                   controller: treasurerName,
                                                   hintText:
                                                       'Associated Student Name',
@@ -735,8 +533,6 @@ class _AddEventState extends State<AddEvent> {
                                         child: Padding(
                                           padding: const EdgeInsets.all(8.0),
                                           child: Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
                                             mainAxisAlignment:
                                                 MainAxisAlignment.start,
                                             children: [
@@ -752,36 +548,7 @@ class _AddEventState extends State<AddEvent> {
                                               Expanded(
                                                 flex: 4,
                                                 child: CustomTextField(
-                                                  onChanged: (value) async {
-                                                    if (RegExp(
-                                                            r'^\d{2}[A-Z]{3}\d{5}$')
-                                                        .hasMatch(value)) {
-                                                      DocumentSnapshot<
-                                                              Map<String,
-                                                                  dynamic>>
-                                                          student =
-                                                          await FirebaseFirestore
-                                                              .instance
-                                                              .collection(
-                                                                  'user')
-                                                              .doc(vpresidentID
-                                                                  .text)
-                                                              .get();
-
-                                                      if (student.exists) {
-                                                        Map<String, dynamic>
-                                                            studentData =
-                                                            student.data()!;
-                                                        vpresidentName.text =
-                                                            studentData['name'];
-                                                      } else {
-                                                        vpresidentName.text =
-                                                            '';
-                                                      }
-                                                    } else {
-                                                      vpresidentName.text = '';
-                                                    }
-                                                  },
+                                                  onChanged: (value) => onTextChanged(value, vpresidentName),
                                                   validator: (value) {
                                                     if (value!.isEmpty) {
                                                       return 'Please enter student ID';
@@ -804,8 +571,6 @@ class _AddEventState extends State<AddEvent> {
                                         child: Padding(
                                           padding: const EdgeInsets.all(8.0),
                                           child: Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
                                             mainAxisAlignment:
                                                 MainAxisAlignment.start,
                                             children: [
@@ -821,36 +586,7 @@ class _AddEventState extends State<AddEvent> {
                                               Expanded(
                                                 flex: 4,
                                                 child: CustomTextField(
-                                                  onChanged: (value) async {
-                                                    if (RegExp(
-                                                            r'^\d{2}[A-Z]{3}\d{5}$')
-                                                        .hasMatch(value)) {
-                                                      DocumentSnapshot<
-                                                              Map<String,
-                                                                  dynamic>>
-                                                          student =
-                                                          await FirebaseFirestore
-                                                              .instance
-                                                              .collection(
-                                                                  'user')
-                                                              .doc(vsecretaryID
-                                                                  .text)
-                                                              .get();
-
-                                                      if (student.exists) {
-                                                        Map<String, dynamic>
-                                                            studentData =
-                                                            student.data()!;
-                                                        vsecretaryName.text =
-                                                            studentData['name'];
-                                                      } else {
-                                                        vsecretaryName.text =
-                                                            '';
-                                                      }
-                                                    } else {
-                                                      vsecretaryName.text = '';
-                                                    }
-                                                  },
+                                                  onChanged: (value) => onTextChanged(value, vsecretaryName),
                                                   validator: (value) {
                                                     if (value!.isEmpty) {
                                                       return 'Please enter student ID';
@@ -873,8 +609,6 @@ class _AddEventState extends State<AddEvent> {
                                         child: Padding(
                                           padding: const EdgeInsets.all(8.0),
                                           child: Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
                                             mainAxisAlignment:
                                                 MainAxisAlignment.start,
                                             children: [
@@ -890,36 +624,7 @@ class _AddEventState extends State<AddEvent> {
                                               Expanded(
                                                 flex: 4,
                                                 child: CustomTextField(
-                                                  onChanged: (value) async {
-                                                    if (RegExp(
-                                                            r'^\d{2}[A-Z]{3}\d{5}$')
-                                                        .hasMatch(value)) {
-                                                      DocumentSnapshot<
-                                                              Map<String,
-                                                                  dynamic>>
-                                                          student =
-                                                          await FirebaseFirestore
-                                                              .instance
-                                                              .collection(
-                                                                  'user')
-                                                              .doc(vtreasurerID
-                                                                  .text)
-                                                              .get();
-
-                                                      if (student.exists) {
-                                                        Map<String, dynamic>
-                                                            studentData =
-                                                            student.data()!;
-                                                        vtreasurerName.text =
-                                                            studentData['name'];
-                                                      } else {
-                                                        vtreasurerName.text =
-                                                            '';
-                                                      }
-                                                    } else {
-                                                      vtreasurerName.text = '';
-                                                    }
-                                                  },
+                                                  onChanged: (value) => onTextChanged(value, vtreasurerName),
                                                   validator: (value) {
                                                     if (value!.isEmpty) {
                                                       return 'Please enter student ID';
@@ -946,8 +651,6 @@ class _AddEventState extends State<AddEvent> {
                                         child: Padding(
                                           padding: const EdgeInsets.all(8.0),
                                           child: Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
                                             mainAxisAlignment:
                                                 MainAxisAlignment.start,
                                             children: [
@@ -983,8 +686,6 @@ class _AddEventState extends State<AddEvent> {
                                         child: Padding(
                                           padding: const EdgeInsets.all(8.0),
                                           child: Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
                                             mainAxisAlignment:
                                                 MainAxisAlignment.start,
                                             children: [
@@ -1020,8 +721,6 @@ class _AddEventState extends State<AddEvent> {
                                         child: Padding(
                                           padding: const EdgeInsets.all(8.0),
                                           child: Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
                                             mainAxisAlignment:
                                                 MainAxisAlignment.start,
                                             children: [
@@ -1142,7 +841,10 @@ class _AddEventState extends State<AddEvent> {
                                                     context,
                                                     MaterialPageRoute(
                                                       builder: (context) =>
-                                                          ViewEvent(selectedSociety: widget.selectedSociety,),
+                                                          ViewEvent(
+                                                        selectedSociety: widget
+                                                            .selectedSociety,
+                                                      ),
                                                     ),
                                                   );
                                                   ScaffoldMessenger.of(context)
@@ -1153,8 +855,8 @@ class _AddEventState extends State<AddEvent> {
                                                       width: 225.0,
                                                       behavior: SnackBarBehavior
                                                           .floating,
-                                                      duration:
-                                                          const Duration(seconds: 3),
+                                                      duration: const Duration(
+                                                          seconds: 3),
                                                     ),
                                                   );
                                                 } catch (e) {

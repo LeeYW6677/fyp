@@ -25,16 +25,10 @@ class _AdvisorProfileState extends State<AdvisorProfile> {
   final department = TextEditingController();
 
   String? selectedGender;
-  String selectedDepartment = 'FOCS';
+  String selectedDepartment = 'Faculty of Computing and Information Technology';
   final GlobalKey<FormState> _formKey1 = GlobalKey<FormState>();
   final GlobalKey<FormState> _formKey2 = GlobalKey<FormState>();
-    final LocalStorage storage = LocalStorage('user');
-
-  @override
-  void initState() {
-    super.initState();
-    getData();
-  }
+  final LocalStorage storage = LocalStorage('user');
 
   Future<void> getData() async {
     User? user = FirebaseAuth.instance.currentUser;
@@ -123,6 +117,12 @@ class _AdvisorProfileState extends State<AdvisorProfile> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    getData();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const Header(),
@@ -132,7 +132,7 @@ class _AdvisorProfileState extends State<AdvisorProfile> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (Responsive.isDesktop(context))
-               const Expanded(
+              const Expanded(
                 child: CustomDrawer(),
               ),
             Expanded(
@@ -189,42 +189,6 @@ class _AdvisorProfileState extends State<AdvisorProfile> {
                                                   const Expanded(
                                                     flex: 1,
                                                     child: Text(
-                                                      'Name',
-                                                      style: TextStyle(
-                                                          fontSize: 16),
-                                                    ),
-                                                  ),
-                                                  Expanded(
-                                                    flex: 4,
-                                                    child: CustomTextField(
-                                                      controller: name,
-                                                      hintText:
-                                                          'Enter your name',
-                                                      validator: (value) {
-                                                        if (value!.isEmpty) {
-                                                          return 'Please enter your name';
-                                                        }
-                                                        return null;
-                                                      },
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                          Expanded(
-                                            child: Padding(
-                                              padding:
-                                                  const EdgeInsets.all(8.0),
-                                              child: Row(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.center,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.start,
-                                                children: [
-                                                  const Expanded(
-                                                    flex: 1,
-                                                    child: Text(
                                                       'Advisor ID',
                                                       style: TextStyle(
                                                           fontSize: 16),
@@ -243,10 +207,6 @@ class _AdvisorProfileState extends State<AdvisorProfile> {
                                               ),
                                             ),
                                           ),
-                                        ],
-                                      ),
-                                      Row(
-                                        children: [
                                           Expanded(
                                             child: Padding(
                                               padding:
@@ -272,6 +232,46 @@ class _AdvisorProfileState extends State<AdvisorProfile> {
                                                       hintText:
                                                           'Enter your email',
                                                       enabled: false,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: Padding(
+                                              padding:
+                                                  const EdgeInsets.all(8.0),
+                                              child: Row(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.center,
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.start,
+                                                children: [
+                                                  const Expanded(
+                                                    flex: 1,
+                                                    child: Text(
+                                                      'Name',
+                                                      style: TextStyle(
+                                                          fontSize: 16),
+                                                    ),
+                                                  ),
+                                                  Expanded(
+                                                    flex: 4,
+                                                    child: CustomTextField(
+                                                      controller: name,
+                                                      hintText:
+                                                          'Enter your name',
+                                                      validator: (value) {
+                                                        if (value!.isEmpty) {
+                                                          return 'Please enter your name';
+                                                        }
+                                                        return null;
+                                                      },
                                                     ),
                                                   ),
                                                 ],
@@ -491,7 +491,8 @@ class _AdvisorProfileState extends State<AdvisorProfile> {
                                               ),
                                             ),
                                           ),
-                                          if (storage.getItem('role') == 'advisor')
+                                          if (storage.getItem('role') ==
+                                              'advisor')
                                             Expanded(
                                               child: Padding(
                                                 padding:
@@ -523,21 +524,33 @@ class _AdvisorProfileState extends State<AdvisorProfile> {
                                                           dropdownItems: const [
                                                             DropdownMenuItem<
                                                                 String>(
-                                                              value: 'FOCS',
-                                                              child:
-                                                                  Text('FOCS'),
+                                                              value:
+                                                                  'Faculty of Computing and Information Technology',
+                                                              child: Text(
+                                                                  'Faculty of Computing and Information Technology',
+                                                                  overflow:
+                                                                      TextOverflow
+                                                                          .ellipsis),
                                                             ),
                                                             DropdownMenuItem<
                                                                 String>(
-                                                              value: 'FOAS',
-                                                              child:
-                                                                  Text('FOAS'),
+                                                              value:
+                                                                  'Faculty of Applied Science',
+                                                              child: Text(
+                                                                  'Faculty of Applied Science',
+                                                                  overflow:
+                                                                      TextOverflow
+                                                                          .ellipsis),
                                                             ),
                                                             DropdownMenuItem<
                                                                 String>(
-                                                              value: 'FAFB',
-                                                              child:
-                                                                  Text('FAFB'),
+                                                              value:
+                                                                  'Faculty of Accountancy, Finance and Business',
+                                                              child: Text(
+                                                                  'Faculty of Accountancy, Finance and Business',
+                                                                  overflow:
+                                                                      TextOverflow
+                                                                          .ellipsis),
                                                             ),
                                                           ],
                                                         )),
@@ -545,7 +558,8 @@ class _AdvisorProfileState extends State<AdvisorProfile> {
                                                 ),
                                               ),
                                             ),
-                                          if (storage.getItem('role') == 'branch head')
+                                          if (storage.getItem('role') ==
+                                              'branch head')
                                             const Expanded(
                                               child: SizedBox(),
                                             )
@@ -559,42 +573,6 @@ class _AdvisorProfileState extends State<AdvisorProfile> {
                                   key: _formKey2,
                                   child: Column(
                                     children: [
-                                      Row(children: [
-                                        Expanded(
-                                          child: Padding(
-                                            padding: const EdgeInsets.all(8.0),
-                                            child: Row(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.center,
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.start,
-                                              children: [
-                                                const Expanded(
-                                                  flex: 1,
-                                                  child: Text(
-                                                    'Name',
-                                                    style:
-                                                        TextStyle(fontSize: 16),
-                                                  ),
-                                                ),
-                                                Expanded(
-                                                  flex: 4,
-                                                  child: CustomTextField(
-                                                    controller: name,
-                                                    hintText: 'Enter your name',
-                                                    validator: (value) {
-                                                      if (value!.isEmpty) {
-                                                        return 'Please enter your name';
-                                                      }
-                                                      return null;
-                                                    },
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ]),
                                       Row(
                                         children: [
                                           Expanded(
@@ -655,6 +633,42 @@ class _AdvisorProfileState extends State<AdvisorProfile> {
                                                     hintText:
                                                         'Enter your email',
                                                     enabled: false,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ]),
+                                      Row(children: [
+                                        Expanded(
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Row(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.center,
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.start,
+                                              children: [
+                                                const Expanded(
+                                                  flex: 1,
+                                                  child: Text(
+                                                    'Name',
+                                                    style:
+                                                        TextStyle(fontSize: 16),
+                                                  ),
+                                                ),
+                                                Expanded(
+                                                  flex: 4,
+                                                  child: CustomTextField(
+                                                    controller: name,
+                                                    hintText: 'Enter your name',
+                                                    validator: (value) {
+                                                      if (value!.isEmpty) {
+                                                        return 'Please enter your name';
+                                                      }
+                                                      return null;
+                                                    },
                                                   ),
                                                 ),
                                               ],
@@ -918,21 +932,33 @@ class _AdvisorProfileState extends State<AdvisorProfile> {
                                                           dropdownItems: const [
                                                             DropdownMenuItem<
                                                                 String>(
-                                                              value: 'FOCS',
-                                                              child:
-                                                                  Text('FOCS'),
+                                                              value:
+                                                                  'Faculty of Computing and Information Technology',
+                                                              child: Text(
+                                                                  'Faculty of Computing and Information Technology',
+                                                                  overflow:
+                                                                      TextOverflow
+                                                                          .ellipsis),
                                                             ),
                                                             DropdownMenuItem<
                                                                 String>(
-                                                              value: 'FOAS',
-                                                              child:
-                                                                  Text('FOAS'),
+                                                              value:
+                                                                  'Faculty of Applied Science',
+                                                              child: Text(
+                                                                  'Faculty of Applied Science',
+                                                                  overflow:
+                                                                      TextOverflow
+                                                                          .ellipsis),
                                                             ),
                                                             DropdownMenuItem<
                                                                 String>(
-                                                              value: 'FAFB',
-                                                              child:
-                                                                  Text('FAFB'),
+                                                              value:
+                                                                  'Faculty of Accountancy, Finance and Business',
+                                                              child: Text(
+                                                                  'Faculty of Accountancy, Finance and Business',
+                                                                  overflow:
+                                                                      TextOverflow
+                                                                          .ellipsis),
                                                             ),
                                                           ],
                                                         )),

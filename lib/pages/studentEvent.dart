@@ -37,9 +37,8 @@ class _StudentEventState extends State<StudentEvent> {
           .where('position', whereIn: position)
           .get();
 
-      List<String> eventIds = relatedEvent.docs
-          .map((doc) => doc['eventID'] as String)
-          .toList();
+      List<String> eventIds =
+          relatedEvent.docs.map((doc) => doc['eventID'] as String).toList();
 
       final QuerySnapshot<Map<String, dynamic>> eventSnapshot = await firestore
           .collection('event')
@@ -212,7 +211,6 @@ class _StudentEventState extends State<StudentEvent> {
                                     ),
                                   ),
                                   Container(
-                                    height: 2000,
                                     decoration: BoxDecoration(
                                       color: Colors.white,
                                       border: Border.all(
@@ -261,8 +259,6 @@ class _StudentEventState extends State<StudentEvent> {
                                                     DataColumn(
                                                         label:
                                                             Text('President')),
-                                                    DataColumn(
-                                                        label: Text('Advisor')),
                                                     DataColumn(
                                                         label: Text('Date')),
                                                     DataColumn(
@@ -556,7 +552,8 @@ class _EventDataSource extends DataTableSource {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => Proposal(selectedEvent: event['eventID'].toString()),
+                    builder: (context) =>
+                        Proposal(selectedEvent: event['eventID'].toString()),
                   ),
                 );
               },
@@ -645,7 +642,6 @@ class _EventDataSource2 extends DataTableSource {
       cells: [
         DataCell(Text(event['eventName'].toString())),
         DataCell(Text(event['president'].toString())),
-        DataCell(Text(event['advisorName'].toString())),
         DataCell(Text(DateFormat('dd-MM-yyyy').format(event['date'].toDate()))),
         DataCell(Row(
           children: [
@@ -654,7 +650,9 @@ class _EventDataSource2 extends DataTableSource {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => Proposal(selectedEvent: event['eventID'],),
+                    builder: (context) => Proposal(
+                      selectedEvent: event['eventID'],
+                    ),
                   ),
                 );
               },

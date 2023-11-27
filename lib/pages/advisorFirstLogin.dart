@@ -24,17 +24,15 @@ class _AdvisorFirstLoginState extends State<AdvisorFirstLogin> {
   final contact = TextEditingController();
   final department = TextEditingController();
   String selectedGender = 'M';
-  String selectedDepartment = '';
-  List<String> departmentItems = ['FOCS', 'FOAS', 'FAFB'];
+  String selectedDepartment = 'Faculty of Computing and Information Technology';
+  List<String> departmentItems = [
+    'Faculty of Computing and Information Technology',
+    'Faculty of Applied Science',
+    'Faculty of Accountancy, Finance and Business'
+  ];
   String? idErrorText;
   String? icErrorText;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-
-  @override
-  void initState() {
-    super.initState();
-    getData();
-  }
 
   Future<void> getData() async {
     FirebaseFirestore firestore = FirebaseFirestore.instance;
@@ -104,7 +102,7 @@ class _AdvisorFirstLoginState extends State<AdvisorFirstLogin> {
                 builder: (context) => const Home(),
               ),
             ).then((_) => ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
+                  const SnackBar(
                     content: Text('Your personal details has been registered.'),
                     width: 225.0,
                     behavior: SnackBarBehavior.floating,
@@ -114,7 +112,7 @@ class _AdvisorFirstLoginState extends State<AdvisorFirstLogin> {
           }
         } catch (error) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            const SnackBar(
               content: Text(
                   'Failed to register your personal details. Please try again later'),
               width: 225.0,
@@ -125,6 +123,11 @@ class _AdvisorFirstLoginState extends State<AdvisorFirstLogin> {
         }
       }
     }
+  }
+
+  void initState() {
+    super.initState();
+    getData();
   }
 
   @override
@@ -494,13 +497,14 @@ class _AdvisorFirstLoginState extends State<AdvisorFirstLogin> {
                                         child: CustomDDL<String>(
                                           controller: department,
                                           hintText: 'Select your department',
-                                          value:
-                                              selectedDepartment,
+                                          value: selectedDepartment,
                                           dropdownItems:
                                               departmentItems.map((department) {
                                             return DropdownMenuItem<String>(
                                               value: department,
-                                              child: Text(department),
+                                              child: Text(department,
+                                                  overflow:
+                                                      TextOverflow.ellipsis),
                                             );
                                           }).toList(),
                                         )),

@@ -24,17 +24,11 @@ class _ProfileState extends State<Profile> {
   final programme = TextEditingController();
   final faculty = TextEditingController();
   String? selectedGender;
-  String selectedProgramme = 'Computer Science';
-  String selectedFaculty = 'FOCS';
+  String selectedProgramme = 'Diploma in Computer Science';
+  String selectedFaculty = 'Faculty of Computing and Information Technology';
   List<String> programmeItems = [];
   final GlobalKey<FormState> _formKey1 = GlobalKey<FormState>();
   final GlobalKey<FormState> _formKey2 = GlobalKey<FormState>();
-
-  @override
-  void initState() {
-    super.initState();
-    getData();
-  }
 
   Future<void> getData() async {
     User? user = FirebaseAuth.instance.currentUser;
@@ -180,42 +174,6 @@ class _ProfileState extends State<Profile> {
                                                   const Expanded(
                                                     flex: 1,
                                                     child: Text(
-                                                      'Name',
-                                                      style: TextStyle(
-                                                          fontSize: 16),
-                                                    ),
-                                                  ),
-                                                  Expanded(
-                                                    flex: 4,
-                                                    child: CustomTextField(
-                                                      controller: name,
-                                                      hintText:
-                                                          'Enter your name',
-                                                      validator: (value) {
-                                                        if (value!.isEmpty) {
-                                                          return 'Please enter your name';
-                                                        }
-                                                        return null;
-                                                      },
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                          Expanded(
-                                            child: Padding(
-                                              padding:
-                                                  const EdgeInsets.all(8.0),
-                                              child: Row(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.center,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.start,
-                                                children: [
-                                                  const Expanded(
-                                                    flex: 1,
-                                                    child: Text(
                                                       'Student ID',
                                                       style: TextStyle(
                                                           fontSize: 16),
@@ -234,10 +192,6 @@ class _ProfileState extends State<Profile> {
                                               ),
                                             ),
                                           ),
-                                        ],
-                                      ),
-                                      Row(
-                                        children: [
                                           Expanded(
                                             child: Padding(
                                               padding:
@@ -263,6 +217,46 @@ class _ProfileState extends State<Profile> {
                                                       hintText:
                                                           'Enter your email',
                                                       enabled: false,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: Padding(
+                                              padding:
+                                                  const EdgeInsets.all(8.0),
+                                              child: Row(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.center,
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.start,
+                                                children: [
+                                                  const Expanded(
+                                                    flex: 1,
+                                                    child: Text(
+                                                      'Name',
+                                                      style: TextStyle(
+                                                          fontSize: 16),
+                                                    ),
+                                                  ),
+                                                  Expanded(
+                                                    flex: 4,
+                                                    child: CustomTextField(
+                                                      controller: name,
+                                                      hintText:
+                                                          'Enter your name',
+                                                      validator: (value) {
+                                                        if (value!.isEmpty) {
+                                                          return 'Please enter your name';
+                                                        }
+                                                        return null;
+                                                      },
                                                     ),
                                                   ),
                                                 ],
@@ -533,8 +527,11 @@ class _ProfileState extends State<Profile> {
                                                           return DropdownMenuItem<
                                                               String>(
                                                             value: programme,
-                                                            child:
-                                                                Text(programme),
+                                                            child: Text(
+                                                                programme,
+                                                                overflow:
+                                                                    TextOverflow
+                                                                        .ellipsis),
                                                           );
                                                         }).toList(),
                                                       )),
@@ -579,18 +576,33 @@ class _ProfileState extends State<Profile> {
                                                         dropdownItems: const [
                                                           DropdownMenuItem<
                                                               String>(
-                                                            value: 'FOCS',
-                                                            child: Text('FOCS'),
+                                                            value:
+                                                                'Faculty of Computing and Information Technology',
+                                                            child: Text(
+                                                                'Faculty of Computing and Information Technology',
+                                                                overflow:
+                                                                    TextOverflow
+                                                                        .ellipsis),
                                                           ),
                                                           DropdownMenuItem<
                                                               String>(
-                                                            value: 'FOAS',
-                                                            child: Text('FOAS'),
+                                                            value:
+                                                                'Faculty of Applied Science',
+                                                            child: Text(
+                                                                'Faculty of Applied Science',
+                                                                overflow:
+                                                                    TextOverflow
+                                                                        .ellipsis),
                                                           ),
                                                           DropdownMenuItem<
                                                               String>(
-                                                            value: 'FAFB',
-                                                            child: Text('FAFB'),
+                                                            value:
+                                                                'Faculty of Accountancy, Finance and Business',
+                                                            child: Text(
+                                                                'Faculty of Accountancy, Finance and Business',
+                                                                overflow:
+                                                                    TextOverflow
+                                                                        .ellipsis),
                                                           ),
                                                         ],
                                                       )),
@@ -608,42 +620,6 @@ class _ProfileState extends State<Profile> {
                                   key: _formKey2,
                                   child: Column(
                                     children: [
-                                      Row(children: [
-                                        Expanded(
-                                          child: Padding(
-                                            padding: const EdgeInsets.all(8.0),
-                                            child: Row(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.center,
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.start,
-                                              children: [
-                                                const Expanded(
-                                                  flex: 1,
-                                                  child: Text(
-                                                    'Name',
-                                                    style:
-                                                        TextStyle(fontSize: 16),
-                                                  ),
-                                                ),
-                                                Expanded(
-                                                  flex: 4,
-                                                  child: CustomTextField(
-                                                    controller: name,
-                                                    hintText: 'Enter your name',
-                                                    validator: (value) {
-                                                      if (value!.isEmpty) {
-                                                        return 'Please enter your name';
-                                                      }
-                                                      return null;
-                                                    },
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ]),
                                       Row(
                                         children: [
                                           Expanded(
@@ -711,6 +687,46 @@ class _ProfileState extends State<Profile> {
                                           ),
                                         ),
                                       ]),
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: Padding(
+                                              padding:
+                                                  const EdgeInsets.all(8.0),
+                                              child: Row(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.center,
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.start,
+                                                children: [
+                                                  const Expanded(
+                                                    flex: 1,
+                                                    child: Text(
+                                                      'Name',
+                                                      style: TextStyle(
+                                                          fontSize: 16),
+                                                    ),
+                                                  ),
+                                                  Expanded(
+                                                    flex: 4,
+                                                    child: CustomTextField(
+                                                      controller: name,
+                                                      hintText:
+                                                          'Enter your name',
+                                                      validator: (value) {
+                                                        if (value!.isEmpty) {
+                                                          return 'Please enter your name';
+                                                        }
+                                                        return null;
+                                                      },
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                       Row(children: [
                                         Expanded(
                                           child: Padding(
@@ -965,15 +981,18 @@ class _ProfileState extends State<Profile> {
                                                         hintText:
                                                             'Select your programme',
                                                         value:
-                                                            selectedProgramme,  
+                                                            selectedProgramme,
                                                         dropdownItems:
                                                             programmeItems.map(
                                                                 (programme) {
                                                           return DropdownMenuItem<
                                                               String>(
                                                             value: programme,
-                                                            child:
-                                                                Text(programme),
+                                                            child: Text(
+                                                                programme,
+                                                                overflow:
+                                                                    TextOverflow
+                                                                        .ellipsis),
                                                           );
                                                         }).toList(),
                                                       )),
@@ -1022,18 +1041,33 @@ class _ProfileState extends State<Profile> {
                                                         dropdownItems: const [
                                                           DropdownMenuItem<
                                                               String>(
-                                                            value: 'FOCS',
-                                                            child: Text('FOCS'),
+                                                            value:
+                                                                'Faculty of Computing and Information Technology',
+                                                            child: Text(
+                                                                'Faculty of Computing and Information Technology',
+                                                                overflow:
+                                                                    TextOverflow
+                                                                        .ellipsis),
                                                           ),
                                                           DropdownMenuItem<
                                                               String>(
-                                                            value: 'FOAS',
-                                                            child: Text('FOAS'),
+                                                            value:
+                                                                'Faculty of Applied Science',
+                                                            child: Text(
+                                                                'Faculty of Applied Science',
+                                                                overflow:
+                                                                    TextOverflow
+                                                                        .ellipsis),
                                                           ),
                                                           DropdownMenuItem<
                                                               String>(
-                                                            value: 'FAFB',
-                                                            child: Text('FAFB'),
+                                                            value:
+                                                                'Faculty of Accountancy, Finance and Business',
+                                                            child: Text(
+                                                                'Faculty of Accountancy, Finance and Business',
+                                                                overflow:
+                                                                    TextOverflow
+                                                                        .ellipsis),
                                                           ),
                                                         ],
                                                       )),
@@ -1106,23 +1140,36 @@ class _ProfileState extends State<Profile> {
 
   void getProgrammesForFaculty(String faculty) {
     switch (faculty) {
-      case 'FOCS':
-        selectedProgramme = 'Computer Science';
+      case 'Faculty of Computing and Information Technology':
+        selectedProgramme = 'Diploma in Computer Science';
         programmeItems = [
-          'Computer Science',
-          'Information Technology',
-          'Software Engineering'
+          'Diploma in Computer Science',
+          'Diploma in Information Technology',
+          'Diploma in Information Systems',
+          'Bachelor of Software Engineering (Hons)',
+          'Bachelor of Computer Science (Hons) in Data Science',
+          'Bachelor of Information Technology (Hons) in Internet Technology',
         ];
-      case 'FOAS':
-        selectedProgramme = 'Food Science';
+      case 'Faculty of Applied Science':
+        selectedProgramme = 'Diploma in Science';
         programmeItems = [
-          'Food Science',
-          'Sports and Exercise Science',
-          'Nutrition'
+          'Diploma in Science',
+          'Diploma in Sports and Exercise Science',
+          'Diploma in Food Science',
+          'Bachelor of Science (Hons) in Food Science',
+          'Bachelor of Science (Hons) in Analytical Chemistry',
+          'Bachelor of Science (Hons) in Nutrition',
         ];
-      case 'FAFB':
-        selectedProgramme = 'Business Administration';
-        programmeItems = ['Business Administration', 'Finance', 'Marketing'];
+      case 'Faculty of Accountancy, Finance and Business':
+        selectedProgramme = 'Diploma in Accounting';
+        programmeItems = [
+          'Diploma in Accounting',
+          'Diploma in Banking and Finance',
+          'Diploma in E-Marketing',
+          'Bachelor of Accounting (Hons)',
+          'Bachelor of Banking and Finance (Hons)',
+          'Bachelor of Business (Hons) in Entrepreneurship'
+        ];
       default:
         break;
     }

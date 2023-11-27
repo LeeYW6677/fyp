@@ -76,6 +76,8 @@ class _SocietyState extends State<Society> {
               .where('societyID', isEqualTo: selectedSociety)
               .where('position', whereIn: ['Advisor', 'Co-advisor']).get();
 
+      advisorList.clear();
+      coAdvisorList.clear();
       for (var docSnapshot in advisorSnapshot.docs) {
         Map<String, dynamic> userData = docSnapshot.data();
 
@@ -87,8 +89,12 @@ class _SocietyState extends State<Society> {
         }
       }
 
-      allAdvisor.addAll(advisorList);
-      allAdvisor.addAll(coAdvisorList);
+      allAdvisor.clear();
+
+      setState(() {
+        allAdvisor.addAll(advisorList);
+        allAdvisor.addAll(coAdvisorList);
+      });
 
       // Fetch member data
       final QuerySnapshot<Map<String, dynamic>> membersSnapshot =
@@ -159,6 +165,7 @@ class _SocietyState extends State<Society> {
     }
   }
 
+ @override
   void initState() {
     super.initState();
     getData();
@@ -166,368 +173,398 @@ class _SocietyState extends State<Society> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: const Header(),
-      drawer: !Responsive.isDesktop(context)
-          ? const CustomDrawer(
-              index: 2,
-              page: 'Society',
-            )
-          : null,
-      body: SafeArea(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (Responsive.isDesktop(context))
-              const Expanded(
-                child: CustomDrawer(
-                  index: 2,
-                  page: 'Society',
-                ),
-              ),
-            Expanded(
-              flex: 5,
-              child: SingleChildScrollView(
-                child: Column(children: [
-                  const NavigationMenu(
-                    buttonTexts: ['Society'],
-                    destination: [Society()],
-                  ),
-                  Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Society',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 20,
-                              ),
-                            ),
-                            const Divider(
-                              thickness: 0.1,
-                              color: Colors.black,
-                            ),
-                            Row(
-                              children: [
-                                const Text('View'),
-                                const SizedBox(
-                                  width: 15,
-                                ),
-                                SizedBox(
-                                    width: 300,
-                                    child: CustomDDL<String>(
-                                      controller: society,
-                                      hintText: 'Select society',
-                                      value: selectedSociety,
-                                      onChanged: (String? newValue) {
-                                        setState(() {
-                                          selectedSociety = newValue!;
-                                          fetchSocietyDetails();
-                                        });
-                                      },
-                                      dropdownItems:
-                                          societyIDs.map((societyID) {
-                                        String societyName =
-                                            getSocietyNameById(societyID);
-
-                                        return DropdownMenuItem<String>(
-                                          value: societyID,
-                                          child: Text(societyName),
-                                        );
-                                      }).toList(),
-                                    )),
-                              ],
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                CustomButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const AddSociety(),
-                                      ),
-                                    );
-                                  },
-                                  text: 'Add Society',
-                                  width: 100,
-                                  buttonColor: Colors.green,
-                                ),
-                                const SizedBox(
-                                  width: 15,
-                                ),
-                                CustomButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => ViewEvent(
-                                          selectedSociety: selectedSociety,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                  text: 'View Event',
-                                  width: 100,
-                                ),
-                                const SizedBox(
-                                  width: 15,
-                                ),
-                              ],
-                            ),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 20.0),
-                              child: Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    border: Border.all(
-                                      color: Colors.grey,
-                                      width: 1.0,
+          return Scaffold(
+            appBar: const Header(),
+            drawer: !Responsive.isDesktop(context)
+                ? const CustomDrawer(
+                    index: 2,
+                    page: 'Society',
+                  )
+                : null,
+            body: SafeArea(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (Responsive.isDesktop(context))
+                    const Expanded(
+                      child: CustomDrawer(
+                        index: 2,
+                        page: 'Society',
+                      ),
+                    ),
+                  Expanded(
+                    flex: 5,
+                    child: SingleChildScrollView(
+                      child: Column(children: [
+                        const NavigationMenu(
+                          buttonTexts: ['Society'],
+                          destination: [Society()],
+                        ),
+                        Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Society',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20,
                                     ),
                                   ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(16.0),
-                                    child: Column(
-                                      children: [
-                                        LayoutBuilder(
-                                            builder: (context, constraints) {
-                                          if (!Responsive.isMobile(context)) {
-                                            return Column(
-                                              children: [
-                                                Row(
-                                                  children: [
-                                                    const Expanded(
-                                                      flex: 2,
-                                                      child: Text(
-                                                        'Advisor:',
-                                                        style: TextStyle(
-                                                          fontSize: 16,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    Expanded(
-                                                      flex: 4,
-                                                      child: Text(
-                                                        advisorList.isNotEmpty
-                                                            ? advisorList[0]
-                                                                ['name']
-                                                            : '',
-                                                        style: const TextStyle(
-                                                          fontSize: 16,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    const Expanded(
-                                                      flex: 2,
-                                                      child: Text(
-                                                        'Co-Advisor:',
-                                                        style: TextStyle(
-                                                          fontSize: 16,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    Expanded(
-                                                      flex: 4,
-                                                      child: Text(
-                                                        coAdvisorList.isNotEmpty
-                                                            ? coAdvisorList[0]
-                                                                ['name']
-                                                            : '',
-                                                        style: const TextStyle(
-                                                          fontSize: 16,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                                const SizedBox(
-                                                  height: 5,
-                                                ),
-                                                Row(
-                                                  children: [
-                                                    Expanded(
-                                                      flex: 2,
-                                                      child: Container(),
-                                                    ),
-                                                    Expanded(
-                                                      flex: 4,
-                                                      child: Container(),
-                                                    ),
-                                                    Expanded(
-                                                      flex: 2,
-                                                      child: Container(),
-                                                    ),
-                                                    Expanded(
-                                                      flex: 4,
-                                                      child: Text(
-                                                        coAdvisorList.isNotEmpty
-                                                            ? coAdvisorList[1]
-                                                                ['name']
-                                                            : '',
-                                                        style: const TextStyle(
-                                                          fontSize: 16,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                )
-                                              ],
-                                            );
-                                          } else {
-                                            return Column(
-                                              children: [
-                                                Row(
-                                                  children: [
-                                                    const Expanded(
-                                                      flex: 2,
-                                                      child: Text(
-                                                        'Advisor:',
-                                                        style: TextStyle(
-                                                          fontSize: 16,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    Expanded(
-                                                      flex: 4,
-                                                      child: Text(
-                                                        advisorList[0]['name'],
-                                                        style: const TextStyle(
-                                                          fontSize: 16,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                                Row(
-                                                  children: [
-                                                    const Expanded(
-                                                      flex: 2,
-                                                      child: Text(
-                                                        'Co-Advisor:',
-                                                        style: TextStyle(
-                                                          fontSize: 16,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    Expanded(
-                                                      flex: 4,
-                                                      child: Text(
-                                                        coAdvisorList[0]
-                                                            ['name'],
-                                                        style: const TextStyle(
-                                                          fontSize: 16,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                                Row(
-                                                  children: [
-                                                    Expanded(
-                                                      flex: 2,
-                                                      child: Container(),
-                                                    ),
-                                                    Expanded(
-                                                      flex: 4,
-                                                      child: Text(
-                                                        coAdvisorList[1]
-                                                            ['name'],
-                                                        style: const TextStyle(
-                                                          fontSize: 16,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                )
-                                              ],
-                                            );
-                                          }
-                                        }),
-                                        Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                              vertical: 20),
-                                          child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.end,
+                                  const Divider(
+                                    thickness: 0.1,
+                                    color: Colors.black,
+                                  ),
+                                  Row(
+                                    children: [
+                                      const Text('View'),
+                                      const SizedBox(
+                                        width: 15,
+                                      ),
+                                      SizedBox(
+                                          width: 300,
+                                          child: CustomDDL<String>(
+                                            controller: society,
+                                            hintText: 'Select society',
+                                            value: selectedSociety,
+                                            onChanged: (String? newValue) {
+                                              setState(() {
+                                                selectedSociety = newValue!;
+                                                fetchSocietyDetails();
+                                              });
+                                            },
+                                            dropdownItems:
+                                                societyIDs.map((societyID) {
+                                              String societyName =
+                                                  getSocietyNameById(societyID);
+
+                                              return DropdownMenuItem<String>(
+                                                value: societyID,
+                                                child: Text(societyName,
+                                                    overflow:
+                                                        TextOverflow.ellipsis),
+                                              );
+                                            }).toList(),
+                                          )),
+                                    ],
+                                  ),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      CustomButton(
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  const AddSociety(),
+                                            ),
+                                          );
+                                        },
+                                        text: 'Add Society',
+                                        width: 100,
+                                        buttonColor: Colors.green,
+                                      ),
+                                      const SizedBox(
+                                        width: 15,
+                                      ),
+                                      CustomButton(
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => ViewEvent(
+                                                selectedSociety:
+                                                    selectedSociety,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                        text: 'View Event',
+                                        width: 100,
+                                      ),
+                                      const SizedBox(
+                                        width: 15,
+                                      ),
+                                    ],
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 20.0),
+                                    child: Container(
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          border: Border.all(
+                                            color: Colors.grey,
+                                            width: 1.0,
+                                          ),
+                                        ),
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(16.0),
+                                          child: Column(
                                             children: [
-                                              CustomButton(
-                                                onPressed: () {
-                                                  showDialog(
-                                                      context: context,
-                                                      builder: (_) {
-                                                        return ChangeDialog(
-                                                          original: allAdvisor,
-                                                          selectedSociety:
-                                                              selectedSociety,
-                                                          function: () {
-                                                            fetchSocietyDetails();
-                                                          },
-                                                        );
-                                                      });
-                                                },
-                                                text: 'Change Advisor',
-                                                width: 150,
+                                              LayoutBuilder(builder:
+                                                  (context, constraints) {
+                                                if (!Responsive.isMobile(
+                                                    context)) {
+                                                  return Column(
+                                                    children: [
+                                                      Row(
+                                                        children: [
+                                                          const Expanded(
+                                                            flex: 2,
+                                                            child: Text(
+                                                              'Advisor:',
+                                                              style: TextStyle(
+                                                                fontSize: 16,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                          Expanded(
+                                                            flex: 4,
+                                                            child: Text(
+                                                              advisorList
+                                                                      .isNotEmpty
+                                                                  ? advisorList[
+                                                                      0]['name']
+                                                                  : '',
+                                                              style:
+                                                                  const TextStyle(
+                                                                fontSize: 16,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                          const Expanded(
+                                                            flex: 2,
+                                                            child: Text(
+                                                              'Co-Advisor:',
+                                                              style: TextStyle(
+                                                                fontSize: 16,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                          Expanded(
+                                                            flex: 4,
+                                                            child: Text(
+                                                              coAdvisorList
+                                                                      .isNotEmpty
+                                                                  ? coAdvisorList[
+                                                                      0]['name']
+                                                                  : '',
+                                                              style:
+                                                                  const TextStyle(
+                                                                fontSize: 16,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      const SizedBox(
+                                                        height: 5,
+                                                      ),
+                                                      Row(
+                                                        children: [
+                                                          Expanded(
+                                                            flex: 2,
+                                                            child: Container(),
+                                                          ),
+                                                          Expanded(
+                                                            flex: 4,
+                                                            child: Container(),
+                                                          ),
+                                                          Expanded(
+                                                            flex: 2,
+                                                            child: Container(),
+                                                          ),
+                                                          Expanded(
+                                                            flex: 4,
+                                                            child: Text(
+                                                              coAdvisorList
+                                                                      .isNotEmpty
+                                                                  ? coAdvisorList[
+                                                                      1]['name']
+                                                                  : '',
+                                                              style:
+                                                                  const TextStyle(
+                                                                fontSize: 16,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      )
+                                                    ],
+                                                  );
+                                                } else {
+                                                  return Column(
+                                                    children: [
+                                                      Row(
+                                                        children: [
+                                                          const Expanded(
+                                                            flex: 2,
+                                                            child: Text(
+                                                              'Advisor:',
+                                                              style: TextStyle(
+                                                                fontSize: 16,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                          Expanded(
+                                                            flex: 4,
+                                                            child: Text(
+                                                              advisorList
+                                                                      .isNotEmpty
+                                                                  ? advisorList[
+                                                                      0]['name']
+                                                                  : '',
+                                                              style:
+                                                                  const TextStyle(
+                                                                fontSize: 16,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      Row(
+                                                        children: [
+                                                          const Expanded(
+                                                            flex: 2,
+                                                            child: Text(
+                                                              'Co-Advisor:',
+                                                              style: TextStyle(
+                                                                fontSize: 16,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                          Expanded(
+                                                            flex: 4,
+                                                            child: Text(
+                                                              coAdvisorList
+                                                                      .isNotEmpty
+                                                                  ? coAdvisorList[
+                                                                      0]['name']
+                                                                  : '',
+                                                              style:
+                                                                  const TextStyle(
+                                                                fontSize: 16,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      Row(
+                                                        children: [
+                                                          Expanded(
+                                                            flex: 2,
+                                                            child: Container(),
+                                                          ),
+                                                          Expanded(
+                                                            flex: 4,
+                                                            child: Text(
+                                                              coAdvisorList
+                                                                      .isNotEmpty
+                                                                  ? coAdvisorList[
+                                                                      1]['name']
+                                                                  : '',
+                                                              style:
+                                                                  const TextStyle(
+                                                                fontSize: 16,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      )
+                                                    ],
+                                                  );
+                                                }
+                                              }),
+                                              Padding(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        vertical: 20),
+                                                child: Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.end,
+                                                  children: [
+                                                    CustomButton(
+                                                      onPressed: () {
+                                                        showDialog(
+                                                            context: context,
+                                                            builder: (_) {
+                                                              return ChangeDialog(
+                                                                original:
+                                                                    allAdvisor,
+                                                                selectedSociety:
+                                                                    selectedSociety,
+                                                                function: () {
+                                                                  fetchSocietyDetails();
+                                                                },
+                                                              );
+                                                            });
+                                                      },
+                                                      text: 'Change Advisor',
+                                                      width: 150,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              Row(
+                                                children: [
+                                                  Expanded(
+                                                    child: SizedBox(
+                                                      width:
+                                                          MediaQuery.of(context)
+                                                              .size
+                                                              .width,
+                                                      child: CustomDataTable(
+                                                        context: context,
+                                                        selectedSociety:
+                                                            selectedSociety,
+                                                        fetchSocietyDetails:
+                                                            fetchSocietyDetails,
+                                                        highcomm: highcomm,
+                                                        lowcomm: lowcomm,
+                                                        columns: const [
+                                                          DataColumn(
+                                                            label: Text('Name'),
+                                                          ),
+                                                          DataColumn(
+                                                              label: Text(
+                                                                  'Student ID')),
+                                                          DataColumn(
+                                                              label: Text(
+                                                                  'Email')),
+                                                          DataColumn(
+                                                              label: Text(
+                                                                  'IC No.')),
+                                                          DataColumn(
+                                                              label: Text(
+                                                                  'Contact')),
+                                                          DataColumn(
+                                                              label: Text(
+                                                                  'Position')),
+                                                        ],
+                                                        source:
+                                                            _MembersDataSource(
+                                                                _members),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
                                             ],
                                           ),
-                                        ),
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: SizedBox(
-                                                width: MediaQuery.of(context)
-                                                    .size
-                                                    .width,
-                                                child: CustomDataTable(
-                                                  context: context,
-                                                  selectedSociety:
-                                                      selectedSociety,
-                                                  fetchSocietyDetails:
-                                                      fetchSocietyDetails,
-                                                  highcomm: highcomm,
-                                                  lowcomm: lowcomm,
-                                                  columns: const [
-                                                    DataColumn(
-                                                      label: Text('Name'),
-                                                    ),
-                                                    DataColumn(
-                                                        label:
-                                                            Text('Student ID')),
-                                                    DataColumn(
-                                                        label: Text('Email')),
-                                                    DataColumn(
-                                                        label: Text('IC No.')),
-                                                    DataColumn(
-                                                        label: Text('Contact')),
-                                                    DataColumn(
-                                                        label:
-                                                            Text('Position')),
-                                                  ],
-                                                  source: _MembersDataSource(
-                                                      _members),
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  )),
-                            ),
-                          ]))
-                ]),
+                                        )),
+                                  ),
+                                ]))
+                      ]),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
-      bottomNavigationBar: const Footer(),
-    );
+            bottomNavigationBar: const Footer(),
+          );
   }
 }
 
@@ -675,18 +712,29 @@ class _CustomDataTableState extends State<CustomDataTable> {
             ),
             CustomButton(
               onPressed: () {
-                showDialog(
-                    context: widget.context,
-                    builder: (_) {
-                      return EditDialog(
-                        selectedSociety: widget.selectedSociety,
-                        highcomm: widget.highcomm,
-                        lowcomm: widget.lowcomm,
-                        function: () {
-                          widget.fetchSocietyDetails();
-                        },
-                      );
-                    });
+                if (widget.lowcomm.isNotEmpty) {
+                  showDialog(
+                      context: widget.context,
+                      builder: (_) {
+                        return EditDialog(
+                          selectedSociety: widget.selectedSociety,
+                          highcomm: widget.highcomm,
+                          lowcomm: widget.lowcomm,
+                          function: () {
+                            widget.fetchSocietyDetails();
+                          },
+                        );
+                      });
+                } else {
+                  ScaffoldMessenger.of(widget.context).showSnackBar(
+                    const SnackBar(
+                      content: Text('There is no available member to promote.'),
+                      width: 300.0,
+                      behavior: SnackBarBehavior.floating,
+                      duration: Duration(seconds: 3),
+                    ),
+                  );
+                }
               },
               text: 'Promote',
               width: 100,

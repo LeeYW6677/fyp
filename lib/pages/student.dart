@@ -379,14 +379,16 @@ class _StudentDataSource extends DataTableSource {
     }
   }
 
-  void _showConfirmationDialog(
-      BuildContext context, int index, Map<String, dynamic> student, bool status) {
+  void _showConfirmationDialog(BuildContext context, int index,
+      Map<String, dynamic> student, bool status) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text(status ? 'Disable Account' : 'Enable Account'),
-          content: Text(status ? 'Are you sure you want to disable the account of ${student['id']}?' : 'Are you sure you want to enable the account of ${student['id']}?'),
+          content: Text(status
+              ? 'Are you sure you want to disable the account of ${student['id']}?'
+              : 'Are you sure you want to enable the account of ${student['id']}?'),
           actions: [
             TextButton(
               onPressed: () {
@@ -397,8 +399,7 @@ class _StudentDataSource extends DataTableSource {
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                updateStudentStatus(
-                    index, student['id'], !student['status']);
+                updateStudentStatus(index, student['id'], !student['status']);
               },
               child: Text('Confirm'),
             ),

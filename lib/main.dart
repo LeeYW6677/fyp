@@ -2,12 +2,11 @@ import 'dart:ui';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:fyp/pages/addEvent.dart';
 import 'package:fyp/pages/home.dart';
 import 'package:fyp/pages/login.dart';
 import 'package:fyp/functions/firebase_options.dart';
-import 'package:fyp/pages/proposal.dart';
-import 'package:fyp/pages/schedule.dart';
-import 'package:fyp/pages/studentEvent.dart';
+import 'package:fyp/pages/viewEvent.dart';
 
 
 void main() async {
@@ -45,7 +44,7 @@ class _SocietyManagementSystemState extends State<SocietyManagementSystem> {
           thumbVisibility: MaterialStateProperty.all<bool>(true),
         ),
       ),
-      home: user != null ? const Schedule(selectedEvent: 'E001',) : const Login(),
+      home: user != null ? const ViewEvent(selectedSociety: 'S001',) : const Login(),
     );
   }
 }

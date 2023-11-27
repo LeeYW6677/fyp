@@ -36,108 +36,131 @@ class _AddSocietyState extends State<AddSociety> {
 
   final GlobalKey<FormState> _formKey1 = GlobalKey<FormState>();
 
+  Future<void> onTextChanged(
+      String value, TextEditingController controller) async {
+    if (RegExp(r'^\d{2}[A-Z]{3}\d{5}$').hasMatch(value)) {
+      DocumentSnapshot<Map<String, dynamic>> student =
+          await FirebaseFirestore.instance.collection('user').doc(value).get();
+
+      if (student.exists) {
+        Map<String, dynamic> studentData = student.data()!;
+        setState(() {
+          controller.text = studentData['name'];
+        });
+      } else {
+        setState(() {
+          controller.text = '';
+        });
+      }
+    } else {
+      setState(() {
+        controller.text = '';
+      });
+    }
+  }
+
+  bool hasDuplicateTextValues() {
+    List<String> textValues = [
+      advisorID.text,
+      coAdvisorID1.text,
+      coAdvisorID2.text,
+      presidentID.text,
+      secretaryID.text,
+      treasurerID.text,
+      vpresidentID.text,
+      vsecretaryID.text,
+      vtreasurerID.text,
+    ];
+    Set<String> uniqueTextValues = Set<String>.from(textValues);
+    return textValues.length != uniqueTextValues.length;
+  }
+
+  Future<void> updateAdvisor(
+      String id, String newPosition, String societyID) async {
+    try {
+      FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+      DocumentReference<Map<String, dynamic>> userReference =
+          firestore.collection('user').doc(id);
+
+      DocumentSnapshot<Map<String, dynamic>> userSnapshot =
+          await userReference.get();
+
+      if (userSnapshot.exists) {
+        await userReference.update({
+          'societyID': societyID,
+          'position': newPosition,
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to register society. Please try again.'),
+          width: 225.0,
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
+  Future<String> createSociety(String societyName) async {
+    try {
+      FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+      QuerySnapshot<Map<String, dynamic>> snapshot =
+          await firestore.collection('society').get();
+
+      int totalCount = snapshot.size;
+
+      String societyID = 'S' + (totalCount + 1).toString().padLeft(3, '0');
+
+      DocumentReference<Map<String, dynamic>> societyReference =
+          firestore.collection('society').doc(societyID);
+
+      await societyReference.set({
+        'societyID': societyID,
+        'societyName': societyName,
+      });
+      return societyID;
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to register society. Please try again.'),
+          width: 225.0,
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return 'S100';
+    }
+  }
+
+  Future<void> addMember(
+      String societyID, String studentID, String position) async {
+    try {
+      FirebaseFirestore firestore = FirebaseFirestore.instance;
+      CollectionReference members = firestore.collection('member');
+
+      await members.add({
+        'societyID': societyID,
+        'studentID': studentID,
+        'position': position,
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to register society. Please try again.'),
+          width: 225.0,
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    bool hasDuplicateTextValues() {
-      List<String> textValues = [
-        advisorID.text,
-        coAdvisorID1.text,
-        coAdvisorID2.text,
-        presidentID.text,
-        secretaryID.text,
-        treasurerID.text,
-        vpresidentID.text,
-        vsecretaryID.text,
-        vtreasurerID.text,
-      ];
-      Set<String> uniqueTextValues = Set<String>.from(textValues);
-      return textValues.length != uniqueTextValues.length;
-    }
-
-    Future<void> updateAdvisor(
-        String id, String newPosition, String societyID) async {
-      try {
-        FirebaseFirestore firestore = FirebaseFirestore.instance;
-
-        DocumentReference<Map<String, dynamic>> userReference =
-            firestore.collection('user').doc(id);
-
-        DocumentSnapshot<Map<String, dynamic>> userSnapshot =
-            await userReference.get();
-
-        if (userSnapshot.exists) {
-          await userReference.update({
-            'societyID': societyID,
-            'position': newPosition,
-          });
-        }
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to register society. Please try again.'),
-            width: 225.0,
-            behavior: SnackBarBehavior.floating,
-            duration: Duration(seconds: 3),
-          ),
-        );
-      }
-    }
-
-    Future<String> createSociety(String societyName) async {
-      try {
-        FirebaseFirestore firestore = FirebaseFirestore.instance;
-
-        QuerySnapshot<Map<String, dynamic>> snapshot =
-            await firestore.collection('society').get();
-
-        int totalCount = snapshot.size;
-
-        String societyID = 'S' + (totalCount + 1).toString().padLeft(3, '0');
-
-        DocumentReference<Map<String, dynamic>> societyReference =
-            firestore.collection('society').doc(societyID);
-
-        await societyReference.set({
-          'societyID': societyID,
-          'societyName': societyName,
-        });
-        return societyID;
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to register society. Please try again.'),
-            width: 225.0,
-            behavior: SnackBarBehavior.floating,
-            duration: Duration(seconds: 3),
-          ),
-        );
-        return 'S100';
-      }
-    }
-
-    Future<void> addMember(
-        String societyID, String studentID, String position) async {
-      try {
-        FirebaseFirestore firestore = FirebaseFirestore.instance;
-        CollectionReference members = firestore.collection('member');
-
-        await members.add({
-          'societyID': societyID,
-          'studentID': studentID,
-          'position': position,
-        });
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to register society. Please try again.'),
-            width: 225.0,
-            behavior: SnackBarBehavior.floating,
-            duration: Duration(seconds: 3),
-          ),
-        );
-      }
-    }
-
     return Scaffold(
       appBar: const Header(),
       drawer: !Responsive.isDesktop(context)
@@ -190,8 +213,6 @@ class _AddSocietyState extends State<AddSociety> {
                                         child: Padding(
                                           padding: const EdgeInsets.all(8.0),
                                           child: Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
                                             mainAxisAlignment:
                                                 MainAxisAlignment.start,
                                             children: [
@@ -273,8 +294,6 @@ class _AddSocietyState extends State<AddSociety> {
                                         child: Padding(
                                           padding: const EdgeInsets.all(8.0),
                                           child: Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
                                             mainAxisAlignment:
                                                 MainAxisAlignment.start,
                                             children: [
@@ -344,8 +363,6 @@ class _AddSocietyState extends State<AddSociety> {
                                         child: Padding(
                                           padding: const EdgeInsets.all(8.0),
                                           child: Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
                                             mainAxisAlignment:
                                                 MainAxisAlignment.start,
                                             children: [
@@ -416,8 +433,6 @@ class _AddSocietyState extends State<AddSociety> {
                                         child: Padding(
                                           padding: const EdgeInsets.all(8.0),
                                           child: Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
                                             mainAxisAlignment:
                                                 MainAxisAlignment.start,
                                             children: [
@@ -492,8 +507,6 @@ class _AddSocietyState extends State<AddSociety> {
                                         child: Padding(
                                           padding: const EdgeInsets.all(8.0),
                                           child: Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
                                             mainAxisAlignment:
                                                 MainAxisAlignment.start,
                                             children: [
@@ -529,8 +542,6 @@ class _AddSocietyState extends State<AddSociety> {
                                         child: Padding(
                                           padding: const EdgeInsets.all(8.0),
                                           child: Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
                                             mainAxisAlignment:
                                                 MainAxisAlignment.start,
                                             children: [
@@ -566,8 +577,6 @@ class _AddSocietyState extends State<AddSociety> {
                                         child: Padding(
                                           padding: const EdgeInsets.all(8.0),
                                           child: Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
                                             mainAxisAlignment:
                                                 MainAxisAlignment.start,
                                             children: [
@@ -648,8 +657,6 @@ class _AddSocietyState extends State<AddSociety> {
                                         child: Padding(
                                           padding: const EdgeInsets.all(8.0),
                                           child: Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
                                             mainAxisAlignment:
                                                 MainAxisAlignment.start,
                                             children: [
@@ -665,35 +672,7 @@ class _AddSocietyState extends State<AddSociety> {
                                               Expanded(
                                                 flex: 4,
                                                 child: CustomTextField(
-                                                  onChanged: (value) async {
-                                                    if (RegExp(
-                                                            r'^\d{2}[A-Z]{3}\d{5}$')
-                                                        .hasMatch(value)) {
-                                                      DocumentSnapshot<
-                                                              Map<String,
-                                                                  dynamic>>
-                                                          student =
-                                                          await FirebaseFirestore
-                                                              .instance
-                                                              .collection(
-                                                                  'user')
-                                                              .doc(presidentID
-                                                                  .text)
-                                                              .get();
-
-                                                      if (student.exists) {
-                                                        Map<String, dynamic>
-                                                            studentData =
-                                                            student.data()!;
-                                                        presidentName.text =
-                                                            studentData['name'];
-                                                      } else {
-                                                        presidentName.text = '';
-                                                      }
-                                                    } else {
-                                                      presidentName.text = '';
-                                                    }
-                                                  },
+                                                  onChanged: (value) => onTextChanged(value, presidentName),
                                                   validator: (value) {
                                                     if (value!.isEmpty) {
                                                       return 'Please enter student ID';
@@ -716,8 +695,6 @@ class _AddSocietyState extends State<AddSociety> {
                                         child: Padding(
                                           padding: const EdgeInsets.all(8.0),
                                           child: Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
                                             mainAxisAlignment:
                                                 MainAxisAlignment.start,
                                             children: [
@@ -733,35 +710,7 @@ class _AddSocietyState extends State<AddSociety> {
                                               Expanded(
                                                 flex: 4,
                                                 child: CustomTextField(
-                                                  onChanged: (value) async {
-                                                    if (RegExp(
-                                                            r'^\d{2}[A-Z]{3}\d{5}$')
-                                                        .hasMatch(value)) {
-                                                      DocumentSnapshot<
-                                                              Map<String,
-                                                                  dynamic>>
-                                                          student =
-                                                          await FirebaseFirestore
-                                                              .instance
-                                                              .collection(
-                                                                  'user')
-                                                              .doc(secretaryID
-                                                                  .text)
-                                                              .get();
-
-                                                      if (student.exists) {
-                                                        Map<String, dynamic>
-                                                            studentData =
-                                                            student.data()!;
-                                                        secretaryName.text =
-                                                            studentData['name'];
-                                                      } else {
-                                                        secretaryName.text = '';
-                                                      }
-                                                    } else {
-                                                      secretaryName.text = '';
-                                                    }
-                                                  },
+                                                   onChanged: (value) => onTextChanged(value, secretaryName),
                                                   validator: (value) {
                                                     if (value!.isEmpty) {
                                                       return 'Please enter student ID';
@@ -784,8 +733,6 @@ class _AddSocietyState extends State<AddSociety> {
                                         child: Padding(
                                           padding: const EdgeInsets.all(8.0),
                                           child: Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
                                             mainAxisAlignment:
                                                 MainAxisAlignment.start,
                                             children: [
@@ -801,35 +748,7 @@ class _AddSocietyState extends State<AddSociety> {
                                               Expanded(
                                                 flex: 4,
                                                 child: CustomTextField(
-                                                  onChanged: (value) async {
-                                                    if (RegExp(
-                                                            r'^\d{2}[A-Z]{3}\d{5}$')
-                                                        .hasMatch(value)) {
-                                                      DocumentSnapshot<
-                                                              Map<String,
-                                                                  dynamic>>
-                                                          student =
-                                                          await FirebaseFirestore
-                                                              .instance
-                                                              .collection(
-                                                                  'user')
-                                                              .doc(treasurerID
-                                                                  .text)
-                                                              .get();
-
-                                                      if (student.exists) {
-                                                        Map<String, dynamic>
-                                                            studentData =
-                                                            student.data()!;
-                                                        treasurerName.text =
-                                                            studentData['name'];
-                                                      } else {
-                                                        treasurerName.text = '';
-                                                      }
-                                                    } else {
-                                                      treasurerName.text = '';
-                                                    }
-                                                  },
+                                                 onChanged: (value) => onTextChanged(value, treasurerName),
                                                   validator: (value) {
                                                     if (value!.isEmpty) {
                                                       return 'Please enter student ID';
@@ -856,8 +775,6 @@ class _AddSocietyState extends State<AddSociety> {
                                         child: Padding(
                                           padding: const EdgeInsets.all(8.0),
                                           child: Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
                                             mainAxisAlignment:
                                                 MainAxisAlignment.start,
                                             children: [
@@ -893,8 +810,6 @@ class _AddSocietyState extends State<AddSociety> {
                                         child: Padding(
                                           padding: const EdgeInsets.all(8.0),
                                           child: Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
                                             mainAxisAlignment:
                                                 MainAxisAlignment.start,
                                             children: [
@@ -930,8 +845,6 @@ class _AddSocietyState extends State<AddSociety> {
                                         child: Padding(
                                           padding: const EdgeInsets.all(8.0),
                                           child: Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
                                             mainAxisAlignment:
                                                 MainAxisAlignment.start,
                                             children: [
@@ -1001,8 +914,6 @@ class _AddSocietyState extends State<AddSociety> {
                                         child: Padding(
                                           padding: const EdgeInsets.all(8.0),
                                           child: Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
                                             mainAxisAlignment:
                                                 MainAxisAlignment.start,
                                             children: [
@@ -1018,36 +929,8 @@ class _AddSocietyState extends State<AddSociety> {
                                               Expanded(
                                                 flex: 4,
                                                 child: CustomTextField(
-                                                  onChanged: (value) async {
-                                                    if (RegExp(
-                                                            r'^\d{2}[A-Z]{3}\d{5}$')
-                                                        .hasMatch(value)) {
-                                                      DocumentSnapshot<
-                                                              Map<String,
-                                                                  dynamic>>
-                                                          student =
-                                                          await FirebaseFirestore
-                                                              .instance
-                                                              .collection(
-                                                                  'user')
-                                                              .doc(vpresidentID
-                                                                  .text)
-                                                              .get();
-
-                                                      if (student.exists) {
-                                                        Map<String, dynamic>
-                                                            studentData =
-                                                            student.data()!;
-                                                        vpresidentName.text =
-                                                            studentData['name'];
-                                                      } else {
-                                                        vpresidentName.text =
-                                                            '';
-                                                      }
-                                                    } else {
-                                                      vpresidentName.text = '';
-                                                    }
-                                                  },
+                                                  onChanged: (value) => onTextChanged(value, vpresidentName),
+                                                    
                                                   validator: (value) {
                                                     if (value!.isEmpty) {
                                                       return 'Please enter student ID';
@@ -1070,8 +953,6 @@ class _AddSocietyState extends State<AddSociety> {
                                         child: Padding(
                                           padding: const EdgeInsets.all(8.0),
                                           child: Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
                                             mainAxisAlignment:
                                                 MainAxisAlignment.start,
                                             children: [
@@ -1087,36 +968,7 @@ class _AddSocietyState extends State<AddSociety> {
                                               Expanded(
                                                 flex: 4,
                                                 child: CustomTextField(
-                                                  onChanged: (value) async {
-                                                    if (RegExp(
-                                                            r'^\d{2}[A-Z]{3}\d{5}$')
-                                                        .hasMatch(value)) {
-                                                      DocumentSnapshot<
-                                                              Map<String,
-                                                                  dynamic>>
-                                                          student =
-                                                          await FirebaseFirestore
-                                                              .instance
-                                                              .collection(
-                                                                  'user')
-                                                              .doc(vsecretaryID
-                                                                  .text)
-                                                              .get();
-
-                                                      if (student.exists) {
-                                                        Map<String, dynamic>
-                                                            studentData =
-                                                            student.data()!;
-                                                        vsecretaryName.text =
-                                                            studentData['name'];
-                                                      } else {
-                                                        vsecretaryName.text =
-                                                            '';
-                                                      }
-                                                    } else {
-                                                      vsecretaryName.text = '';
-                                                    }
-                                                  },
+                                                    onChanged: (value) => onTextChanged(value, vsecretaryName),
                                                   validator: (value) {
                                                     if (value!.isEmpty) {
                                                       return 'Please enter student ID';
@@ -1139,8 +991,6 @@ class _AddSocietyState extends State<AddSociety> {
                                         child: Padding(
                                           padding: const EdgeInsets.all(8.0),
                                           child: Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
                                             mainAxisAlignment:
                                                 MainAxisAlignment.start,
                                             children: [
@@ -1156,36 +1006,7 @@ class _AddSocietyState extends State<AddSociety> {
                                               Expanded(
                                                 flex: 4,
                                                 child: CustomTextField(
-                                                  onChanged: (value) async {
-                                                    if (RegExp(
-                                                            r'^\d{2}[A-Z]{3}\d{5}$')
-                                                        .hasMatch(value)) {
-                                                      DocumentSnapshot<
-                                                              Map<String,
-                                                                  dynamic>>
-                                                          student =
-                                                          await FirebaseFirestore
-                                                              .instance
-                                                              .collection(
-                                                                  'user')
-                                                              .doc(vtreasurerID
-                                                                  .text)
-                                                              .get();
-
-                                                      if (student.exists) {
-                                                        Map<String, dynamic>
-                                                            studentData =
-                                                            student.data()!;
-                                                        vtreasurerName.text =
-                                                            studentData['name'];
-                                                      } else {
-                                                        vtreasurerName.text =
-                                                            '';
-                                                      }
-                                                    } else {
-                                                      vtreasurerName.text = '';
-                                                    }
-                                                  },
+                                                  onChanged: (value) => onTextChanged(value, vtreasurerName),
                                                   validator: (value) {
                                                     if (value!.isEmpty) {
                                                       return 'Please enter student ID';
@@ -1212,8 +1033,6 @@ class _AddSocietyState extends State<AddSociety> {
                                         child: Padding(
                                           padding: const EdgeInsets.all(8.0),
                                           child: Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
                                             mainAxisAlignment:
                                                 MainAxisAlignment.start,
                                             children: [
@@ -1249,8 +1068,6 @@ class _AddSocietyState extends State<AddSociety> {
                                         child: Padding(
                                           padding: const EdgeInsets.all(8.0),
                                           child: Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
                                             mainAxisAlignment:
                                                 MainAxisAlignment.start,
                                             children: [
@@ -1286,8 +1103,6 @@ class _AddSocietyState extends State<AddSociety> {
                                         child: Padding(
                                           padding: const EdgeInsets.all(8.0),
                                           child: Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
                                             mainAxisAlignment:
                                                 MainAxisAlignment.start,
                                             children: [
