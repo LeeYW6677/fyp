@@ -2,11 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
-import 'package:fyp/pages/budget.dart';
-import 'package:fyp/pages/committee.dart';
-import 'package:fyp/pages/schedule.dart';
 import 'package:fyp/pages/studentOrganisedEvent.dart';
-import 'package:timelines/timelines.dart';
 import 'package:flutter/services.dart';
 
 class Proposal extends StatefulWidget {
@@ -18,6 +14,7 @@ class Proposal extends StatefulWidget {
 }
 
 class _ProposalState extends State<Proposal> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool enable = true;
   String status = '';
   List<String> progress = ['Planning', 'Checked', 'Recommended', 'Approved'];
@@ -41,6 +38,9 @@ class _ProposalState extends State<Proposal> {
         if (status != 'Planning') {
           enable = false;
         }
+        setState(() {
+          status = status;
+        });
       }
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -58,13 +58,11 @@ class _ProposalState extends State<Proposal> {
   final type = TextEditingController();
   final aim = TextEditingController();
   final description = TextEditingController();
-    final member = TextEditingController();
+  final member = TextEditingController();
   final nonMember = TextEditingController();
   final guest = TextEditingController();
 
   String selectedType = 'Talk';
-  int characterCount = 0;
-  int characterCount2 = 0;
 
   @override
   void initState() {
@@ -118,670 +116,390 @@ class _ProposalState extends State<Proposal> {
                               thickness: 0.1,
                               color: Colors.black,
                             ),
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) => Proposal(
-                                              selectedEvent:
-                                                  widget.selectedEvent)),
-                                    );
-                                  },
-                                  style: TextButton.styleFrom(
-                                    padding: const EdgeInsets.all(16.0),
-                                    backgroundColor: Colors.white,
-                                    foregroundColor: Colors.black,
-                                    side: const BorderSide(
-                                        color: Colors.grey, width: 1.0),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(0.0),
-                                    ),
-                                  ),
-                                  child: const Text('Pre Event'),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) => Schedule(
-                                                selectedEvent:
-                                                    widget.selectedEvent,
-                                              )),
-                                    );
-                                  },
-                                  style: TextButton.styleFrom(
-                                    padding: const EdgeInsets.all(16.0),
-                                    backgroundColor: Colors.grey[200],
-                                    foregroundColor: Colors.black,
-                                    side: const BorderSide(
-                                        color: Colors.grey, width: 1.0),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(0.0),
-                                    ),
-                                  ),
-                                  child: const Text('Post Event'),
-                                ),
-                              ],
-                            ),
-                            Row(children: [
-                              Expanded(
-                                  child: Container(
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        border: Border.all(
-                                            width: 1.0, color: Colors.grey),
+                            Form(
+                                key: _formKey,
+                                child: TabContainer(
+                                    selectedEvent: widget.selectedEvent,
+                                    tab: 'Pre',
+                                    form: 'Proposal',
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: Padding(
+                                              padding:
+                                                  const EdgeInsets.all(8.0),
+                                              child: Row(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.center,
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.start,
+                                                children: [
+                                                  if (Responsive.isDesktop(
+                                                      context))
+                                                    const Expanded(
+                                                      flex: 1,
+                                                      child: Text(
+                                                        'Event Name',
+                                                        style: TextStyle(
+                                                            fontSize: 16),
+                                                      ),
+                                                    ),
+                                                  Expanded(
+                                                    flex: 4,
+                                                    child: CustomTextField(
+                                                      screen:
+                                                          !Responsive.isDesktop(
+                                                              context),
+                                                      controller: name,
+                                                      labelText: 'Event Name',
+                                                      hintText:
+                                                          'Enter event name',
+                                                      validator: (value) {
+                                                        if (value!.isEmpty) {
+                                                          return 'Please enter event name';
+                                                        }
+                                                        return null;
+                                                      },
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            child: Padding(
+                                              padding:
+                                                  const EdgeInsets.all(8.0),
+                                              child: Row(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.center,
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.start,
+                                                children: [
+                                                  if (Responsive.isDesktop(
+                                                      context))
+                                                    const Expanded(
+                                                      flex: 1,
+                                                      child: Text(
+                                                        'Event Type',
+                                                        style: TextStyle(
+                                                            fontSize: 16),
+                                                      ),
+                                                    ),
+                                                  Expanded(
+                                                      flex: 4,
+                                                      child: CustomDDL<String>(
+                                                        labelText: 'Event Type',
+                                                        screen: !Responsive
+                                                            .isDesktop(context),
+                                                        controller: type,
+                                                        hintText:
+                                                            'Select event type',
+                                                        value: selectedType,
+                                                        dropdownItems: [
+                                                          'Talk',
+                                                          'Workshop',
+                                                          'Competition',
+                                                          'Meeting',
+                                                          'Trip',
+                                                          'Fund Raising',
+                                                          'Performance',
+                                                          'Training',
+                                                          'Exhibition'
+                                                        ].map((type) {
+                                                          return DropdownMenuItem<
+                                                              String>(
+                                                            value: type,
+                                                            child: Text(type,
+                                                                overflow:
+                                                                    TextOverflow
+                                                                        .ellipsis),
+                                                          );
+                                                        }).toList(),
+                                                      )),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                      child: Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.end,
-                                              children: [
-                                                Row(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    TextButton(
-                                                      onPressed: () {
-                                                        Navigator.push(
-                                                          context,
-                                                          MaterialPageRoute(
-                                                              builder: (context) =>
-                                                                  Proposal(
-                                                                      selectedEvent:
-                                                                          widget
-                                                                              .selectedEvent)),
-                                                        );
-                                                      },
-                                                      style:
-                                                          TextButton.styleFrom(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .all(16.0),
-                                                        backgroundColor:
-                                                            Colors.white,
-                                                        foregroundColor:
-                                                            Colors.black,
-                                                        side: const BorderSide(
-                                                            color: Colors.grey,
-                                                            width: 1.0),
-                                                        shape:
-                                                            RoundedRectangleBorder(
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(
-                                                                      0.0),
-                                                        ),
-                                                      ),
-                                                      child: const Text(
-                                                          'Proposal'),
-                                                    ),
-                                                    TextButton(
-                                                      onPressed: () {
-                                                        Navigator.push(
-                                                          context,
-                                                          MaterialPageRoute(
-                                                              builder:
-                                                                  (context) =>
-                                                                      Schedule(
-                                                                        selectedEvent:
-                                                                            widget.selectedEvent,
-                                                                      )),
-                                                        );
-                                                      },
-                                                      style:
-                                                          TextButton.styleFrom(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .all(16.0),
-                                                        backgroundColor:
-                                                            Colors.grey[200],
-                                                        foregroundColor:
-                                                            Colors.black,
-                                                        side: const BorderSide(
-                                                            color: Colors.grey,
-                                                            width: 1.0),
-                                                        shape:
-                                                            RoundedRectangleBorder(
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(
-                                                                      0.0),
-                                                        ),
-                                                      ),
-                                                      child: const Text(
-                                                          'Schedule'),
-                                                    ),
-                                                    TextButton(
-                                                      onPressed: () {
-                                                        Navigator.push(
-                                                          context,
-                                                          MaterialPageRoute(
-                                                              builder: (context) =>
-                                                                  const Committee()),
-                                                        );
-                                                      },
-                                                      style:
-                                                          TextButton.styleFrom(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .all(16.0),
-                                                        backgroundColor:
-                                                            Colors.grey[200],
-                                                        foregroundColor:
-                                                            Colors.black,
-                                                        side: const BorderSide(
-                                                            color: Colors.grey,
-                                                            width: 1.0),
-                                                        shape:
-                                                            RoundedRectangleBorder(
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(
-                                                                      0.0),
-                                                        ),
-                                                      ),
-                                                      child: const Text(
-                                                          'Committee'),
-                                                    ),
-                                                    TextButton(
-                                                      onPressed: () {
-                                                        Navigator.push(
-                                                          context,
-                                                          MaterialPageRoute(
-                                                              builder: (context) =>
-                                                                  const Budget()),
-                                                        );
-                                                      },
-                                                      style:
-                                                          TextButton.styleFrom(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .all(16.0),
-                                                        foregroundColor:
-                                                            Colors.black,
-                                                        backgroundColor:
-                                                            Colors.grey[200],
-                                                        side: const BorderSide(
-                                                            color: Colors.grey,
-                                                            width: 1.0),
-                                                        shape:
-                                                            RoundedRectangleBorder(
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(
-                                                                      0.0),
-                                                        ),
-                                                      ),
-                                                      child:
-                                                          const Text('Budget'),
-                                                    ),
-                                                  ],
-                                                ),
-                                                Row(
-                                                  children: [
-                                                    Expanded(
-                                                      child: Container(
-                                                        decoration:
-                                                            BoxDecoration(
-                                                          color: Colors.white,
-                                                          border: Border.all(
-                                                              width: 1.0,
-                                                              color:
-                                                                  Colors.grey),
-                                                        ),
-                                                        child: Padding(
-                                                          padding:
-                                                              const EdgeInsets
-                                                                  .all(16.0),
-                                                          child: Column(
-                                                            crossAxisAlignment:
-                                                                CrossAxisAlignment
-                                                                    .end,
-                                                            children: [
-                                                              Row(
-                                                                children: [
-                                                                  Expanded(
-                                                                    child:
-                                                                        Padding(
-                                                                      padding: const EdgeInsets
-                                                                          .all(
-                                                                          8.0),
-                                                                      child:
-                                                                          Row(
-                                                                        crossAxisAlignment:
-                                                                            CrossAxisAlignment.center,
-                                                                        mainAxisAlignment:
-                                                                            MainAxisAlignment.start,
-                                                                        children: [
-                                                                          const Expanded(
-                                                                            flex:
-                                                                                1,
-                                                                            child:
-                                                                                Text(
-                                                                              'Event Name',
-                                                                              style: TextStyle(fontSize: 16),
-                                                                            ),
-                                                                          ),
-                                                                          Expanded(
-                                                                            flex:
-                                                                                4,
-                                                                            child:
-                                                                                CustomTextField(
-                                                                              controller: name,
-                                                                              hintText: 'Enter event name',
-                                                                              validator: (value) {
-                                                                                if (value!.isEmpty) {
-                                                                                  return 'Please enter event name';
-                                                                                }
-                                                                                return null;
-                                                                              },
-                                                                            ),
-                                                                          ),
-                                                                        ],
-                                                                      ),
-                                                                    ),
-                                                                  ),
-                                                                  Expanded(
-                                                                    child:
-                                                                        Padding(
-                                                                      padding: const EdgeInsets
-                                                                          .all(
-                                                                          8.0),
-                                                                      child:
-                                                                          Row(
-                                                                        crossAxisAlignment:
-                                                                            CrossAxisAlignment.center,
-                                                                        mainAxisAlignment:
-                                                                            MainAxisAlignment.start,
-                                                                        children: [
-                                                                          const Expanded(
-                                                                            flex:
-                                                                                1,
-                                                                            child:
-                                                                                Text(
-                                                                              'Event Type',
-                                                                              style: TextStyle(fontSize: 16),
-                                                                            ),
-                                                                          ),
-                                                                          Expanded(
-                                                                              flex: 4,
-                                                                              child: CustomDDL<String>(
-                                                                                controller: type,
-                                                                                hintText: 'Select event type',
-                                                                                value: selectedType,
-                                                                                dropdownItems: [
-                                                                                  'Talk',
-                                                                                  'Workshop',
-                                                                                  'Competition',
-                                                                                  'Meeting',
-                                                                                  'Trip',
-                                                                                  'Fund Raising',
-                                                                                  'Performance',
-                                                                                  'Training',
-                                                                                  'Exhibition'
-                                                                                ].map((type) {
-                                                                                  return DropdownMenuItem<String>(
-                                                                                    value: type,
-                                                                                    child: Text(type, overflow: TextOverflow.ellipsis),
-                                                                                  );
-                                                                                }).toList(),
-                                                                              )),
-                                                                        ],
-                                                                      ),
-                                                                    ),
-                                                                  ),
-                                                                ],
-                                                              ),
-                                                              const SizedBox(
-                                                                height: 15,
-                                                              ),
-                                                              Row(
-                                                                children: [
-                                                                  Expanded(
-                                                                      child: Padding(
-                                                                          padding: const EdgeInsets.all(8.0),
-                                                                          child: Row(
-                                                                            crossAxisAlignment:
-                                                                                CrossAxisAlignment.start,
-                                                                            mainAxisAlignment:
-                                                                                MainAxisAlignment.start,
-                                                                            children: [
-                                                                              const Expanded(
-                                                                                flex: 1,
-                                                                                child: Text(
-                                                                                  'Description',
-                                                                                  style: TextStyle(fontSize: 16),
-                                                                                ),
-                                                                              ),
-                                                                              Expanded(
-                                                                                flex: 9,
-                                                                                child: CustomTextField(
-                                                                                  hintText: 'Enter event description',
-                                                                                  controller: description,
-                                                                                  maxLine: 5,
-                                                                                  validator: (value) {
-                                                                                    if (value!.isEmpty) {
-                                                                                      return 'Please enter event description';
-                                                                                    }
-                                                                                    return null;
-                                                                                  },
-                                                                                  onChanged: (text) {
-                                                                                    setState(() {
-                                                                                      characterCount = text.length;
-                                                                                    });
-                                                                                  },
-                                                                                ),
-                                                                              ),
-                                                                            ],
-                                                                          ))),
-                                                                ],
-                                                              ),
-                                                              Row(
-                                                                mainAxisAlignment:
-                                                                    MainAxisAlignment
-                                                                        .end,
-                                                                children: [
-                                                                  Text(
-                                                                      '$characterCount/400'),
-                                                                  const SizedBox(
-                                                                    width: 10,
-                                                                  ),
-                                                                ],
-                                                              ),
-                                                              Row(
-                                                                children: [
-                                                                  Expanded(
-                                                                      child: Padding(
-                                                                          padding: const EdgeInsets.all(8.0),
-                                                                          child: Row(
-                                                                            crossAxisAlignment:
-                                                                                CrossAxisAlignment.start,
-                                                                            mainAxisAlignment:
-                                                                                MainAxisAlignment.start,
-                                                                            children: [
-                                                                              const Expanded(
-                                                                                flex: 1,
-                                                                                child: Text(
-                                                                                  'Aim',
-                                                                                  style: TextStyle(fontSize: 16),
-                                                                                ),
-                                                                              ),
-                                                                              Expanded(
-                                                                                flex: 9,
-                                                                                child: CustomTextField(
-                                                                                  hintText: 'Enter aim of event',
-                                                                                  controller: aim,
-                                                                                  maxLine: 5,
-                                                                                  validator: (value) {
-                                                                                    if (value!.isEmpty) {
-                                                                                      return 'Please enter aim of the event';
-                                                                                    }
-                                                                                    return null;
-                                                                                  },
-                                                                                  onChanged: (text) {
-                                                                                    setState(() {
-                                                                                      characterCount2 = text.length;
-                                                                                    });
-                                                                                  },
-                                                                                ),
-                                                                              ),
-                                                                            ],
-                                                                          ))),
-                                                                ],
-                                                              ),
-
-                                                               Row(
-                                                                children: [
-                                                                  Expanded(
-                                                                      child: Padding(
-                                                                          padding: const EdgeInsets.all(8.0),
-                                                                          child: Row(
-                                                                            crossAxisAlignment:
-                                                                                CrossAxisAlignment.center,
-                                                                            mainAxisAlignment:
-                                                                                MainAxisAlignment.start,
-                                                                            children: [
-                                                                              const Expanded(
-                                                                                flex: 3,
-                                                                                child: Text(
-                                                                                  'Participants',
-                                                                                  style: TextStyle(fontSize: 16),
-                                                                                ),
-                                                                              ),
-                                                                              const Expanded(
-                                                                                flex: 3,
-                                                                                child: Text(
-                                                                                  'Member',
-                                                                                  style: TextStyle(fontSize: 16),
-                                                                                ),
-                                                                              ),                                                                              
-                                                                              Expanded(
-                                                                                flex: 1,
-                                                                                child: CustomTextField(
-                                                                                  hintText: '0',
-                                                                                  controller: member,
-                                                                                  validator: (value) {
-                                                                                    if (value!.isEmpty) {
-                                                                                      return 'Please enter member count';
-                                                                                    }
-                                                                                    return null;
-                                                                                  },
-                                                                                  
-                                                                                ),
-                                                                              ),
-                                                                              const Expanded(
-                                                                                flex: 3,
-                                                                                child: Text(
-                                                                                  'Non-Member',
-                                                                                  style: TextStyle(fontSize: 16),
-                                                                                ),
-                                                                              ),                                                                              
-                                                                              Expanded(
-                                                                                flex: 1,
-                                                                                child: CustomTextField(
-                                                                                  hintText: '0',
-                                                                                  controller: nonMember,
-                                                                                  validator: (value) {
-                                                                                    if (value!.isEmpty) {
-                                                                                      return 'Please enter non-Member count';
-                                                                                    }
-                                                                                    return null;
-                                                                                  },
-                                                                                  
-                                                                                ),
-                                                                              ),
-                                                                              const Expanded(
-                                                                                flex: 3,
-                                                                                child: Text(
-                                                                                  'Guest',
-                                                                                  style: TextStyle(fontSize: 16),
-                                                                                ),
-                                                                              ),                                                                              
-                                                                              Expanded(
-                                                                                flex: 1,
-                                                                                child: CustomTextField(
-                                                                                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],                                                                      
-                                                                                  hintText: '0',
-                                                                                  controller: guest,
-                                                                                  validator: (value) {
-                                                                                    if (value!.isEmpty) {
-                                                                                      return 'Please enter guest count';
-                                                                                    }
-                                                                                    return null;
-                                                                                  },
-                                                                                  
-                                                                                ),
-                                                                              ),
-                                                                            ],
-                                                                          ))),
-                                                                ],
-                                                              ),
-                                                              const SizedBox(
-                                                                height: 15,
-                                                              ),
-                                                              Row(
-                                                                mainAxisAlignment:
-                                                                    MainAxisAlignment
-                                                                        .end,
-                                                                children: [
-                                                                  if (status ==
-                                                                      'Planning')
-                                                                    CustomButton(
-                                                                      onPressed:
-                                                                          () async {
-                                                                        FirebaseFirestore
-                                                                            firestore =
-                                                                            FirebaseFirestore.instance;
-                                                                        Map<String,
-                                                                                dynamic>
-                                                                            updatedData =
-                                                                            {
-                                                                          'eventName':
-                                                                              name.text,
-                                                                          'type':
-                                                                              selectedType,
-                                                                          'description':
-                                                                              description.text,
-                                                                          'aim':
-                                                                              aim.text,
-                                                                        };
-
-                                                                        try {
-                                                                          await firestore
-                                                                              .collection('event')
-                                                                              .doc(widget.selectedEvent)
-                                                                              .update(updatedData);
-                                                                        } catch (error) {
-                                                                          ScaffoldMessenger.of(context)
-                                                                              .showSnackBar(
-                                                                            const SnackBar(
-                                                                              content: Text('Failed to update proposal. Please try again.'),
-                                                                              width: 225.0,
-                                                                              behavior: SnackBarBehavior.floating,
-                                                                              duration: Duration(seconds: 3),
-                                                                            ),
-                                                                          );
-                                                                        }
-                                                                      },
-                                                                      text:
-                                                                          'Save',
-                                                                      width:
-                                                                          150,
-                                                                    ),
-                                                                  const SizedBox(
-                                                                    width: 10,
-                                                                  ),
-                                                                ],
-                                                              ),
-                                                              const Divider(
-                                                                  thickness:
-                                                                      0.1,
-                                                                  color: Colors
-                                                                      .black),
-                                                              SizedBox(
-                                                                height: 175,
-                                                                child: Timeline
-                                                                    .tileBuilder(
-                                                                  shrinkWrap:
-                                                                      true,
-                                                                  padding:
-                                                                      EdgeInsets
-                                                                          .zero,
-                                                                  theme:
-                                                                      TimelineThemeData(
-                                                                    direction: Axis
-                                                                        .horizontal,
-                                                                    connectorTheme: const ConnectorThemeData(
-                                                                        space:
-                                                                            8.0,
-                                                                        thickness:
-                                                                            2.0),
-                                                                  ),
-                                                                  builder:
-                                                                      TimelineTileBuilder
-                                                                          .connected(
-                                                                    connectionDirection:
-                                                                        ConnectionDirection
-                                                                            .before,
-                                                                    itemCount:
-                                                                        4,
-                                                                    itemExtentBuilder:
-                                                                        (_, __) {
-                                                                      return (MediaQuery.of(context).size.width -
-                                                                              200) /
-                                                                          4.0;
-                                                                    },
-                                                                    oppositeContentsBuilder:
-                                                                        (context,
-                                                                            index) {
-                                                                      return Container();
-                                                                    },
-                                                                    contentsBuilder:
-                                                                        (context,
-                                                                            index) {
-                                                                      return Column(
-                                                                        children: [
-                                                                          Text(progress[
-                                                                              index]),
-                                                                          const SizedBox(
-                                                                              height: 10),
-                                                                          if (index <=
-                                                                              progress.indexOf(status))
-                                                                            CustomButton(onPressed: status == 'Planning' ? () {} : () {}, text: status == 'Planning' ? 'Submit' : 'Unsubmit'),
-                                                                        ],
-                                                                      );
-                                                                    },
-                                                                    indicatorBuilder:
-                                                                        (_, index) {
-                                                                      if (index <=
-                                                                          progress
-                                                                              .indexOf(status)) {
-                                                                        return DotIndicator(
-                                                                          size:
-                                                                              30.0,
-                                                                          color:
-                                                                              Colors.green,
-                                                                        );
-                                                                      } else {
-                                                                        return OutlinedDotIndicator(
-                                                                          borderWidth:
-                                                                              4.0,
-                                                                          color:
-                                                                              Colors.green,
-                                                                        );
-                                                                      }
-                                                                    },
-                                                                    connectorBuilder: (_,
-                                                                        index,
-                                                                        type) {
-                                                                      if (index >
-                                                                          0) {
-                                                                        return SolidLineConnector(
-                                                                          color:
-                                                                              Colors.green,
-                                                                        );
-                                                                      } else {
-                                                                        return null;
-                                                                      }
-                                                                    },
-                                                                  ),
-                                                                ),
-                                                              ),
-                                                            ],
+                                      const SizedBox(
+                                        height: 15,
+                                      ),
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                              child: Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(8.0),
+                                                  child: Row(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment.start,
+                                                    children: [
+                                                      if (Responsive.isDesktop(
+                                                          context))
+                                                        const Expanded(
+                                                          flex: 1,
+                                                          child: Text(
+                                                            'Description',
+                                                            style: TextStyle(
+                                                                fontSize: 16),
                                                           ),
                                                         ),
+                                                      Expanded(
+                                                        flex: 9,
+                                                        child: CustomTextField(
+                                                          screen: !Responsive
+                                                              .isDesktop(
+                                                                  context),
+                                                          maxLength: 400,
+                                                          labelText:
+                                                              'Description',
+                                                          hintText:
+                                                              'Enter event description',
+                                                          controller:
+                                                              description,
+                                                          maxLine: 5,
+                                                          validator: (value) {
+                                                            if (value!
+                                                                .isEmpty) {
+                                                              return 'Please enter event description';
+                                                            }
+                                                            return null;
+                                                          },
+                                                        ),
                                                       ),
-                                                    ),
-                                                  ],
-                                                )
-                                              ]))))
-                            ]),
+                                                    ],
+                                                  ))),
+                                        ],
+                                      ),
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                              child: Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(8.0),
+                                                  child: Row(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment.start,
+                                                    children: [
+                                                      if (Responsive.isDesktop(
+                                                          context))
+                                                        const Expanded(
+                                                          flex: 1,
+                                                          child: Text(
+                                                            'Aim',
+                                                            style: TextStyle(
+                                                                fontSize: 16),
+                                                          ),
+                                                        ),
+                                                      Expanded(
+                                                        flex: 9,
+                                                        child: CustomTextField(
+                                                          maxLength: 400,
+                                                          labelText: 'Aim',
+                                                          screen: !Responsive
+                                                              .isDesktop(
+                                                                  context),
+                                                          hintText:
+                                                              'Enter aim of event',
+                                                          controller: aim,
+                                                          maxLine: 5,
+                                                          validator: (value) {
+                                                            if (value!
+                                                                .isEmpty) {
+                                                              return 'Please enter aim of the event';
+                                                            }
+                                                            return null;
+                                                          },
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ))),
+                                        ],
+                                      ),
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                              child: Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(8.0),
+                                                  child: Row(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .center,
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment.start,
+                                                    children: [
+                                                      if (Responsive.isDesktop(
+                                                          context))
+                                                        const Expanded(
+                                                          flex: 3,
+                                                          child: Text(
+                                                            'Participants',
+                                                            style: TextStyle(
+                                                                fontSize: 16),
+                                                          ),
+                                                        ),
+                                                      const Expanded(
+                                                        flex: 3,
+                                                        child: Text(
+                                                          'Member',
+                                                          style: TextStyle(
+                                                              fontSize: 16),
+                                                        ),
+                                                      ),
+                                                      SizedBox(
+                                                        width: 50,
+                                                        child: CustomTextField(
+                                                          inputFormatters: [
+                                                            FilteringTextInputFormatter
+                                                                .digitsOnly
+                                                          ],
+                                                          hintText: '0',
+                                                          controller: member,
+                                                          validator: (value) {
+                                                            if (value!
+                                                                .isEmpty) {
+                                                              return ' ';
+                                                            }
+                                                            return null;
+                                                          },
+                                                        ),
+                                                      ),
+                                                      const SizedBox(
+                                                        width: 50,
+                                                      ),
+                                                      const Expanded(
+                                                        flex: 3,
+                                                        child: Text(
+                                                          'Non-Member',
+                                                          style: TextStyle(
+                                                              fontSize: 16),
+                                                        ),
+                                                      ),
+                                                      SizedBox(
+                                                        width: 50,
+                                                        child: CustomTextField(
+                                                          inputFormatters: [
+                                                            FilteringTextInputFormatter
+                                                                .digitsOnly
+                                                          ],
+                                                          hintText: '0',
+                                                          controller: nonMember,
+                                                          validator: (value) {
+                                                            if (value!
+                                                                .isEmpty) {
+                                                              return ' ';
+                                                            }
+                                                            return null;
+                                                          },
+                                                        ),
+                                                      ),
+                                                      const SizedBox(
+                                                        width: 50,
+                                                      ),
+                                                      const Expanded(
+                                                        flex: 3,
+                                                        child: Text(
+                                                          'Guest',
+                                                          style: TextStyle(
+                                                              fontSize: 16),
+                                                        ),
+                                                      ),
+                                                      SizedBox(
+                                                        width: 50,
+                                                        child: CustomTextField(
+                                                          inputFormatters: [
+                                                            FilteringTextInputFormatter
+                                                                .digitsOnly
+                                                          ],
+                                                          hintText: '0',
+                                                          controller: guest,
+                                                          validator: (value) {
+                                                            if (value!
+                                                                .isEmpty) {
+                                                              return ' ';
+                                                            }
+                                                            return null;
+                                                          },
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ))),
+                                        ],
+                                      ),
+                                      const SizedBox(
+                                        height: 15,
+                                      ),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        children: [
+                                          if (status == 'Planning')
+                                            CustomButton(
+                                              onPressed: () async {
+                                                if (_formKey.currentState!
+                                                    .validate()) {
+                                                  FirebaseFirestore firestore =
+                                                      FirebaseFirestore
+                                                          .instance;
+                                                  Map<String, dynamic>
+                                                      updatedData = {
+                                                    'eventName': name.text,
+                                                    'type': selectedType,
+                                                    'description':
+                                                        description.text,
+                                                    'aim': aim.text,
+                                                    'memberCount': member.text,
+                                                    'nonMemberCount':
+                                                        nonMember.text,
+                                                    'guestCOunt': guest.text,
+                                                  };
+
+                                                  try {
+                                                    await firestore
+                                                        .collection('event')
+                                                        .doc(widget
+                                                            .selectedEvent)
+                                                        .update(updatedData);
+                                                  } catch (error) {
+                                                    ScaffoldMessenger.of(
+                                                            context)
+                                                        .showSnackBar(
+                                                      const SnackBar(
+                                                        content: Text(
+                                                            'Failed to update proposal. Please try again.'),
+                                                        width: 225.0,
+                                                        behavior:
+                                                            SnackBarBehavior
+                                                                .floating,
+                                                        duration: Duration(
+                                                            seconds: 3),
+                                                      ),
+                                                    );
+                                                  }
+                                                }
+                                              },
+                                              text: 'Save',
+                                              width: 150,
+                                            ),
+                                          const SizedBox(
+                                            width: 10,
+                                          ),
+                                        ],
+                                      ),
+                                      const Divider(
+                                          thickness: 0.1, color: Colors.black),
+                                      CustomTimeline(status: status),
+                                    ])),
                           ]))
                 ]),
               ),

@@ -170,7 +170,7 @@ class _OngoingEventState extends State<OngoingEvent> {
                                       borderRadius: BorderRadius.circular(0.0),
                                     ),
                                   ),
-                                  child: const Text('Schedule'),
+                                  child: const Text('Organising'),
                                 ),
                               ],
                             ),

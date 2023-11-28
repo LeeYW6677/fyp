@@ -2,16 +2,10 @@ import 'dart:ui';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:fyp/pages/addEvent.dart';
 import 'package:fyp/pages/home.dart';
 import 'package:fyp/pages/login.dart';
 import 'package:fyp/functions/firebase_options.dart';
-import 'package:fyp/pages/ongoingEvent.dart';
-import 'package:fyp/pages/proposal.dart';
-import 'package:fyp/pages/student.dart';
-import 'package:fyp/pages/studentOngoingEvent.dart';
-import 'package:fyp/pages/studentOrganisedEvent.dart';
-
+import 'package:fyp/pages/schedule.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -48,7 +42,7 @@ class _SocietyManagementSystemState extends State<SocietyManagementSystem> {
           thumbVisibility: MaterialStateProperty.all<bool>(true),
         ),
       ),
-      home: user != null ? Proposal(selectedEvent: 'E001',) : const Login(),
+      home: user != null ? Schedule(selectedEvent: 'E001',) : const Login(),
     );
   }
 }

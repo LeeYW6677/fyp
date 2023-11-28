@@ -1,9 +1,4 @@
-
 import 'package:flutter/material.dart';
-
-void main() {
-  runApp(MyApp());
-}
 
 class MyApp extends StatelessWidget {
   @override
@@ -69,17 +64,55 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       );
 
       if (selectedTime != null) {
-        Program newProgram = Program(
-          date: selectedDate,
-          time: selectedTime,
-          details: "Program details...",
-        );
+        String? details = await _showDetailsInputDialog();
 
-        setState(() {
-          programs.add(newProgram);
-        });
+        if (details != null) {
+          Program newProgram = Program(
+            date: selectedDate,
+            time: selectedTime,
+            details: details,
+          );
+
+          setState(() {
+            programs.add(newProgram);
+          });
+        }
       }
     }
+  }
+
+  Future<String?> _showDetailsInputDialog() async {
+    TextEditingController detailsController = TextEditingController();
+
+    return showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Enter Program Details'),
+          content: TextField(
+            controller: detailsController,
+            maxLines: 3,
+            decoration: InputDecoration(
+              hintText: 'Enter details...',
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, detailsController.text);
+              },
+              child: Text('OK'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, null);
+              },
+              child: Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _deleteProgram(int index) {
@@ -110,12 +143,32 @@ class ProgramItem extends StatelessWidget {
       title: Text('Date: ${program.date.toLocal()}'),
       subtitle: Text('Time: ${program.time.format(context)}'),
       onTap: () {
-        // Add navigation to a detailed view if needed
+        _showDetailsDialog(context, program.details);
       },
       trailing: IconButton(
         icon: Icon(Icons.delete),
         onPressed: onDelete,
       ),
+    );
+  }
+
+  Future<void> _showDetailsDialog(BuildContext context, String details) {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Program Details'),
+          content: Text(details),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
     );
   }
 }

@@ -137,7 +137,7 @@ class _OrganisedEventState extends State<OrganisedEvent> {
                                   },
                                   style: TextButton.styleFrom(
                                     padding: const EdgeInsets.all(24.0),
-                                    backgroundColor: Colors.white,
+                                    backgroundColor: Colors.grey[200],
                                     foregroundColor: Colors.black,
                                     side: const BorderSide(
                                         color: Colors.grey, width: 1.0),
@@ -160,7 +160,7 @@ class _OrganisedEventState extends State<OrganisedEvent> {
                                   },
                                   style: TextButton.styleFrom(
                                     padding: const EdgeInsets.all(24.0),
-                                    backgroundColor: Colors.grey[200],
+                                    backgroundColor: Colors.white,
                                     foregroundColor: Colors.black,
                                     side: const BorderSide(
                                         color: Colors.grey, width: 1.0),
@@ -168,7 +168,7 @@ class _OrganisedEventState extends State<OrganisedEvent> {
                                       borderRadius: BorderRadius.circular(0.0),
                                     ),
                                   ),
-                                  child: const Text('Schedule'),
+                                  child: const Text('Organising'),
                                 ),
                               ],
                             ),

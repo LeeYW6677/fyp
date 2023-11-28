@@ -2,12 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
-import 'package:fyp/pages/budget.dart';
-import 'package:fyp/pages/committee.dart';
-import 'package:fyp/pages/proposal.dart';
 import 'package:fyp/pages/studentOrganisedEvent.dart';
 import 'package:intl/intl.dart';
-import 'package:timelines/timelines.dart';
 
 class Schedule extends StatefulWidget {
   final String selectedEvent;
@@ -18,9 +14,10 @@ class Schedule extends StatefulWidget {
 }
 
 class _ScheduleState extends State<Schedule> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  List<Program> programs = [];
   bool enable = true;
   String status = '';
-  List<String> progress = ['Planning', 'Checked', 'Recommended', 'Approved'];
   Future<void> getData() async {
     try {
       final FirebaseFirestore firestore = FirebaseFirestore.instance;
@@ -50,26 +47,32 @@ class _ScheduleState extends State<Schedule> {
     }
   }
 
-  List<TableRow> tableRows = [];
-  void addToTable() {
-    if (date.text.isNotEmpty &&
-        start.text.isNotEmpty &&
-        end.text.isNotEmpty &&
-        description.text.isNotEmpty) {
-      setState(() {
-        tableRows.add(
-          TableRow(
-            children: [
-              Column(children: [Text('${date.text}')]),
-              Column(children: [Text('${start.text} - ${end.text}')]),
-              Column(children: [Text('${description.text}')]),
-            ],
-          ),
-        );
-      });
-    } else {
-      // Handle validation errors or show a message to the user
-    }
+  void _deleteProgram(int index) {
+    setState(() {
+      programs.removeAt(index);
+    });
+  }
+
+  void addProgram() {
+    final DateFormat timeFormat = DateFormat('HH:mm');
+    DateTime parsedTime = timeFormat.parse(start.text);
+    TimeOfDay startTime = TimeOfDay.fromDateTime(parsedTime);
+    DateTime parsedTime2 = timeFormat.parse(end.text);
+    TimeOfDay endTime = TimeOfDay.fromDateTime(parsedTime2);
+    String dateText = date.text;
+    final DateFormat dateFormat = DateFormat('dd-MM-yyyy');
+    DateTime parsedDate = dateFormat.parse(dateText);
+
+    Program newProgram = Program(
+      date: parsedDate,
+      start: startTime,
+      end: endTime,
+      details: detail.text,
+    );
+
+    setState(() {
+      programs.add(newProgram);
+    });
   }
 
   @override
@@ -81,11 +84,10 @@ class _ScheduleState extends State<Schedule> {
   final date = TextEditingController();
   final start = TextEditingController();
   final end = TextEditingController();
-  final aim = TextEditingController();
-  final description = TextEditingController();
+  final detail = TextEditingController();
   String selectedType = 'Talk';
-  int characterCount = 0;
-  int characterCount2 = 0;
+  String? startError;
+  String? endError;
 
   @override
   Widget build(BuildContext context) {
@@ -133,622 +135,370 @@ class _ScheduleState extends State<Schedule> {
                               thickness: 0.1,
                               color: Colors.black,
                             ),
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) => Proposal(
-                                              selectedEvent:
-                                                  widget.selectedEvent)),
-                                    );
-                                  },
-                                  style: TextButton.styleFrom(
-                                    padding: const EdgeInsets.all(16.0),
-                                    backgroundColor: Colors.white,
-                                    foregroundColor: Colors.black,
-                                    side: const BorderSide(
-                                        color: Colors.grey, width: 1.0),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(0.0),
-                                    ),
-                                  ),
-                                  child: const Text('Pre Event'),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) => Schedule(
-                                                selectedEvent:
-                                                    widget.selectedEvent,
-                                              )),
-                                    );
-                                  },
-                                  style: TextButton.styleFrom(
-                                    padding: const EdgeInsets.all(16.0),
-                                    backgroundColor: Colors.grey[200],
-                                    foregroundColor: Colors.black,
-                                    side: const BorderSide(
-                                        color: Colors.grey, width: 1.0),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(0.0),
-                                    ),
-                                  ),
-                                  child: const Text('Post Event'),
-                                ),
-                              ],
-                            ),
-                            Row(children: [
-                              Expanded(
-                                  child: Container(
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        border: Border.all(
-                                            width: 1.0, color: Colors.grey),
+                            Form(
+                                key: _formKey,
+                                child: TabContainer(
+                                    selectedEvent: widget.selectedEvent,
+                                    tab: 'Pre',
+                                    form: 'Schedule',
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: Padding(
+                                              padding:
+                                                  const EdgeInsets.all(8.0),
+                                              child: Row(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.center,
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.start,
+                                                children: [
+                                                  const Expanded(
+                                                    flex: 1,
+                                                    child: Text(
+                                                      'Date',
+                                                      style: TextStyle(
+                                                          fontSize: 16),
+                                                    ),
+                                                  ),
+                                                  Expanded(
+                                                    flex: 4,
+                                                    child: CustomTextField(
+                                                      controller: date,
+                                                      hintText: 'Enter date',
+                                                      suffixIcon: const Icon(Icons
+                                                          .calendar_today_rounded),
+                                                      onTap: () async {
+                                                        DateTime? pickedDate =
+                                                            await showDatePicker(
+                                                          context: context,
+                                                          initialDate:
+                                                              DateTime.now()
+                                                                  .add(Duration(
+                                                                      days: 7)),
+                                                          firstDate:
+                                                              DateTime.now()
+                                                                  .add(Duration(
+                                                                      days: 7)),
+                                                          lastDate:
+                                                              DateTime.now()
+                                                                  .add(Duration(
+                                                                      days:
+                                                                          365)),
+                                                        );
+
+                                                        if (pickedDate !=
+                                                            null) {
+                                                          setState(() {
+                                                            date.text = DateFormat(
+                                                                    'dd-MM-yyyy')
+                                                                .format(
+                                                                    pickedDate);
+                                                          });
+                                                        }
+                                                      },
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            child: Padding(
+                                              padding:
+                                                  const EdgeInsets.all(8.0),
+                                              child: Row(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.center,
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.start,
+                                                children: [
+                                                  const Expanded(
+                                                    flex: 1,
+                                                    child: Text(
+                                                      'Time',
+                                                      style: TextStyle(
+                                                          fontSize: 16),
+                                                    ),
+                                                  ),
+                                                  Expanded(
+                                                    flex: 2,
+                                                    child: CustomTextField(
+                                                      errorText: startError,
+                                                      controller: start,
+                                                      hintText:
+                                                          'Enter start time',
+                                                      suffixIcon: const Icon(
+                                                          Icons.punch_clock),
+                                                      onTap: () async {
+                                                        TimeOfDay? pickedTime =
+                                                            await showTimePicker(
+                                                          context: context,
+                                                          initialEntryMode:
+                                                              TimePickerEntryMode
+                                                                  .inputOnly,
+                                                          initialTime:
+                                                              const TimeOfDay(
+                                                                  hour: 12,
+                                                                  minute: 00),
+                                                        );
+
+                                                        if (pickedTime !=
+                                                            null) {
+                                                          startError = null;
+
+                                                          if (end.text != '') {
+                                                            final DateFormat
+                                                                timeFormat =
+                                                                DateFormat(
+                                                                    'HH:mm');
+                                                            DateTime
+                                                                parsedTime =
+                                                                timeFormat
+                                                                    .parse(end
+                                                                        .text);
+                                                            TimeOfDay endTime =
+                                                                TimeOfDay
+                                                                    .fromDateTime(
+                                                                        parsedTime);
+                                                            if (pickedTime
+                                                                        .hour >
+                                                                    endTime
+                                                                        .hour ||
+                                                                (pickedTime.hour ==
+                                                                        endTime
+                                                                            .hour &&
+                                                                    pickedTime
+                                                                            .minute >
+                                                                        endTime
+                                                                            .minute)) {
+                                                              setState(() {
+                                                                start.text =
+                                                                    pickedTime
+                                                                        .format(
+                                                                            context);
+                                                              });
+                                                            } else {
+                                                              startError =
+                                                                  'Start Time must be before End Time';
+                                                            }
+                                                          } else {
+                                                            setState(() {
+                                                              start.text =
+                                                                  pickedTime
+                                                                      .format(
+                                                                          context);
+                                                            });
+                                                          }
+                                                        }
+                                                      },
+                                                    ),
+                                                  ),
+                                                  const Text('     -     '),
+                                                  Expanded(
+                                                    flex: 2,
+                                                    child: CustomTextField(
+                                                      errorText: endError,
+                                                      controller: end,
+                                                      hintText:
+                                                          'Enter end time',
+                                                      suffixIcon: const Icon(
+                                                          Icons.punch_clock),
+                                                      onTap: () async {
+                                                        TimeOfDay? pickedTime =
+                                                            await showTimePicker(
+                                                          context: context,
+                                                          initialEntryMode:
+                                                              TimePickerEntryMode
+                                                                  .input,
+                                                          initialTime:
+                                                              const TimeOfDay(
+                                                                  hour: 12,
+                                                                  minute: 00),
+                                                        );
+
+                                                        if (pickedTime !=
+                                                            null) {
+                                                          endError = null;
+
+                                                          if (start.text !=
+                                                              '') {
+                                                            final DateFormat
+                                                                timeFormat =
+                                                                DateFormat(
+                                                                    'HH:mm');
+                                                            DateTime
+                                                                parsedTime =
+                                                                timeFormat
+                                                                    .parse(start
+                                                                        .text);
+                                                            TimeOfDay
+                                                                startTime =
+                                                                TimeOfDay
+                                                                    .fromDateTime(
+                                                                        parsedTime);
+
+                                                            if (pickedTime
+                                                                        .hour >
+                                                                    startTime
+                                                                        .hour ||
+                                                                (pickedTime.hour ==
+                                                                        startTime
+                                                                            .hour &&
+                                                                    pickedTime
+                                                                            .minute >
+                                                                        startTime
+                                                                            .minute)) {
+                                                              setState(() {
+                                                                end.text =
+                                                                    pickedTime
+                                                                        .format(
+                                                                            context);
+                                                              });
+                                                            } else {
+                                                              endError =
+                                                                  'End Time must be after Start Time';
+                                                            }
+                                                          } else {
+                                                            setState(() {
+                                                              end.text = pickedTime
+                                                                  .format(
+                                                                      context);
+                                                            });
+                                                          }
+                                                        }
+                                                      },
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                      child: Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.end,
-                                              children: [
-                                                Row(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    TextButton(
-                                                      onPressed: () {
-                                                        Navigator.push(
-                                                          context,
-                                                          MaterialPageRoute(
-                                                              builder: (context) =>
-                                                                  Proposal(
-                                                                      selectedEvent:
-                                                                          widget
-                                                                              .selectedEvent)),
-                                                        );
-                                                      },
-                                                      style:
-                                                          TextButton.styleFrom(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .all(16.0),
-                                                        backgroundColor:
-                                                            Colors.grey[200],
-                                                        foregroundColor:
-                                                            Colors.black,
-                                                        side: const BorderSide(
-                                                            color: Colors.grey,
-                                                            width: 1.0),
-                                                        shape:
-                                                            RoundedRectangleBorder(
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(
-                                                                      0.0),
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                              child: Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(8.0),
+                                                  child: Row(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment.start,
+                                                    children: [
+                                                      const Expanded(
+                                                        flex: 1,
+                                                        child: Text(
+                                                          'Programme Details',
+                                                          style: TextStyle(
+                                                              fontSize: 16),
                                                         ),
                                                       ),
-                                                      child: const Text(
-                                                          'Proposal'),
-                                                    ),
-                                                    TextButton(
-                                                      onPressed: () {
-                                                        Navigator.push(
-                                                          context,
-                                                          MaterialPageRoute(
-                                                              builder: (context) =>
-                                                                  Schedule(
-                                                                      selectedEvent:
-                                                                          widget
-                                                                              .selectedEvent)),
-                                                        );
-                                                      },
-                                                      style:
-                                                          TextButton.styleFrom(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .all(16.0),
-                                                        backgroundColor:
-                                                            Colors.white,
-                                                        foregroundColor:
-                                                            Colors.black,
-                                                        side: const BorderSide(
-                                                            color: Colors.grey,
-                                                            width: 1.0),
-                                                        shape:
-                                                            RoundedRectangleBorder(
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(
-                                                                      0.0),
+                                                      Expanded(
+                                                        flex: 9,
+                                                        child: CustomTextField(
+                                                          maxLength: 100,
+                                                          hintText:
+                                                              'Enter programme details',
+                                                          controller: detail,
+                                                          maxLine: 3,
+                                                          validator: (value) {
+                                                            if (value!
+                                                                .isEmpty) {
+                                                              return 'Please enter programme details';
+                                                            }
+                                                            return null;
+                                                          },
                                                         ),
                                                       ),
-                                                      child: const Text(
-                                                          'Schedule'),
-                                                    ),
-                                                    TextButton(
-                                                      onPressed: () {
-                                                        Navigator.push(
-                                                          context,
-                                                          MaterialPageRoute(
-                                                              builder: (context) =>
-                                                                  const Committee()),
-                                                        );
-                                                      },
-                                                      style:
-                                                          TextButton.styleFrom(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .all(16.0),
-                                                        backgroundColor:
-                                                            Colors.grey[200],
-                                                        foregroundColor:
-                                                            Colors.black,
-                                                        side: const BorderSide(
-                                                            color: Colors.grey,
-                                                            width: 1.0),
-                                                        shape:
-                                                            RoundedRectangleBorder(
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(
-                                                                      0.0),
-                                                        ),
-                                                      ),
-                                                      child: const Text(
-                                                          'Committee'),
-                                                    ),
-                                                    TextButton(
-                                                      onPressed: () {
-                                                        Navigator.push(
-                                                          context,
-                                                          MaterialPageRoute(
-                                                              builder: (context) =>
-                                                                  const Budget()),
-                                                        );
-                                                      },
-                                                      style:
-                                                          TextButton.styleFrom(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .all(16.0),
-                                                        foregroundColor:
-                                                            Colors.black,
-                                                        backgroundColor:
-                                                            Colors.grey[200],
-                                                        side: const BorderSide(
-                                                            color: Colors.grey,
-                                                            width: 1.0),
-                                                        shape:
-                                                            RoundedRectangleBorder(
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(
-                                                                      0.0),
-                                                        ),
-                                                      ),
-                                                      child:
-                                                          const Text('Budget'),
-                                                    ),
-                                                  ],
+                                                    ],
+                                                  ))),
+                                        ],
+                                      ),
+                                      CustomButton(
+                                          width: 150,
+                                          onPressed: () {
+                                            if (_formKey.currentState!
+                                                .validate()) {
+                                              addProgram();
+                                            }
+                                          },
+                                          text: 'Add'),
+                                      Padding(
+                                        padding: EdgeInsets.all(8.0),
+                                        child: Row(
+                                          children: [
+                                            Expanded(
+                                              flex: 2,
+                                              child: Container(
+                                                decoration: BoxDecoration(
+                                                  border: Border.all(
+                                                      color: Colors.black),
                                                 ),
-                                                Row(
-                                                  children: [
-                                                    Expanded(
-                                                      child: Container(
-                                                        decoration:
-                                                            BoxDecoration(
-                                                          color: Colors.white,
-                                                          border: Border.all(
-                                                              width: 1.0,
-                                                              color:
-                                                                  Colors.grey),
-                                                        ),
-                                                        child: Padding(
-                                                          padding:
-                                                              const EdgeInsets
-                                                                  .all(16.0),
-                                                          child: Column(
-                                                            crossAxisAlignment:
-                                                                CrossAxisAlignment
-                                                                    .end,
-                                                            children: [
-                                                              Row(
-                                                                children: [
-                                                                  Expanded(
-                                                                    child:
-                                                                        Padding(
-                                                                      padding: const EdgeInsets
-                                                                          .all(
-                                                                          8.0),
-                                                                      child:
-                                                                          Row(
-                                                                        crossAxisAlignment:
-                                                                            CrossAxisAlignment.center,
-                                                                        mainAxisAlignment:
-                                                                            MainAxisAlignment.start,
-                                                                        children: [
-                                                                          const Expanded(
-                                                                            flex:
-                                                                                1,
-                                                                            child:
-                                                                                Text(
-                                                                              'Date',
-                                                                              style: TextStyle(fontSize: 16),
-                                                                            ),
-                                                                          ),
-                                                                          Expanded(
-                                                                            flex:
-                                                                                4,
-                                                                            child:
-                                                                                CustomTextField(
-                                                                              controller: date,
-                                                                              hintText: 'Enter date',
-                                                                              suffixIcon: const Icon(Icons.calendar_today_rounded),
-                                                                              onTap: () async {
-                                                                                DateTime? pickedDate = await showDatePicker(
-                                                                                  context: context,
-                                                                                  initialDate: DateTime(2000),
-                                                                                  firstDate: DateTime(1900),
-                                                                                  lastDate: DateTime(2010),
-                                                                                );
-
-                                                                                if (pickedDate != null) {
-                                                                                  setState(() {
-                                                                                    date.text = DateFormat('dd-MM-yyyy').format(pickedDate);
-                                                                                  });
-                                                                                }
-                                                                              },
-                                                                            ),
-                                                                          ),
-                                                                        ],
-                                                                      ),
-                                                                    ),
-                                                                  ),
-                                                                  Expanded(
-                                                                    child:
-                                                                        Padding(
-                                                                      padding: const EdgeInsets
-                                                                          .all(
-                                                                          8.0),
-                                                                      child:
-                                                                          Row(
-                                                                        crossAxisAlignment:
-                                                                            CrossAxisAlignment.center,
-                                                                        mainAxisAlignment:
-                                                                            MainAxisAlignment.start,
-                                                                        children: [
-                                                                          const Expanded(
-                                                                            flex:
-                                                                                1,
-                                                                            child:
-                                                                                Text(
-                                                                              'Time',
-                                                                              style: TextStyle(fontSize: 16),
-                                                                            ),
-                                                                          ),
-                                                                          Expanded(
-                                                                            flex:
-                                                                                2,
-                                                                            child:
-                                                                                CustomTextField(
-                                                                              controller: start,
-                                                                              hintText: 'Enter start time',
-                                                                              suffixIcon: const Icon(Icons.punch_clock),
-                                                                              onTap: () async {
-                                                                                TimeOfDay? pickedTime = await showTimePicker(
-                                                                                  context: context,
-                                                                                  initialTime: TimeOfDay.now(),
-                                                                                );
-
-                                                                                if (pickedTime != null) {
-                                                                                  setState(() {
-                                                                                    start.text = pickedTime.format(context);
-                                                                                  });
-                                                                                }
-                                                                              },
-                                                                            ),
-                                                                          ),
-                                                                          const Text(
-                                                                              '     -     '),
-                                                                          Expanded(
-                                                                            flex:
-                                                                                2,
-                                                                            child:
-                                                                                CustomTextField(
-                                                                              controller: end,
-                                                                              hintText: 'Enter end time',
-                                                                              suffixIcon: const Icon(Icons.punch_clock),
-                                                                              onTap: () async {
-                                                                                TimeOfDay? pickedTime = await showTimePicker(
-                                                                                  context: context,
-                                                                                  initialTime: TimeOfDay.now(),
-                                                                                );
-
-                                                                                if (pickedTime != null) {
-                                                                                  setState(() {
-                                                                                    end.text = pickedTime.format(context);
-                                                                                  });
-                                                                                }
-                                                                              },
-                                                                            ),
-                                                                          ),
-                                                                        ],
-                                                                      ),
-                                                                    ),
-                                                                  ),
-                                                                ],
-                                                              ),
-                                                              const SizedBox(
-                                                                height: 15,
-                                                              ),
-                                                              Row(
-                                                                children: [
-                                                                  Expanded(
-                                                                      child: Padding(
-                                                                          padding: const EdgeInsets.all(8.0),
-                                                                          child: Row(
-                                                                            crossAxisAlignment:
-                                                                                CrossAxisAlignment.start,
-                                                                            mainAxisAlignment:
-                                                                                MainAxisAlignment.start,
-                                                                            children: [
-                                                                              const Expanded(
-                                                                                flex: 1,
-                                                                                child: Text(
-                                                                                  'Programme Details',
-                                                                                  style: TextStyle(fontSize: 16),
-                                                                                ),
-                                                                              ),
-                                                                              Expanded(
-                                                                                flex: 9,
-                                                                                child: CustomTextField(
-                                                                                  hintText: 'Enter programme details',
-                                                                                  controller: description,
-                                                                                  maxLine: 3,
-                                                                                  validator: (value) {
-                                                                                    if (value!.isEmpty) {
-                                                                                      return 'Please enter programme details';
-                                                                                    }
-                                                                                    return null;
-                                                                                  },
-                                                                                  onChanged: (text) {
-                                                                                    setState(() {
-                                                                                      characterCount = text.length;
-                                                                                    });
-                                                                                  },
-                                                                                ),
-                                                                              ),
-                                                                            ],
-                                                                          ))),
-                                                                ],
-                                                              ),
-                                                              Row(
-                                                                mainAxisAlignment:
-                                                                    MainAxisAlignment
-                                                                        .end,
-                                                                children: [
-                                                                  Text(
-                                                                      '$characterCount/100'),
-                                                                  const SizedBox(
-                                                                    width: 10,
-                                                                  ),
-                                                                ],
-                                                              ),
-                                                              const SizedBox(
-                                                                  height: 15),
-                                                              Row(
-                                                                mainAxisAlignment:
-                                                                    MainAxisAlignment
-                                                                        .end,
-                                                                children: [
-                                                                  if (status ==
-                                                                      'Planning')
-                                                                    CustomButton(
-                                                                      onPressed:
-                                                                          () {
-                                                                        addToTable();
-                                                                      },
-                                                                      text:
-                                                                          'Save',
-                                                                      width:
-                                                                          150,
-                                                                    ),
-                                                                  const SizedBox(
-                                                                    width: 10,
-                                                                  ),
-                                                                ],
-                                                              ),
-                                                              const SizedBox(
-                                                                height: 15,
-                                                              ),
-                                                              Table(
-                                                                columnWidths: const {
-                                                                  0: FlexColumnWidth(
-                                                                      1),
-                                                                  1: FlexColumnWidth(
-                                                                      1),
-                                                                  2: FlexColumnWidth(
-                                                                      4),
-                                                                },
-                                                                border:
-                                                                    TableBorder
-                                                                        .all(
-                                                                  color: Colors
-                                                                      .grey,
-                                                                ),
-                                                                children: [
-                                                                  const TableRow(
-                                                                    children: [
-                                                                      TableCell(
-                                                                        child:
-                                                                            Padding(
-                                                                          padding:
-                                                                              EdgeInsets.all(12.0),
-                                                                          child:
-                                                                              Text('Date'),
-                                                                        ),
-                                                                      ),
-                                                                      TableCell(
-                                                                        child:
-                                                                            Padding(
-                                                                          padding:
-                                                                              EdgeInsets.all(12.0),
-                                                                          child:
-                                                                              Text('Time'),
-                                                                        ),
-                                                                      ),
-                                                                      TableCell(
-                                                                        child:
-                                                                            Padding(
-                                                                          padding:
-                                                                              EdgeInsets.all(12.0),
-                                                                          child:
-                                                                              Text('Programme Details'),
-                                                                        ),
-                                                                      ),
-                                                                    ],
-                                                                  ),
-                                                                  for (TableRow row
-                                                                      in tableRows)
-                                                                    TableRow(
-                                                                      children: [
-                                                                        Padding(
-                                                                          padding: const EdgeInsets
-                                                                              .all(
-                                                                              12.0),
-                                                                          child: Text(
-                                                                              row.children![0].toString(),
-                                                                              style: const TextStyle(fontSize: 14)),
-                                                                        ),
-                                                                        Padding(
-                                                                          padding: const EdgeInsets
-                                                                              .all(
-                                                                              12.0),
-                                                                          child: Text(
-                                                                              row.children![1].toString(),
-                                                                              style: const TextStyle(fontSize: 14)),
-                                                                        ),
-                                                                        Padding(
-                                                                          padding: const EdgeInsets
-                                                                              .all(
-                                                                              12.0),
-                                                                          child: Text(
-                                                                              row.children![2].toString(),
-                                                                              style: const TextStyle(fontSize: 14)),
-                                                                        ),
-                                                                      ],
-                                                                    ),
-                                                                ],
-                                                              ),
-                                                              const Divider(
-                                                                  thickness:
-                                                                      0.1,
-                                                                  color: Colors
-                                                                      .black),
-                                                              SizedBox(
-                                                                height: 175,
-                                                                child: Timeline
-                                                                    .tileBuilder(
-                                                                  shrinkWrap:
-                                                                      true,
-                                                                  padding:
-                                                                      EdgeInsets
-                                                                          .zero,
-                                                                  theme:
-                                                                      TimelineThemeData(
-                                                                    direction: Axis
-                                                                        .horizontal,
-                                                                    connectorTheme: const ConnectorThemeData(
-                                                                        space:
-                                                                            8.0,
-                                                                        thickness:
-                                                                            2.0),
-                                                                  ),
-                                                                  builder:
-                                                                      TimelineTileBuilder
-                                                                          .connected(
-                                                                    connectionDirection:
-                                                                        ConnectionDirection
-                                                                            .before,
-                                                                    itemCount:
-                                                                        4,
-                                                                    itemExtentBuilder:
-                                                                        (_, __) {
-                                                                      return (MediaQuery.of(context).size.width -
-                                                                              200) /
-                                                                          4.0;
-                                                                    },
-                                                                    oppositeContentsBuilder:
-                                                                        (context,
-                                                                            index) {
-                                                                      return Container();
-                                                                    },
-                                                                    contentsBuilder:
-                                                                        (context,
-                                                                            index) {
-                                                                      return Column(
-                                                                        children: [
-                                                                          Text(progress[
-                                                                              index]),
-                                                                          const SizedBox(
-                                                                              height: 10),
-                                                                          if (index <=
-                                                                              progress.indexOf(status))
-                                                                            CustomButton(onPressed: status == 'Planning' ? () {} : () {}, text: status == 'Planning' ? 'Submit' : 'Unsubmit'),
-                                                                        ],
-                                                                      );
-                                                                    },
-                                                                    indicatorBuilder:
-                                                                        (_, index) {
-                                                                      if (index <=
-                                                                          progress
-                                                                              .indexOf(status)) {
-                                                                        return const DotIndicator(
-                                                                          size:
-                                                                              30.0,
-                                                                          color:
-                                                                              Colors.green,
-                                                                        );
-                                                                      } else {
-                                                                        return const OutlinedDotIndicator(
-                                                                          borderWidth:
-                                                                              4.0,
-                                                                          color:
-                                                                              Colors.green,
-                                                                        );
-                                                                      }
-                                                                    },
-                                                                    connectorBuilder: (_,
-                                                                        index,
-                                                                        type) {
-                                                                      if (index >
-                                                                          0) {
-                                                                        return const SolidLineConnector(
-                                                                          color:
-                                                                              Colors.green,
-                                                                        );
-                                                                      } else {
-                                                                        return null;
-                                                                      }
-                                                                    },
-                                                                  ),
-                                                                ),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                )
-                                              ])))),
-                            ]),
+                                                child: Padding(
+                                                  padding: EdgeInsets.all(8.0),
+                                                  child: Text('Date'),
+                                                ),
+                                              ),
+                                            ),
+                                            Expanded(
+                                              flex: 3,
+                                              child: Container(
+                                                decoration: BoxDecoration(
+                                                  border: Border.all(
+                                                      color: Colors.black),
+                                                ),
+                                                child: Padding(
+                                                  padding: EdgeInsets.all(8.0),
+                                                  child: Text('Time'),
+                                                ),
+                                              ),
+                                            ),
+                                            Expanded(
+                                              flex: 8,
+                                              child: Container(
+                                                decoration: BoxDecoration(
+                                                  border: Border.all(
+                                                      color: Colors.black),
+                                                ),
+                                                child: Padding(
+                                                  padding: EdgeInsets.all(8.0),
+                                                  child: Text('Details'),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(
+                                        height: 15,
+                                      ),
+                                      Column(
+                                        children: [
+                                          Container(
+                                            child: ListView.builder(
+                                              shrinkWrap: true,
+                                              itemCount: programs.length,
+                                              itemBuilder: (context, index) {
+                                                return ProgramItem(
+                                                  program: programs[index],
+                                                  onDelete: () {
+                                                    _deleteProgram(index);
+                                                  },
+                                                );
+                                              },
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const Divider(
+                                          thickness: 0.1, color: Colors.black),
+                                      CustomTimeline(status: status),
+                                    ]))
                           ]))
                 ]),
               ),
@@ -757,6 +507,63 @@ class _ScheduleState extends State<Schedule> {
         ),
       ),
       bottomNavigationBar: const Footer(),
+    );
+  }
+}
+
+class Program {
+  final DateTime date;
+  final TimeOfDay start;
+  final TimeOfDay end;
+  final String details;
+
+  Program(
+      {required this.date,
+      required this.start,
+      required this.end,
+      required this.details});
+}
+
+class ProgramItem extends StatelessWidget {
+  final Program program;
+  final VoidCallback onDelete;
+
+  const ProgramItem({Key? key, required this.program, required this.onDelete})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      title: Text('Date: ${program.date.toLocal()}'),
+      subtitle: Text(
+          'Time: ${program.start.format(context)} - ${program.end.format(context)}'),
+      onTap: () {
+        _showDetailsDialog(context, program.details);
+      },
+      trailing: IconButton(
+        icon: Icon(Icons.delete),
+        onPressed: onDelete,
+      ),
+    );
+  }
+
+  Future<void> _showDetailsDialog(BuildContext context, String details) {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Program Details'),
+          content: Text(details),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
     );
   }
 }

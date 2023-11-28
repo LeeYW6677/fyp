@@ -2,14 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fyp/pages/advisor.dart';
 import 'package:fyp/pages/advisorProfile.dart';
+import 'package:fyp/pages/budget.dart';
+import 'package:fyp/pages/committee.dart';
 import 'package:fyp/pages/home.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:fyp/pages/proposal.dart';
+import 'package:fyp/pages/schedule.dart';
 import 'package:fyp/pages/society.dart';
 import 'package:fyp/pages/student.dart';
 import 'package:fyp/pages/studentOngoingEvent.dart';
 import 'package:fyp/pages/studentSociety.dart';
 import 'package:intl/intl.dart';
 import 'package:localstorage/localstorage.dart';
+import 'package:timelines/timelines.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -60,6 +65,8 @@ class CustomDDL<T> extends StatefulWidget {
   final TextEditingController controller;
   final Function(T?)? onChanged;
   final List<DropdownMenuItem<T>> dropdownItems;
+  final String? labelText;
+  final bool? screen;
 
   const CustomDDL({
     Key? key,
@@ -68,6 +75,8 @@ class CustomDDL<T> extends StatefulWidget {
     required this.dropdownItems,
     required this.value,
     this.onChanged,
+    this.labelText,
+    this.screen,
   }) : super(key: key);
 
   @override
@@ -91,6 +100,7 @@ class _CustomDDLState<T> extends State<CustomDDL<T>> {
       },
       items: widget.dropdownItems,
       decoration: InputDecoration(
+        labelText: widget.screen == true ? widget.labelText : null,
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 10.0, vertical: 0),
         hintText: widget.hintText,
@@ -292,11 +302,11 @@ class CustomDrawer extends StatelessWidget {
                       ),
                       onTap: () {
                         Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const StudentOngoingEvent(),
-                              ),
-                            );
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const StudentOngoingEvent(),
+                          ),
+                        );
                       },
                       tileColor: index == 3 ? Colors.blue : null,
                       shape: const Border(
@@ -343,7 +353,10 @@ class CustomTextField extends StatefulWidget {
   final void Function(String)? onChanged;
   final Icon? suffixIcon;
   final int maxLine;
-  final FilteringTextInputFormatter? inputFormatters;
+  final List<TextInputFormatter>? inputFormatters;
+  final String? labelText;
+  final bool? screen;
+  final int? maxLength;
 
   const CustomTextField({
     Key? key,
@@ -360,6 +373,9 @@ class CustomTextField extends StatefulWidget {
     this.suffixIcon,
     this.maxLine = 1,
     this.inputFormatters,
+    this.labelText,
+    this.screen,
+    this.maxLength,
   }) : super(key: key);
 
   @override
@@ -378,6 +394,10 @@ class _CustomTextFieldState extends State<CustomTextField> {
   @override
   Widget build(BuildContext context) {
     return TextFormField(
+      maxLength: widget.maxLength,
+      maxLengthEnforcement: widget.maxLength != null
+          ? MaxLengthEnforcement.enforced
+          : MaxLengthEnforcement.none,
       inputFormatters: widget.inputFormatters ?? [],
       style: const TextStyle(color: Colors.black),
       maxLines: widget.maxLine,
@@ -387,8 +407,9 @@ class _CustomTextFieldState extends State<CustomTextField> {
       obscureText: obscureText,
       onChanged: widget.onChanged,
       decoration: InputDecoration(
-        contentPadding:
-            EdgeInsets.symmetric(horizontal: 10.0, vertical: widget.maxLine!=1 ? 15.0 : 0),
+        labelText: widget.screen == true ? widget.labelText : null,
+        contentPadding: EdgeInsets.symmetric(
+            horizontal: 10.0, vertical: widget.maxLine != 1 ? 15.0 : 0),
         prefixText: widget.prefixText,
         hintText: widget.hintText,
         errorText: widget.errorText,
@@ -731,6 +752,283 @@ class PasswordStrengthIndicator extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             const Text('Password must contains atleast 1 digit'),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class TabContainer extends StatelessWidget {
+  final List<Widget> children;
+  final String selectedEvent;
+  final String tab;
+  final String form;
+
+  const TabContainer(
+      {super.key,
+      required this.children,
+      required this.selectedEvent,
+      required this.tab,
+      required this.form});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        Proposal(selectedEvent: selectedEvent),
+                  ),
+                );
+              },
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.all(16.0),
+                backgroundColor:
+                    tab == 'Pre' ? Colors.white : Colors.grey[200],
+                foregroundColor: Colors.black,
+                side: const BorderSide(color: Colors.grey, width: 1.0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(0.0),
+                ),
+              ),
+              child: const Text('Pre Event'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        Schedule(selectedEvent: selectedEvent),
+                  ),
+                );
+              },
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.all(16.0),
+                backgroundColor:
+                    tab == 'Post' ? Colors.white : Colors.grey[200],
+                foregroundColor: Colors.black,
+                side: const BorderSide(color: Colors.grey, width: 1.0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(0.0),
+                ),
+              ),
+              child: const Text('Post Event'),
+            ),
+          ],
+        ),
+        Row(
+          children: [
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border.all(width: 1.0, color: Colors.grey),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          TextButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      Proposal(selectedEvent: selectedEvent),
+                                ),
+                              );
+                            },
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.all(16.0),
+                              backgroundColor:  form == 'Proposal'? Colors.white : Colors.grey[200],
+                              foregroundColor: Colors.black,
+                              side: const BorderSide(
+                                  color: Colors.grey, width: 1.0),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(0.0),
+                              ),
+                            ),
+                            child: const Text('Proposal'),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      Schedule(selectedEvent: selectedEvent),
+                                ),
+                              );
+                            },
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.all(16.0),
+                              backgroundColor:  form == 'Schedule'? Colors.white : Colors.grey[200],
+                              foregroundColor: Colors.black,
+                              side: const BorderSide(
+                                  color: Colors.grey, width: 1.0),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(0.0),
+                              ),
+                            ),
+                            child: const Text('Schedule'),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const Committee(),
+                                ),
+                              );
+                            },
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.all(16.0),
+                              backgroundColor:  form == 'Committee'? Colors.white : Colors.grey[200],
+                              foregroundColor: Colors.black,
+                              side: const BorderSide(
+                                  color: Colors.grey, width: 1.0),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(0.0),
+                              ),
+                            ),
+                            child: const Text('Committee'),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const Budget(),
+                                ),
+                              );
+                            },
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.all(16.0),
+                              foregroundColor: Colors.black,
+                              backgroundColor:  form == 'Budget'? Colors.white : Colors.grey[200],
+                              side: const BorderSide(
+                                  color: Colors.grey, width: 1.0),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(0.0),
+                              ),
+                            ),
+                            child: const Text('Budget'),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                border:
+                                    Border.all(width: 1.0, color: Colors.grey),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: children,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class CustomTimeline extends StatelessWidget {
+  final String status;
+  const CustomTimeline({super.key, required this.status});
+
+  @override
+  Widget build(BuildContext context) {
+    List<String> progress = ['Planning', 'Checked', 'Recommended', 'Approved'];
+    return Column(
+      children: [
+        SizedBox(
+          height: 100,
+          child: Timeline.tileBuilder(
+            shrinkWrap: true,
+            padding: EdgeInsets.zero,
+            theme: TimelineThemeData(
+              direction: Axis.horizontal,
+              connectorTheme:
+                  const ConnectorThemeData(space: 8.0, thickness: 2.0),
+            ),
+            builder: TimelineTileBuilder.connected(
+              connectionDirection: ConnectionDirection.before,
+              itemCount: 4,
+              itemExtentBuilder: (_, __) {
+                return 400.0;
+              },
+              oppositeContentsBuilder: (context, index) {
+                return Container();
+              },
+              contentsBuilder: (context, index) {
+                return Column(
+                  children: [
+                    Text(progress[index]),
+                    const SizedBox(height: 10),
+                  ],
+                );
+              },
+              indicatorBuilder: (_, index) {
+                if (index <= progress.indexOf(status)) {
+                  return const DotIndicator(
+                    size: 20.0,
+                    color: Colors.green,
+                  );
+                } else {
+                  return const OutlinedDotIndicator(
+                    borderWidth: 4.0,
+                    color: Colors.green,
+                  );
+                }
+              },
+              connectorBuilder: (_, index, type) {
+                if (index > 0) {
+                  return const SolidLineConnector(
+                    color: Colors.green,
+                  );
+                } else {
+                  return null;
+                }
+              },
+            ),
+          ),
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            CustomButton(
+                width: 150,
+                onPressed: status == 'Planning' ? () {} : () {},
+                text: status == 'Planning' ? 'Submit' : 'Unsubmit'),
           ],
         ),
       ],

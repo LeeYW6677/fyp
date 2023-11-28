@@ -242,6 +242,7 @@ class _AddSocietyState extends State<AddSociety> {
                                           ),
                                         ),
                                       ),
+                                      if(Responsive.isDesktop(context))
                                       const Expanded(
                                         child: SizedBox(),
                                       ),
@@ -309,6 +310,8 @@ class _AddSocietyState extends State<AddSociety> {
                                               Expanded(
                                                 flex: 4,
                                                 child: CustomTextField(
+                                                  screen: !Responsive.isDesktop(context),
+                                                  labelText: 'Advisor ID',
                                                   onChanged: (value) async {
                                                     if (RegExp(r'^A\d{3}')
                                                         .hasMatch(value)) {
@@ -378,6 +381,8 @@ class _AddSocietyState extends State<AddSociety> {
                                               Expanded(
                                                 flex: 4,
                                                 child: CustomTextField(
+                                                  screen: !Responsive.isDesktop(context),
+                                                  labelText: 'Advisor ID',
                                                   onChanged: (value) async {
                                                     if (RegExp(r'^A\d{3}')
                                                         .hasMatch(value)) {
@@ -448,6 +453,8 @@ class _AddSocietyState extends State<AddSociety> {
                                               Expanded(
                                                 flex: 4,
                                                 child: CustomTextField(
+                                                  screen: !Responsive.isDesktop(context),
+                                                  labelText: 'Advisor ID',
                                                   onChanged: (value) async {
                                                     if (RegExp(r'^A\d{3}')
                                                         .hasMatch(value)) {
@@ -672,6 +679,8 @@ class _AddSocietyState extends State<AddSociety> {
                                               Expanded(
                                                 flex: 4,
                                                 child: CustomTextField(
+                                                  screen: !Responsive.isDesktop(context),
+                                                  labelText: 'Student ID',
                                                   onChanged: (value) => onTextChanged(value, presidentName),
                                                   validator: (value) {
                                                     if (value!.isEmpty) {
@@ -710,6 +719,8 @@ class _AddSocietyState extends State<AddSociety> {
                                               Expanded(
                                                 flex: 4,
                                                 child: CustomTextField(
+                                                  screen: !Responsive.isDesktop(context),
+                                                  labelText: 'Student ID',
                                                    onChanged: (value) => onTextChanged(value, secretaryName),
                                                   validator: (value) {
                                                     if (value!.isEmpty) {
@@ -748,6 +759,8 @@ class _AddSocietyState extends State<AddSociety> {
                                               Expanded(
                                                 flex: 4,
                                                 child: CustomTextField(
+                                                  screen: !Responsive.isDesktop(context),
+                                                  labelText: 'Student ID',
                                                  onChanged: (value) => onTextChanged(value, treasurerName),
                                                   validator: (value) {
                                                     if (value!.isEmpty) {
@@ -929,6 +942,8 @@ class _AddSocietyState extends State<AddSociety> {
                                               Expanded(
                                                 flex: 4,
                                                 child: CustomTextField(
+                                                  screen: !Responsive.isDesktop(context),
+                                                  labelText: 'Student ID',
                                                   onChanged: (value) => onTextChanged(value, vpresidentName),
                                                     
                                                   validator: (value) {
@@ -968,6 +983,8 @@ class _AddSocietyState extends State<AddSociety> {
                                               Expanded(
                                                 flex: 4,
                                                 child: CustomTextField(
+                                                  screen: !Responsive.isDesktop(context),
+                                                  labelText: 'Student ID',
                                                     onChanged: (value) => onTextChanged(value, vsecretaryName),
                                                   validator: (value) {
                                                     if (value!.isEmpty) {
@@ -1006,6 +1023,8 @@ class _AddSocietyState extends State<AddSociety> {
                                               Expanded(
                                                 flex: 4,
                                                 child: CustomTextField(
+                                                  screen: !Responsive.isDesktop(context),
+                                                  labelText: 'Student ID',
                                                   onChanged: (value) => onTextChanged(value, vtreasurerName),
                                                   validator: (value) {
                                                     if (value!.isEmpty) {
