@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
 import 'package:fyp/pages/society.dart';
-import 'package:fyp/pages/viewEvent.dart';
+import 'package:fyp/pages/ongoingEvent.dart';
 
 class AddEvent extends StatefulWidget {
   final String selectedSociety;
@@ -166,7 +166,7 @@ class _AddEventState extends State<AddEvent> {
                     buttonTexts: const ['Society', 'Event', 'Add Event'],
                     destination: [
                       const Society(),
-                      ViewEvent(selectedSociety: widget.selectedSociety),
+                      OngoingEvent(selectedSociety: widget.selectedSociety),
                       AddEvent(selectedSociety: widget.selectedSociety)
                     ],
                   ),
@@ -841,7 +841,7 @@ class _AddEventState extends State<AddEvent> {
                                                     context,
                                                     MaterialPageRoute(
                                                       builder: (context) =>
-                                                          ViewEvent(
+                                                          OngoingEvent(
                                                         selectedSociety: widget
                                                             .selectedSociety,
                                                       ),

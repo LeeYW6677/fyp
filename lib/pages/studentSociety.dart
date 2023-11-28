@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
-import 'package:fyp/pages/viewEvent.dart';
+import 'package:fyp/pages/ongoingEvent.dart';
 import 'package:localstorage/localstorage.dart';
 
 class StudentSociety extends StatefulWidget {
@@ -272,7 +272,7 @@ class _StudentSocietyState extends State<StudentSociety> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => ViewEvent(
+                                        builder: (context) => OngoingEvent(
                                             selectedSociety: selectedSociety),
                                       ),
                                     );

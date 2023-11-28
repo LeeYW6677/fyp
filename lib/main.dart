@@ -6,7 +6,11 @@ import 'package:fyp/pages/addEvent.dart';
 import 'package:fyp/pages/home.dart';
 import 'package:fyp/pages/login.dart';
 import 'package:fyp/functions/firebase_options.dart';
-import 'package:fyp/pages/viewEvent.dart';
+import 'package:fyp/pages/ongoingEvent.dart';
+import 'package:fyp/pages/proposal.dart';
+import 'package:fyp/pages/student.dart';
+import 'package:fyp/pages/studentOngoingEvent.dart';
+import 'package:fyp/pages/studentOrganisedEvent.dart';
 
 
 void main() async {
@@ -44,7 +48,7 @@ class _SocietyManagementSystemState extends State<SocietyManagementSystem> {
           thumbVisibility: MaterialStateProperty.all<bool>(true),
         ),
       ),
-      home: user != null ? const ViewEvent(selectedSociety: 'S001',) : const Login(),
+      home: user != null ? Proposal(selectedEvent: 'E001',) : const Login(),
     );
   }
 }

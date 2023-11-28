@@ -5,7 +5,7 @@ import 'package:fyp/functions/responsive.dart';
 import 'package:fyp/pages/budget.dart';
 import 'package:fyp/pages/committee.dart';
 import 'package:fyp/pages/proposal.dart';
-import 'package:fyp/pages/studentEvent.dart';
+import 'package:fyp/pages/studentOrganisedEvent.dart';
 import 'package:intl/intl.dart';
 import 'package:timelines/timelines.dart';
 
@@ -113,7 +113,7 @@ class _ScheduleState extends State<Schedule> {
                   NavigationMenu(
                     buttonTexts: const ['Event', 'Schedule'],
                     destination: [
-                      const StudentEvent(),
+                      const StudentOrganisedEvent(),
                       Schedule(selectedEvent: widget.selectedEvent)
                     ],
                   ),
@@ -147,29 +147,7 @@ class _ScheduleState extends State<Schedule> {
                                     );
                                   },
                                   style: TextButton.styleFrom(
-                                    padding: const EdgeInsets.all(24.0),
-                                    backgroundColor: Colors.grey[200],
-                                    foregroundColor: Colors.black,
-                                    side: const BorderSide(
-                                        color: Colors.grey, width: 1.0),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(0.0),
-                                    ),
-                                  ),
-                                  child: const Text('Proposal'),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) => Schedule(
-                                              selectedEvent:
-                                                  widget.selectedEvent)),
-                                    );
-                                  },
-                                  style: TextButton.styleFrom(
-                                    padding: const EdgeInsets.all(24.0),
+                                    padding: const EdgeInsets.all(16.0),
                                     backgroundColor: Colors.white,
                                     foregroundColor: Colors.black,
                                     side: const BorderSide(
@@ -178,19 +156,21 @@ class _ScheduleState extends State<Schedule> {
                                       borderRadius: BorderRadius.circular(0.0),
                                     ),
                                   ),
-                                  child: const Text('Schedule'),
+                                  child: const Text('Pre Event'),
                                 ),
                                 TextButton(
                                   onPressed: () {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                          builder: (context) =>
-                                              const Committee()),
+                                          builder: (context) => Schedule(
+                                                selectedEvent:
+                                                    widget.selectedEvent,
+                                              )),
                                     );
                                   },
                                   style: TextButton.styleFrom(
-                                    padding: const EdgeInsets.all(24.0),
+                                    padding: const EdgeInsets.all(16.0),
                                     backgroundColor: Colors.grey[200],
                                     foregroundColor: Colors.black,
                                     side: const BorderSide(
@@ -199,449 +179,576 @@ class _ScheduleState extends State<Schedule> {
                                       borderRadius: BorderRadius.circular(0.0),
                                     ),
                                   ),
-                                  child: const Text('Committee'),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) => const Budget()),
-                                    );
-                                  },
-                                  style: TextButton.styleFrom(
-                                    padding: const EdgeInsets.all(24.0),
-                                    foregroundColor: Colors.black,
-                                    backgroundColor: Colors.grey[200],
-                                    side: const BorderSide(
-                                        color: Colors.grey, width: 1.0),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(0.0),
-                                    ),
-                                  ),
-                                  child: const Text('Budget'),
+                                  child: const Text('Post Event'),
                                 ),
                               ],
                             ),
-                            Row(
-                              children: [
-                                Expanded(
+                            Row(children: [
+                              Expanded(
                                   child: Container(
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      border: Border.all(
-                                          width: 1.0, color: Colors.grey),
-                                    ),
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(16.0),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.end,
-                                        children: [
-                                          Row(
-                                            children: [
-                                              Expanded(
-                                                child: Padding(
-                                                  padding:
-                                                      const EdgeInsets.all(8.0),
-                                                  child: Row(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .center,
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment.start,
-                                                    children: [
-                                                      const Expanded(
-                                                        flex: 1,
-                                                        child: Text(
-                                                          'Date',
-                                                          style: TextStyle(
-                                                              fontSize: 16),
-                                                        ),
-                                                      ),
-                                                      Expanded(
-                                                        flex: 4,
-                                                        child: CustomTextField(
-                                                          controller: date,
-                                                          hintText:
-                                                              'Enter date',
-                                                          suffixIcon:
-                                                              const Icon(Icons
-                                                                  .calendar_today_rounded),
-                                                          onTap: () async {
-                                                            DateTime?
-                                                                pickedDate =
-                                                                await showDatePicker(
-                                                              context: context,
-                                                              initialDate:
-                                                                  DateTime(
-                                                                      2000),
-                                                              firstDate:
-                                                                  DateTime(
-                                                                      1900),
-                                                              lastDate:
-                                                                  DateTime(
-                                                                      2010),
-                                                            );
-
-                                                            if (pickedDate !=
-                                                                null) {
-                                                              setState(() {
-                                                                date.text = DateFormat(
-                                                                        'dd-MM-yyyy')
-                                                                    .format(
-                                                                        pickedDate);
-                                                              });
-                                                            }
-                                                          },
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
-                                              Expanded(
-                                                child: Padding(
-                                                  padding:
-                                                      const EdgeInsets.all(8.0),
-                                                  child: Row(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .center,
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment.start,
-                                                    children: [
-                                                      const Expanded(
-                                                        flex: 1,
-                                                        child: Text(
-                                                          'Time',
-                                                          style: TextStyle(
-                                                              fontSize: 16),
-                                                        ),
-                                                      ),
-                                                      Expanded(
-                                                        flex: 2,
-                                                        child: CustomTextField(
-                                                          controller: start,
-                                                          hintText:
-                                                              'Enter start time',
-                                                          suffixIcon:
-                                                              const Icon(Icons
-                                                                  .punch_clock),
-                                                          onTap: () async {
-                                                            TimeOfDay?
-                                                                pickedTime =
-                                                                await showTimePicker(
-                                                              context: context,
-                                                              initialTime:
-                                                                  TimeOfDay
-                                                                      .now(),
-                                                            );
-
-                                                            if (pickedTime !=
-                                                                null) {
-                                                              setState(() {
-                                                                start.text =
-                                                                    pickedTime
-                                                                        .format(
-                                                                            context);
-                                                              });
-                                                            }
-                                                          },
-                                                        ),
-                                                      ),
-                                                      const Text('     -     '),
-                                                      Expanded(
-                                                        flex: 2,
-                                                        child: CustomTextField(
-                                                          controller: end,
-                                                          hintText:
-                                                              'Enter end time',
-                                                          suffixIcon:
-                                                              const Icon(Icons
-                                                                  .punch_clock),
-                                                          onTap: () async {
-                                                            TimeOfDay?
-                                                                pickedTime =
-                                                                await showTimePicker(
-                                                              context: context,
-                                                              initialTime:
-                                                                  TimeOfDay
-                                                                      .now(),
-                                                            );
-
-                                                            if (pickedTime !=
-                                                                null) {
-                                                              setState(() {
-                                                                end.text =
-                                                                    pickedTime
-                                                                        .format(
-                                                                            context);
-                                                              });
-                                                            }
-                                                          },
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          const SizedBox(
-                                            height: 15,
-                                          ),
-                                          Row(
-                                            children: [
-                                              Expanded(
-                                                  child: Padding(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                              8.0),
-                                                      child: Row(
-                                                        crossAxisAlignment:
-                                                            CrossAxisAlignment
-                                                                .start,
-                                                        mainAxisAlignment:
-                                                            MainAxisAlignment
-                                                                .start,
-                                                        children: [
-                                                          const Expanded(
-                                                            flex: 1,
-                                                            child: Text(
-                                                              'Programme Details',
-                                                              style: TextStyle(
-                                                                  fontSize: 16),
-                                                            ),
-                                                          ),
-                                                          Expanded(
-                                                            flex: 9,
-                                                            child:
-                                                                CustomTextField(
-                                                              hintText:
-                                                                  'Enter programme details',
-                                                              controller:
-                                                                  description,
-                                                              maxLine: 3,
-                                                              validator:
-                                                                  (value) {
-                                                                if (value!
-                                                                    .isEmpty) {
-                                                                  return 'Please enter programme details';
-                                                                }
-                                                                return null;
-                                                              },
-                                                              onChanged:
-                                                                  (text) {
-                                                                setState(() {
-                                                                  characterCount =
-                                                                      text.length;
-                                                                });
-                                                              },
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ))),
-                                            ],
-                                          ),
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.end,
-                                            children: [
-                                              Text('$characterCount/100'),
-                                              const SizedBox(
-                                                width: 10,
-                                              ),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 15),
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.end,
-                                            children: [
-                                              if (status == 'Planning')
-                                                CustomButton(
-                                                  onPressed: () {
-                                                    addToTable();
-                                                  },
-                                                  text: 'Save',
-                                                  width: 150,
-                                                ),
-                                              const SizedBox(
-                                                width: 10,
-                                              ),
-                                            ],
-                                          ),
-                                          const SizedBox(
-                                            height: 15,
-                                          ),
-                                          Table(
-                                            columnWidths: const {
-                                              0: FlexColumnWidth(1),
-                                              1: FlexColumnWidth(1),
-                                              2: FlexColumnWidth(4),
-                                            },
-                                            border: TableBorder.all(
-                                              color: Colors.grey,
-                                            ),
-                                            children: [
-                                              const TableRow(
-                                                children: [
-                                                  TableCell(
-                                                    child: Padding(
-                                                      padding:
-                                                          EdgeInsets.all(12.0),
-                                                      child: Text('Date'),
-                                                    ),
-                                                  ),
-                                                  TableCell(
-                                                    child: Padding(
-                                                      padding:
-                                                          EdgeInsets.all(12.0),
-                                                      child: Text('Time'),
-                                                    ),
-                                                  ),
-                                                  TableCell(
-                                                    child: Padding(
-                                                      padding:
-                                                          EdgeInsets.all(12.0),
-                                                      child: Text(
-                                                          'Programme Details'),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              for (TableRow row in tableRows)
-                                                TableRow(
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        border: Border.all(
+                                            width: 1.0, color: Colors.grey),
+                                      ),
+                                      child: Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.end,
+                                              children: [
+                                                Row(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
                                                   children: [
-                                                    Padding(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                              12.0),
-                                                      child: Text(
-                                                          row.children![0]
-                                                              .toString(),
-                                                          style:
-                                                              const TextStyle(
-                                                                  fontSize:
-                                                                      14)),
+                                                    TextButton(
+                                                      onPressed: () {
+                                                        Navigator.push(
+                                                          context,
+                                                          MaterialPageRoute(
+                                                              builder: (context) =>
+                                                                  Proposal(
+                                                                      selectedEvent:
+                                                                          widget
+                                                                              .selectedEvent)),
+                                                        );
+                                                      },
+                                                      style:
+                                                          TextButton.styleFrom(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(16.0),
+                                                        backgroundColor:
+                                                            Colors.grey[200],
+                                                        foregroundColor:
+                                                            Colors.black,
+                                                        side: const BorderSide(
+                                                            color: Colors.grey,
+                                                            width: 1.0),
+                                                        shape:
+                                                            RoundedRectangleBorder(
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(
+                                                                      0.0),
+                                                        ),
+                                                      ),
+                                                      child: const Text(
+                                                          'Proposal'),
                                                     ),
-                                                    Padding(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                              12.0),
-                                                      child: Text(
-                                                          row.children![1]
-                                                              .toString(),
-                                                          style:
-                                                              const TextStyle(
-                                                                  fontSize:
-                                                                      14)),
+                                                    TextButton(
+                                                      onPressed: () {
+                                                        Navigator.push(
+                                                          context,
+                                                          MaterialPageRoute(
+                                                              builder: (context) =>
+                                                                  Schedule(
+                                                                      selectedEvent:
+                                                                          widget
+                                                                              .selectedEvent)),
+                                                        );
+                                                      },
+                                                      style:
+                                                          TextButton.styleFrom(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(16.0),
+                                                        backgroundColor:
+                                                            Colors.white,
+                                                        foregroundColor:
+                                                            Colors.black,
+                                                        side: const BorderSide(
+                                                            color: Colors.grey,
+                                                            width: 1.0),
+                                                        shape:
+                                                            RoundedRectangleBorder(
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(
+                                                                      0.0),
+                                                        ),
+                                                      ),
+                                                      child: const Text(
+                                                          'Schedule'),
                                                     ),
-                                                    Padding(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                              12.0),
-                                                      child: Text(
-                                                          row.children![2]
-                                                              .toString(),
-                                                          style:
-                                                              const TextStyle(
-                                                                  fontSize:
-                                                                      14)),
+                                                    TextButton(
+                                                      onPressed: () {
+                                                        Navigator.push(
+                                                          context,
+                                                          MaterialPageRoute(
+                                                              builder: (context) =>
+                                                                  const Committee()),
+                                                        );
+                                                      },
+                                                      style:
+                                                          TextButton.styleFrom(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(16.0),
+                                                        backgroundColor:
+                                                            Colors.grey[200],
+                                                        foregroundColor:
+                                                            Colors.black,
+                                                        side: const BorderSide(
+                                                            color: Colors.grey,
+                                                            width: 1.0),
+                                                        shape:
+                                                            RoundedRectangleBorder(
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(
+                                                                      0.0),
+                                                        ),
+                                                      ),
+                                                      child: const Text(
+                                                          'Committee'),
+                                                    ),
+                                                    TextButton(
+                                                      onPressed: () {
+                                                        Navigator.push(
+                                                          context,
+                                                          MaterialPageRoute(
+                                                              builder: (context) =>
+                                                                  const Budget()),
+                                                        );
+                                                      },
+                                                      style:
+                                                          TextButton.styleFrom(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(16.0),
+                                                        foregroundColor:
+                                                            Colors.black,
+                                                        backgroundColor:
+                                                            Colors.grey[200],
+                                                        side: const BorderSide(
+                                                            color: Colors.grey,
+                                                            width: 1.0),
+                                                        shape:
+                                                            RoundedRectangleBorder(
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(
+                                                                      0.0),
+                                                        ),
+                                                      ),
+                                                      child:
+                                                          const Text('Budget'),
                                                     ),
                                                   ],
                                                 ),
-                                            ],
-                                          ),
-                                          const Divider(
-                                              thickness: 0.1,
-                                              color: Colors.black),
-                                          SizedBox(
-                                            height: 175,
-                                            child: Timeline.tileBuilder(
-                                              shrinkWrap: true,
-                                              padding: EdgeInsets.zero,
-                                              theme: TimelineThemeData(
-                                                direction: Axis.horizontal,
-                                                connectorTheme:
-                                                    const ConnectorThemeData(
-                                                        space: 8.0,
-                                                        thickness: 2.0),
-                                              ),
-                                              builder:
-                                                  TimelineTileBuilder.connected(
-                                                connectionDirection:
-                                                    ConnectionDirection.before,
-                                                itemCount: 4,
-                                                itemExtentBuilder: (_, __) {
-                                                  return (MediaQuery.of(context)
-                                                              .size
-                                                              .width -
-                                                          200) /
-                                                      4.0;
-                                                },
-                                                oppositeContentsBuilder:
-                                                    (context, index) {
-                                                  return Container();
-                                                },
-                                                contentsBuilder:
-                                                    (context, index) {
-                                                  return Column(
-                                                    children: [
-                                                      Text(progress[index]),
-                                                      const SizedBox(
-                                                          height: 10),
-                                                      if (index <=
-                                                          progress
-                                                              .indexOf(status))
-                                                        CustomButton(
-                                                            onPressed: status ==
-                                                                    'Planning'
-                                                                ? () {}
-                                                                : () {},
-                                                            text: status ==
-                                                                    'Planning'
-                                                                ? 'Submit'
-                                                                : 'Unsubmit'),
-                                                    ],
-                                                  );
-                                                },
-                                                indicatorBuilder: (_, index) {
-                                                  if (index <=
-                                                      progress
-                                                          .indexOf(status)) {
-                                                    return const DotIndicator(
-                                                      size: 30.0,
-                                                      color: Colors.green,
-                                                    );
-                                                  } else {
-                                                    return const OutlinedDotIndicator(
-                                                      borderWidth: 4.0,
-                                                      color: Colors.green,
-                                                    );
-                                                  }
-                                                },
-                                                connectorBuilder:
-                                                    (_, index, type) {
-                                                  if (index > 0) {
-                                                    return const SolidLineConnector(
-                                                      color: Colors.green,
-                                                    );
-                                                  } else {
-                                                    return null;
-                                                  }
-                                                },
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            )
+                                                Row(
+                                                  children: [
+                                                    Expanded(
+                                                      child: Container(
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color: Colors.white,
+                                                          border: Border.all(
+                                                              width: 1.0,
+                                                              color:
+                                                                  Colors.grey),
+                                                        ),
+                                                        child: Padding(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .all(16.0),
+                                                          child: Column(
+                                                            crossAxisAlignment:
+                                                                CrossAxisAlignment
+                                                                    .end,
+                                                            children: [
+                                                              Row(
+                                                                children: [
+                                                                  Expanded(
+                                                                    child:
+                                                                        Padding(
+                                                                      padding: const EdgeInsets
+                                                                          .all(
+                                                                          8.0),
+                                                                      child:
+                                                                          Row(
+                                                                        crossAxisAlignment:
+                                                                            CrossAxisAlignment.center,
+                                                                        mainAxisAlignment:
+                                                                            MainAxisAlignment.start,
+                                                                        children: [
+                                                                          const Expanded(
+                                                                            flex:
+                                                                                1,
+                                                                            child:
+                                                                                Text(
+                                                                              'Date',
+                                                                              style: TextStyle(fontSize: 16),
+                                                                            ),
+                                                                          ),
+                                                                          Expanded(
+                                                                            flex:
+                                                                                4,
+                                                                            child:
+                                                                                CustomTextField(
+                                                                              controller: date,
+                                                                              hintText: 'Enter date',
+                                                                              suffixIcon: const Icon(Icons.calendar_today_rounded),
+                                                                              onTap: () async {
+                                                                                DateTime? pickedDate = await showDatePicker(
+                                                                                  context: context,
+                                                                                  initialDate: DateTime(2000),
+                                                                                  firstDate: DateTime(1900),
+                                                                                  lastDate: DateTime(2010),
+                                                                                );
+
+                                                                                if (pickedDate != null) {
+                                                                                  setState(() {
+                                                                                    date.text = DateFormat('dd-MM-yyyy').format(pickedDate);
+                                                                                  });
+                                                                                }
+                                                                              },
+                                                                            ),
+                                                                          ),
+                                                                        ],
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                                  Expanded(
+                                                                    child:
+                                                                        Padding(
+                                                                      padding: const EdgeInsets
+                                                                          .all(
+                                                                          8.0),
+                                                                      child:
+                                                                          Row(
+                                                                        crossAxisAlignment:
+                                                                            CrossAxisAlignment.center,
+                                                                        mainAxisAlignment:
+                                                                            MainAxisAlignment.start,
+                                                                        children: [
+                                                                          const Expanded(
+                                                                            flex:
+                                                                                1,
+                                                                            child:
+                                                                                Text(
+                                                                              'Time',
+                                                                              style: TextStyle(fontSize: 16),
+                                                                            ),
+                                                                          ),
+                                                                          Expanded(
+                                                                            flex:
+                                                                                2,
+                                                                            child:
+                                                                                CustomTextField(
+                                                                              controller: start,
+                                                                              hintText: 'Enter start time',
+                                                                              suffixIcon: const Icon(Icons.punch_clock),
+                                                                              onTap: () async {
+                                                                                TimeOfDay? pickedTime = await showTimePicker(
+                                                                                  context: context,
+                                                                                  initialTime: TimeOfDay.now(),
+                                                                                );
+
+                                                                                if (pickedTime != null) {
+                                                                                  setState(() {
+                                                                                    start.text = pickedTime.format(context);
+                                                                                  });
+                                                                                }
+                                                                              },
+                                                                            ),
+                                                                          ),
+                                                                          const Text(
+                                                                              '     -     '),
+                                                                          Expanded(
+                                                                            flex:
+                                                                                2,
+                                                                            child:
+                                                                                CustomTextField(
+                                                                              controller: end,
+                                                                              hintText: 'Enter end time',
+                                                                              suffixIcon: const Icon(Icons.punch_clock),
+                                                                              onTap: () async {
+                                                                                TimeOfDay? pickedTime = await showTimePicker(
+                                                                                  context: context,
+                                                                                  initialTime: TimeOfDay.now(),
+                                                                                );
+
+                                                                                if (pickedTime != null) {
+                                                                                  setState(() {
+                                                                                    end.text = pickedTime.format(context);
+                                                                                  });
+                                                                                }
+                                                                              },
+                                                                            ),
+                                                                          ),
+                                                                        ],
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                              const SizedBox(
+                                                                height: 15,
+                                                              ),
+                                                              Row(
+                                                                children: [
+                                                                  Expanded(
+                                                                      child: Padding(
+                                                                          padding: const EdgeInsets.all(8.0),
+                                                                          child: Row(
+                                                                            crossAxisAlignment:
+                                                                                CrossAxisAlignment.start,
+                                                                            mainAxisAlignment:
+                                                                                MainAxisAlignment.start,
+                                                                            children: [
+                                                                              const Expanded(
+                                                                                flex: 1,
+                                                                                child: Text(
+                                                                                  'Programme Details',
+                                                                                  style: TextStyle(fontSize: 16),
+                                                                                ),
+                                                                              ),
+                                                                              Expanded(
+                                                                                flex: 9,
+                                                                                child: CustomTextField(
+                                                                                  hintText: 'Enter programme details',
+                                                                                  controller: description,
+                                                                                  maxLine: 3,
+                                                                                  validator: (value) {
+                                                                                    if (value!.isEmpty) {
+                                                                                      return 'Please enter programme details';
+                                                                                    }
+                                                                                    return null;
+                                                                                  },
+                                                                                  onChanged: (text) {
+                                                                                    setState(() {
+                                                                                      characterCount = text.length;
+                                                                                    });
+                                                                                  },
+                                                                                ),
+                                                                              ),
+                                                                            ],
+                                                                          ))),
+                                                                ],
+                                                              ),
+                                                              Row(
+                                                                mainAxisAlignment:
+                                                                    MainAxisAlignment
+                                                                        .end,
+                                                                children: [
+                                                                  Text(
+                                                                      '$characterCount/100'),
+                                                                  const SizedBox(
+                                                                    width: 10,
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                              const SizedBox(
+                                                                  height: 15),
+                                                              Row(
+                                                                mainAxisAlignment:
+                                                                    MainAxisAlignment
+                                                                        .end,
+                                                                children: [
+                                                                  if (status ==
+                                                                      'Planning')
+                                                                    CustomButton(
+                                                                      onPressed:
+                                                                          () {
+                                                                        addToTable();
+                                                                      },
+                                                                      text:
+                                                                          'Save',
+                                                                      width:
+                                                                          150,
+                                                                    ),
+                                                                  const SizedBox(
+                                                                    width: 10,
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                              const SizedBox(
+                                                                height: 15,
+                                                              ),
+                                                              Table(
+                                                                columnWidths: const {
+                                                                  0: FlexColumnWidth(
+                                                                      1),
+                                                                  1: FlexColumnWidth(
+                                                                      1),
+                                                                  2: FlexColumnWidth(
+                                                                      4),
+                                                                },
+                                                                border:
+                                                                    TableBorder
+                                                                        .all(
+                                                                  color: Colors
+                                                                      .grey,
+                                                                ),
+                                                                children: [
+                                                                  const TableRow(
+                                                                    children: [
+                                                                      TableCell(
+                                                                        child:
+                                                                            Padding(
+                                                                          padding:
+                                                                              EdgeInsets.all(12.0),
+                                                                          child:
+                                                                              Text('Date'),
+                                                                        ),
+                                                                      ),
+                                                                      TableCell(
+                                                                        child:
+                                                                            Padding(
+                                                                          padding:
+                                                                              EdgeInsets.all(12.0),
+                                                                          child:
+                                                                              Text('Time'),
+                                                                        ),
+                                                                      ),
+                                                                      TableCell(
+                                                                        child:
+                                                                            Padding(
+                                                                          padding:
+                                                                              EdgeInsets.all(12.0),
+                                                                          child:
+                                                                              Text('Programme Details'),
+                                                                        ),
+                                                                      ),
+                                                                    ],
+                                                                  ),
+                                                                  for (TableRow row
+                                                                      in tableRows)
+                                                                    TableRow(
+                                                                      children: [
+                                                                        Padding(
+                                                                          padding: const EdgeInsets
+                                                                              .all(
+                                                                              12.0),
+                                                                          child: Text(
+                                                                              row.children![0].toString(),
+                                                                              style: const TextStyle(fontSize: 14)),
+                                                                        ),
+                                                                        Padding(
+                                                                          padding: const EdgeInsets
+                                                                              .all(
+                                                                              12.0),
+                                                                          child: Text(
+                                                                              row.children![1].toString(),
+                                                                              style: const TextStyle(fontSize: 14)),
+                                                                        ),
+                                                                        Padding(
+                                                                          padding: const EdgeInsets
+                                                                              .all(
+                                                                              12.0),
+                                                                          child: Text(
+                                                                              row.children![2].toString(),
+                                                                              style: const TextStyle(fontSize: 14)),
+                                                                        ),
+                                                                      ],
+                                                                    ),
+                                                                ],
+                                                              ),
+                                                              const Divider(
+                                                                  thickness:
+                                                                      0.1,
+                                                                  color: Colors
+                                                                      .black),
+                                                              SizedBox(
+                                                                height: 175,
+                                                                child: Timeline
+                                                                    .tileBuilder(
+                                                                  shrinkWrap:
+                                                                      true,
+                                                                  padding:
+                                                                      EdgeInsets
+                                                                          .zero,
+                                                                  theme:
+                                                                      TimelineThemeData(
+                                                                    direction: Axis
+                                                                        .horizontal,
+                                                                    connectorTheme: const ConnectorThemeData(
+                                                                        space:
+                                                                            8.0,
+                                                                        thickness:
+                                                                            2.0),
+                                                                  ),
+                                                                  builder:
+                                                                      TimelineTileBuilder
+                                                                          .connected(
+                                                                    connectionDirection:
+                                                                        ConnectionDirection
+                                                                            .before,
+                                                                    itemCount:
+                                                                        4,
+                                                                    itemExtentBuilder:
+                                                                        (_, __) {
+                                                                      return (MediaQuery.of(context).size.width -
+                                                                              200) /
+                                                                          4.0;
+                                                                    },
+                                                                    oppositeContentsBuilder:
+                                                                        (context,
+                                                                            index) {
+                                                                      return Container();
+                                                                    },
+                                                                    contentsBuilder:
+                                                                        (context,
+                                                                            index) {
+                                                                      return Column(
+                                                                        children: [
+                                                                          Text(progress[
+                                                                              index]),
+                                                                          const SizedBox(
+                                                                              height: 10),
+                                                                          if (index <=
+                                                                              progress.indexOf(status))
+                                                                            CustomButton(onPressed: status == 'Planning' ? () {} : () {}, text: status == 'Planning' ? 'Submit' : 'Unsubmit'),
+                                                                        ],
+                                                                      );
+                                                                    },
+                                                                    indicatorBuilder:
+                                                                        (_, index) {
+                                                                      if (index <=
+                                                                          progress
+                                                                              .indexOf(status)) {
+                                                                        return const DotIndicator(
+                                                                          size:
+                                                                              30.0,
+                                                                          color:
+                                                                              Colors.green,
+                                                                        );
+                                                                      } else {
+                                                                        return const OutlinedDotIndicator(
+                                                                          borderWidth:
+                                                                              4.0,
+                                                                          color:
+                                                                              Colors.green,
+                                                                        );
+                                                                      }
+                                                                    },
+                                                                    connectorBuilder: (_,
+                                                                        index,
+                                                                        type) {
+                                                                      if (index >
+                                                                          0) {
+                                                                        return const SolidLineConnector(
+                                                                          color:
+                                                                              Colors.green,
+                                                                        );
+                                                                      } else {
+                                                                        return null;
+                                                                      }
+                                                                    },
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                )
+                                              ])))),
+                            ]),
                           ]))
                 ]),
               ),

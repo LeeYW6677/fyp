@@ -108,6 +108,12 @@ class _ProfileState extends State<Profile> {
   }
 
   @override
+  void initState(){
+    super.initState();
+    getData();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const Header(),

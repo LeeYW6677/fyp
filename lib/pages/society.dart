@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
 import 'package:fyp/pages/addSociety.dart';
-import 'package:fyp/pages/viewEvent.dart';
+import 'package:fyp/pages/ongoingEvent.dart';
 
 class Society extends StatefulWidget {
   const Society({super.key});
@@ -274,7 +274,7 @@ class _SocietyState extends State<Society> {
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder: (context) => ViewEvent(
+                                              builder: (context) => OngoingEvent(
                                                 selectedSociety:
                                                     selectedSociety,
                                               ),

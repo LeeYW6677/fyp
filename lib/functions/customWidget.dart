@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:fyp/pages/advisor.dart';
 import 'package:fyp/pages/advisorProfile.dart';
 import 'package:fyp/pages/home.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:fyp/pages/society.dart';
 import 'package:fyp/pages/student.dart';
-import 'package:fyp/pages/studentEvent.dart';
+import 'package:fyp/pages/studentOngoingEvent.dart';
 import 'package:fyp/pages/studentSociety.dart';
 import 'package:intl/intl.dart';
 import 'package:localstorage/localstorage.dart';
@@ -293,7 +294,7 @@ class CustomDrawer extends StatelessWidget {
                         Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const StudentEvent(),
+                                builder: (context) => const StudentOngoingEvent(),
                               ),
                             );
                       },
@@ -334,7 +335,6 @@ class CustomTextField extends StatefulWidget {
   final String hintText;
   final bool hiding;
   final Icon? icon;
-  final int width;
   final String? Function(String?)? validator;
   final String? errorText;
   final String? prefixText;
@@ -343,12 +343,12 @@ class CustomTextField extends StatefulWidget {
   final void Function(String)? onChanged;
   final Icon? suffixIcon;
   final int maxLine;
+  final FilteringTextInputFormatter? inputFormatters;
 
   const CustomTextField({
     Key? key,
     required this.controller,
     required this.hintText,
-    this.width = 300,
     this.hiding = false,
     this.icon,
     this.validator,
@@ -359,6 +359,7 @@ class CustomTextField extends StatefulWidget {
     this.onChanged,
     this.suffixIcon,
     this.maxLine = 1,
+    this.inputFormatters,
   }) : super(key: key);
 
   @override
@@ -377,6 +378,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
   @override
   Widget build(BuildContext context) {
     return TextFormField(
+      inputFormatters: widget.inputFormatters ?? [],
       style: const TextStyle(color: Colors.black),
       maxLines: widget.maxLine,
       onTap: widget.onTap,
