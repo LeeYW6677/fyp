@@ -16,6 +16,7 @@ class StudentOrganisedEvent extends StatefulWidget {
 
 class _StudentOrganisedEventState extends State<StudentOrganisedEvent> {
   final LocalStorage storage = LocalStorage('user');
+  bool _isLoading = true;
   List<Map<String, dynamic>> completedEvents = [];
   List<String> position = [
     'President',
@@ -29,6 +30,9 @@ class _StudentOrganisedEventState extends State<StudentOrganisedEvent> {
 
   Future<void> getData() async {
     try {
+      setState(() {
+        _isLoading = true;
+      });
       final FirebaseFirestore firestore = FirebaseFirestore.instance;
       // Fetch event data
       final QuerySnapshot<Map<String, dynamic>> relatedEvent = await firestore
@@ -79,7 +83,13 @@ class _StudentOrganisedEventState extends State<StudentOrganisedEvent> {
           completedEvents = completedEvents;
         });
       }
+      setState(() {
+        _isLoading = false;
+      });
     } catch (error) {
+      setState(() {
+        _isLoading = false;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Failed to fetch data. Please try again.'),
@@ -106,136 +116,147 @@ class _StudentOrganisedEventState extends State<StudentOrganisedEvent> {
               index: 3,
             )
           : null,
-      body: SafeArea(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (Responsive.isDesktop(context))
-              const Expanded(
-                child: CustomDrawer(
-                  index: 3,
-                ),
-              ),
-            Expanded(
-              flex: 5,
-              child: SingleChildScrollView(
-                child: Column(children: [
-                  const NavigationMenu(
-                    buttonTexts: ['Event'],
-                    destination: [
-                      StudentOrganisedEvent(),
-                    ],
-                  ),
-                  Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Event',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 20,
-                              ),
-                            ),
-                            const Divider(
-                              thickness: 0.1,
-                              color: Colors.black,
-                            ),
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) =>
-                                              const StudentOngoingEvent()),
-                                    );
-                                  },
-                                  style: TextButton.styleFrom(
-                                    padding: const EdgeInsets.all(24.0),
-                                    backgroundColor: Colors.grey[200],
-                                    foregroundColor: Colors.black,
-                                    side: const BorderSide(
-                                        color: Colors.grey, width: 1.0),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(0.0),
+      body: _isLoading
+          ? Center(
+              child: CircularProgressIndicator(),
+            )
+          : SafeArea(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (Responsive.isDesktop(context))
+                    const Expanded(
+                      child: CustomDrawer(
+                        index: 3,
+                      ),
+                    ),
+                  Expanded(
+                    flex: 5,
+                    child: SingleChildScrollView(
+                      child: Column(children: [
+                        const NavigationMenu(
+                          buttonTexts: ['Event'],
+                          destination: [
+                            StudentOrganisedEvent(),
+                          ],
+                        ),
+                        Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Event',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20,
                                     ),
                                   ),
-                                  child: const Text('Ongoing'),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) =>
-                                              const StudentOrganisedEvent()),
-                                    );
-                                  },
-                                  style: TextButton.styleFrom(
-                                    padding: const EdgeInsets.all(24.0),
-                                    backgroundColor: Colors.white,
-                                    foregroundColor: Colors.black,
-                                    side: const BorderSide(
-                                        color: Colors.grey, width: 1.0),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(0.0),
-                                    ),
+                                  const Divider(
+                                    thickness: 0.1,
+                                    color: Colors.black,
                                   ),
-                                  child: const Text('Organised'),
-                                ),
-                              ],
-                            ),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      border: Border.all(
-                                          width: 1.0, color: Colors.grey),
-                                    ),
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(16.0),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.end,
-                                        children: [
-                                          CustomDataTable2(
-                                              columns: const [
-                                                DataColumn(
-                                                  label: Text('Name'),
-                                                ),
-                                                DataColumn(
-                                                    label: Text('President')),
-                                                DataColumn(label: Text('Date')),
-                                                DataColumn(
-                                                    label: Text('Action')),
-                                              ],
-                                              source: _EventDataSource2(
-                                                  completedEvents, context),
-                                              refresh: getData,
-                                              context: context),
-                                          const SizedBox(
-                                            height: 15,
+                                  Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    const StudentOngoingEvent()),
+                                          );
+                                        },
+                                        style: TextButton.styleFrom(
+                                          padding: const EdgeInsets.all(24.0),
+                                          backgroundColor: Colors.grey[200],
+                                          foregroundColor: Colors.black,
+                                          side: const BorderSide(
+                                              color: Colors.grey, width: 1.0),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(0.0),
                                           ),
-                                        ],
+                                        ),
+                                        child: const Text('Ongoing'),
                                       ),
-                                    ),
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    const StudentOrganisedEvent()),
+                                          );
+                                        },
+                                        style: TextButton.styleFrom(
+                                          padding: const EdgeInsets.all(24.0),
+                                          backgroundColor: Colors.white,
+                                          foregroundColor: Colors.black,
+                                          side: const BorderSide(
+                                              color: Colors.grey, width: 1.0),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(0.0),
+                                          ),
+                                        ),
+                                        child: const Text('Organised'),
+                                      ),
+                                    ],
                                   ),
-                                ),
-                              ],
-                            )
-                          ]))
-                ]),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            border: Border.all(
+                                                width: 1.0, color: Colors.grey),
+                                          ),
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(16.0),
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.end,
+                                              children: [
+                                                CustomDataTable2(
+                                                    columns: const [
+                                                      DataColumn(
+                                                        label: Text('Name'),
+                                                      ),
+                                                      DataColumn(
+                                                          label: Text(
+                                                              'President')),
+                                                      DataColumn(
+                                                          label: Text('Date')),
+                                                      DataColumn(
+                                                          label:
+                                                              Text('Action')),
+                                                    ],
+                                                    source: _EventDataSource2(
+                                                        completedEvents,
+                                                        context),
+                                                    refresh: getData,
+                                                    context: context),
+                                                const SizedBox(
+                                                  height: 15,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                ]))
+                      ]),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
       bottomNavigationBar: const Footer(),
     );
   }

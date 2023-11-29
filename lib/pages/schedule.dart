@@ -16,10 +16,14 @@ class Schedule extends StatefulWidget {
 class _ScheduleState extends State<Schedule> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   List<Program> programs = [];
+  bool _isLoading = true;
   bool enable = true;
   String status = '';
   Future<void> getData() async {
     try {
+      setState(() {
+        _isLoading = true;
+      });
       final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
       // Fetch event data
@@ -35,7 +39,13 @@ class _ScheduleState extends State<Schedule> {
           enable = false;
         }
       }
+      setState(() {
+        _isLoading = false;
+      });
     } catch (error) {
+      setState(() {
+        _isLoading = false;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Failed to fetch data. Please try again.'),
@@ -98,7 +108,11 @@ class _ScheduleState extends State<Schedule> {
               index: 2,
             )
           : null,
-      body: SafeArea(
+      body: _isLoading
+        ? Center(
+            child: CircularProgressIndicator(),
+          )
+        : SafeArea(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -154,17 +168,52 @@ class _ScheduleState extends State<Schedule> {
                                                 mainAxisAlignment:
                                                     MainAxisAlignment.start,
                                                 children: [
-                                                  const Expanded(
-                                                    flex: 1,
-                                                    child: Text(
-                                                      'Date',
-                                                      style: TextStyle(
-                                                          fontSize: 16),
+                                                  if (Responsive.isDesktop(
+                                                      context))
+                                                    const Expanded(
+                                                      flex: 1,
+                                                      child: Text(
+                                                        'Date',
+                                                        style: TextStyle(
+                                                            fontSize: 16),
+                                                      ),
                                                     ),
-                                                  ),
                                                   Expanded(
                                                     flex: 4,
                                                     child: CustomTextField(
+                                                      screen:
+                                                          !Responsive.isDesktop(
+                                                              context),
+                                                      labelText: 'Date',
+                                                      validator: (value) {
+                                                        final DateFormat
+                                                            dateFormat =
+                                                            DateFormat(
+                                                                'dd-MM-yyyy');
+
+                                                        if (value!.isEmpty) {
+                                                          return 'Please enter date';
+                                                        } else {
+                                                          try {
+                                                            DateTime
+                                                                enteredDate =
+                                                                dateFormat
+                                                                    .parseStrict(
+                                                                        value);
+                                                            if (enteredDate
+                                                                .isBefore(DateTime
+                                                                        .now()
+                                                                    .add(const Duration(
+                                                                        days:
+                                                                            6)))) {
+                                                              return 'Date must be 1 week after today';
+                                                            }
+                                                          } catch (e) {
+                                                            return 'Invalid Date Format. Format: dd-MM-yyyy';
+                                                          }
+                                                          return null;
+                                                        }
+                                                      },
                                                       controller: date,
                                                       hintText: 'Enter date',
                                                       suffixIcon: const Icon(Icons
@@ -173,17 +222,20 @@ class _ScheduleState extends State<Schedule> {
                                                         DateTime? pickedDate =
                                                             await showDatePicker(
                                                           context: context,
-                                                          initialDate:
-                                                              DateTime.now()
-                                                                  .add(Duration(
+                                                          initialDate: DateTime
+                                                                  .now()
+                                                              .add(
+                                                                  const Duration(
                                                                       days: 7)),
-                                                          firstDate:
-                                                              DateTime.now()
-                                                                  .add(Duration(
+                                                          firstDate: DateTime
+                                                                  .now()
+                                                              .add(
+                                                                  const Duration(
                                                                       days: 7)),
-                                                          lastDate:
-                                                              DateTime.now()
-                                                                  .add(Duration(
+                                                          lastDate: DateTime
+                                                                  .now()
+                                                              .add(
+                                                                  const Duration(
                                                                       days:
                                                                           365)),
                                                         );
@@ -204,179 +256,456 @@ class _ScheduleState extends State<Schedule> {
                                               ),
                                             ),
                                           ),
-                                          Expanded(
-                                            child: Padding(
-                                              padding:
-                                                  const EdgeInsets.all(8.0),
-                                              child: Row(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.center,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.start,
-                                                children: [
-                                                  const Expanded(
-                                                    flex: 1,
-                                                    child: Text(
-                                                      'Time',
-                                                      style: TextStyle(
-                                                          fontSize: 16),
+                                          if (Responsive.isDesktop(context))
+                                            Expanded(
+                                              child: Padding(
+                                                padding:
+                                                    const EdgeInsets.all(8.0),
+                                                child: Row(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.center,
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.start,
+                                                  children: [
+                                                    const Expanded(
+                                                      flex: 1,
+                                                      child: Text(
+                                                        'Time',
+                                                        style: TextStyle(
+                                                            fontSize: 16),
+                                                      ),
                                                     ),
-                                                  ),
-                                                  Expanded(
-                                                    flex: 2,
-                                                    child: CustomTextField(
-                                                      errorText: startError,
-                                                      controller: start,
-                                                      hintText:
-                                                          'Enter start time',
-                                                      suffixIcon: const Icon(
-                                                          Icons.punch_clock),
-                                                      onTap: () async {
-                                                        TimeOfDay? pickedTime =
-                                                            await showTimePicker(
-                                                          context: context,
-                                                          initialEntryMode:
-                                                              TimePickerEntryMode
-                                                                  .inputOnly,
-                                                          initialTime:
-                                                              const TimeOfDay(
-                                                                  hour: 12,
-                                                                  minute: 00),
-                                                        );
-
-                                                        if (pickedTime !=
-                                                            null) {
-                                                          startError = null;
-
-                                                          if (end.text != '') {
+                                                    if (Responsive.isDesktop(
+                                                        context))
+                                                      Expanded(
+                                                        flex: 2,
+                                                        child: CustomTextField(
+                                                          validator: (value) {
                                                             final DateFormat
                                                                 timeFormat =
                                                                 DateFormat(
-                                                                    'HH:mm');
-                                                            DateTime
-                                                                parsedTime =
-                                                                timeFormat
-                                                                    .parse(end
-                                                                        .text);
-                                                            TimeOfDay endTime =
-                                                                TimeOfDay
-                                                                    .fromDateTime(
-                                                                        parsedTime);
-                                                            if (pickedTime
-                                                                        .hour >
-                                                                    endTime
-                                                                        .hour ||
-                                                                (pickedTime.hour ==
-                                                                        endTime
-                                                                            .hour &&
-                                                                    pickedTime
-                                                                            .minute >
-                                                                        endTime
-                                                                            .minute)) {
+                                                                    'HH:mm a');
+
+                                                            if (value!
+                                                                .isEmpty) {
+                                                              return 'Enter start time';
+                                                            } else {
+                                                              try {
+                                                                final DateTime
+                                                                    parsedTime =
+                                                                    timeFormat
+                                                                        .parse(
+                                                                            value);
+                                                              } catch (e) {
+                                                                return 'Format: HH-mm AM/PM';
+                                                              }
+                                                              return null;
+                                                            }
+                                                          },
+                                                          screen: !Responsive
+                                                              .isDesktop(
+                                                                  context),
+                                                          labelText:
+                                                              'Start Time',
+                                                          errorText: startError,
+                                                          controller: start,
+                                                          hintText:
+                                                              'Enter start time',
+                                                          suffixIcon:
+                                                              const Icon(Icons
+                                                                  .punch_clock),
+                                                          onTap: () async {
+                                                            TimeOfDay?
+                                                                pickedTime =
+                                                                await showTimePicker(
+                                                              context: context,
+                                                              initialEntryMode:
+                                                                  TimePickerEntryMode
+                                                                      .inputOnly,
+                                                              initialTime:
+                                                                  const TimeOfDay(
+                                                                      hour: 12,
+                                                                      minute:
+                                                                          00),
+                                                            );
+
+                                                            if (pickedTime !=
+                                                                null) {
+                                                              startError = null;
+
+                                                              if (end.text
+                                                                  .isNotEmpty) {
+                                                                final DateFormat
+                                                                    timeFormat =
+                                                                    DateFormat(
+                                                                        'hh:mm a');
+                                                                DateTime
+                                                                    parsedStartTime =
+                                                                    timeFormat.parse(
+                                                                        pickedTime
+                                                                            .format(context));
+                                                                DateTime
+                                                                    parsedEndTime =
+                                                                    timeFormat
+                                                                        .parse(end
+                                                                            .text);
+                                                                if (parsedStartTime
+                                                                    .isBefore(
+                                                                        parsedEndTime)) {
+                                                                  setState(() {
+                                                                    start.text =
+                                                                        pickedTime
+                                                                            .format(context);
+                                                                  });
+                                                                } else {
+                                                                  setState(() {
+                                                                    startError =
+                                                                        'Must be before End Time';
+                                                                  });
+                                                                }
+                                                              } else {
+                                                                setState(() {
+                                                                  start.text =
+                                                                      pickedTime
+                                                                          .format(
+                                                                              context);
+                                                                });
+                                                              }
+                                                            }
+                                                          },
+                                                        ),
+                                                      ),
+                                                    if (Responsive.isDesktop(
+                                                        context))
+                                                      const Text('     -     '),
+                                                    if (Responsive.isDesktop(
+                                                        context))
+                                                      Expanded(
+                                                        flex: 2,
+                                                        child: CustomTextField(
+                                                          screen: !Responsive
+                                                              .isDesktop(
+                                                                  context),
+                                                          labelText: 'End Time',
+                                                          errorText: endError,
+                                                          controller: end,
+                                                          hintText:
+                                                              'Enter end time',
+                                                          suffixIcon:
+                                                              const Icon(Icons
+                                                                  .punch_clock),
+                                                          validator: (value) {
+                                                            final DateFormat
+                                                                timeFormat =
+                                                                DateFormat(
+                                                                    'HH:mm a');
+
+                                                            if (value!
+                                                                .isEmpty) {
+                                                              return 'Enter start time';
+                                                            } else {
+                                                              try {
+                                                                final DateTime
+                                                                    parsedTime =
+                                                                    timeFormat
+                                                                        .parse(
+                                                                            value);
+                                                              } catch (e) {
+                                                                return 'Format: HH-mm AM/PM';
+                                                              }
+                                                              return null;
+                                                            }
+                                                          },
+                                                          onTap: () async {
+                                                            TimeOfDay?
+                                                                pickedTime =
+                                                                await showTimePicker(
+                                                              context: context,
+                                                              initialEntryMode:
+                                                                  TimePickerEntryMode
+                                                                      .input,
+                                                              initialTime:
+                                                                  const TimeOfDay(
+                                                                      hour: 12,
+                                                                      minute:
+                                                                          0),
+                                                            );
+
+                                                            if (pickedTime !=
+                                                                null) {
+                                                              endError = null;
+
+                                                              if (start.text !=
+                                                                  '') {
+                                                                final DateFormat
+                                                                    timeFormat =
+                                                                    DateFormat(
+                                                                        'hh:mm a');
+                                                                DateTime
+                                                                    parsedStartTime =
+                                                                    timeFormat
+                                                                        .parse(start
+                                                                            .text);
+                                                                DateTime
+                                                                    parsedEndTime =
+                                                                    timeFormat.parse(
+                                                                        pickedTime
+                                                                            .format(context));
+
+                                                                if (parsedEndTime
+                                                                    .isAfter(
+                                                                        parsedStartTime)) {
+                                                                  setState(() {
+                                                                    end.text = pickedTime
+                                                                        .format(
+                                                                            context);
+                                                                  });
+                                                                } else {
+                                                                  setState(() {
+                                                                    endError =
+                                                                        'Must be after Start Time';
+                                                                  });
+                                                                }
+                                                              } else {
+                                                                setState(() {
+                                                                  end.text =
+                                                                      pickedTime
+                                                                          .format(
+                                                                              context);
+                                                                });
+                                                              }
+                                                            }
+                                                          },
+                                                        ),
+                                                      ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                      if (!Responsive.isDesktop(context))
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: Padding(
+                                                padding:
+                                                    const EdgeInsets.all(8.0),
+                                                child: Row(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.center,
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.start,
+                                                  children: [
+                                                    if (Responsive.isDesktop(
+                                                        context))
+                                                      const Expanded(
+                                                        flex: 1,
+                                                        child: Text(
+                                                          'Time',
+                                                          style: TextStyle(
+                                                              fontSize: 16),
+                                                        ),
+                                                      ),
+                                                    Expanded(
+                                                      flex: 2,
+                                                      child: CustomTextField(
+                                                        screen: !Responsive
+                                                            .isDesktop(context),
+                                                        validator: (value) {
+                                                          final DateFormat
+                                                              timeFormat =
+                                                              DateFormat(
+                                                                  'HH:mm a');
+
+                                                          if (value!.isEmpty) {
+                                                            return 'Enter start time';
+                                                          } else {
+                                                            try {
+                                                              final DateTime
+                                                                  parsedTime =
+                                                                  timeFormat
+                                                                      .parse(
+                                                                          value);
+                                                            } catch (e) {
+                                                              return 'Format: HH-mm AM/PM';
+                                                            }
+                                                            return null;
+                                                          }
+                                                        },
+                                                        labelText: 'Start Time',
+                                                        errorText: startError,
+                                                        controller: start,
+                                                        hintText:
+                                                            'Enter start time',
+                                                        suffixIcon: const Icon(
+                                                            Icons.punch_clock),
+                                                        onTap: () async {
+                                                          TimeOfDay?
+                                                              pickedTime =
+                                                              await showTimePicker(
+                                                            context: context,
+                                                            initialEntryMode:
+                                                                TimePickerEntryMode
+                                                                    .inputOnly,
+                                                            initialTime:
+                                                                const TimeOfDay(
+                                                                    hour: 12,
+                                                                    minute: 00),
+                                                          );
+
+                                                          if (pickedTime !=
+                                                              null) {
+                                                            startError = null;
+
+                                                            if (end.text
+                                                                .isNotEmpty) {
+                                                              final DateFormat
+                                                                  timeFormat =
+                                                                  DateFormat(
+                                                                      'hh:mm a');
+                                                              DateTime
+                                                                  parsedStartTime =
+                                                                  timeFormat.parse(
+                                                                      pickedTime
+                                                                          .format(
+                                                                              context));
+                                                              DateTime
+                                                                  parsedEndTime =
+                                                                  timeFormat
+                                                                      .parse(end
+                                                                          .text);
+
+                                                              if (parsedStartTime
+                                                                  .isBefore(
+                                                                      parsedEndTime)) {
+                                                                setState(() {
+                                                                  start.text =
+                                                                      pickedTime
+                                                                          .format(
+                                                                              context);
+                                                                });
+                                                              } else {
+                                                                setState(() {
+                                                                  startError =
+                                                                      'Must be before End Time';
+                                                                });
+                                                              }
+                                                            } else {
                                                               setState(() {
                                                                 start.text =
                                                                     pickedTime
                                                                         .format(
                                                                             context);
                                                               });
-                                                            } else {
-                                                              startError =
-                                                                  'Start Time must be before End Time';
                                                             }
-                                                          } else {
-                                                            setState(() {
-                                                              start.text =
-                                                                  pickedTime
-                                                                      .format(
-                                                                          context);
-                                                            });
                                                           }
-                                                        }
-                                                      },
+                                                        },
+                                                      ),
                                                     ),
-                                                  ),
-                                                  const Text('     -     '),
-                                                  Expanded(
-                                                    flex: 2,
-                                                    child: CustomTextField(
-                                                      errorText: endError,
-                                                      controller: end,
-                                                      hintText:
-                                                          'Enter end time',
-                                                      suffixIcon: const Icon(
-                                                          Icons.punch_clock),
-                                                      onTap: () async {
-                                                        TimeOfDay? pickedTime =
-                                                            await showTimePicker(
-                                                          context: context,
-                                                          initialEntryMode:
-                                                              TimePickerEntryMode
-                                                                  .input,
-                                                          initialTime:
-                                                              const TimeOfDay(
-                                                                  hour: 12,
-                                                                  minute: 00),
-                                                        );
+                                                    const Text('     -     '),
+                                                    Expanded(
+                                                      flex: 2,
+                                                      child: CustomTextField(
+                                                        screen: !Responsive
+                                                            .isDesktop(context),
+                                                        labelText: 'End Time',
+                                                        validator: (value) {
+                                                          final DateFormat
+                                                              timeFormat =
+                                                              DateFormat(
+                                                                  'HH:mm a');
 
-                                                        if (pickedTime !=
-                                                            null) {
-                                                          endError = null;
+                                                          if (value!.isEmpty) {
+                                                            return 'Enter start time';
+                                                          } else {
+                                                            try {
+                                                              final DateTime
+                                                                  parsedTime =
+                                                                  timeFormat
+                                                                      .parse(
+                                                                          value);
+                                                            } catch (e) {
+                                                              return 'Format: HH-mm AM/PM';
+                                                            }
+                                                            return null;
+                                                          }
+                                                        },
+                                                        errorText: endError,
+                                                        controller: end,
+                                                        hintText:
+                                                            'Enter end time',
+                                                        suffixIcon: const Icon(
+                                                            Icons.punch_clock),
+                                                        onTap: () async {
+                                                          TimeOfDay?
+                                                              pickedTime =
+                                                              await showTimePicker(
+                                                            context: context,
+                                                            initialEntryMode:
+                                                                TimePickerEntryMode
+                                                                    .input,
+                                                            initialTime:
+                                                                const TimeOfDay(
+                                                                    hour: 12,
+                                                                    minute: 0),
+                                                          );
 
-                                                          if (start.text !=
-                                                              '') {
-                                                            final DateFormat
-                                                                timeFormat =
-                                                                DateFormat(
-                                                                    'HH:mm');
-                                                            DateTime
-                                                                parsedTime =
-                                                                timeFormat
-                                                                    .parse(start
-                                                                        .text);
-                                                            TimeOfDay
-                                                                startTime =
-                                                                TimeOfDay
-                                                                    .fromDateTime(
-                                                                        parsedTime);
+                                                          if (pickedTime !=
+                                                              null) {
+                                                            endError = null;
 
-                                                            if (pickedTime
-                                                                        .hour >
-                                                                    startTime
-                                                                        .hour ||
-                                                                (pickedTime.hour ==
-                                                                        startTime
-                                                                            .hour &&
-                                                                    pickedTime
-                                                                            .minute >
-                                                                        startTime
-                                                                            .minute)) {
+                                                            if (start.text !=
+                                                                '') {
+                                                              final DateFormat
+                                                                  timeFormat =
+                                                                  DateFormat(
+                                                                      'hh:mm a');
+                                                              DateTime
+                                                                  parsedStartTime =
+                                                                  timeFormat
+                                                                      .parse(start
+                                                                          .text);
+                                                              DateTime
+                                                                  parsedEndTime =
+                                                                  timeFormat.parse(
+                                                                      pickedTime
+                                                                          .format(
+                                                                              context));
+
+                                                              if (parsedEndTime
+                                                                  .isAfter(
+                                                                      parsedStartTime)) {
+                                                                setState(() {
+                                                                  end.text =
+                                                                      pickedTime
+                                                                          .format(
+                                                                              context);
+                                                                });
+                                                              } else {
+                                                                setState(() {
+                                                                  endError =
+                                                                      'Must be after Start Time';
+                                                                });
+                                                              }
+                                                            } else {
                                                               setState(() {
                                                                 end.text =
                                                                     pickedTime
                                                                         .format(
                                                                             context);
                                                               });
-                                                            } else {
-                                                              endError =
-                                                                  'End Time must be after Start Time';
                                                             }
-                                                          } else {
-                                                            setState(() {
-                                                              end.text = pickedTime
-                                                                  .format(
-                                                                      context);
-                                                            });
                                                           }
-                                                        }
-                                                      },
+                                                        },
+                                                      ),
                                                     ),
-                                                  ),
-                                                ],
+                                                  ],
+                                                ),
                                               ),
                                             ),
-                                          ),
-                                        ],
-                                      ),
+                                          ],
+                                        ),
                                       Row(
                                         children: [
                                           Expanded(
@@ -390,14 +719,16 @@ class _ScheduleState extends State<Schedule> {
                                                     mainAxisAlignment:
                                                         MainAxisAlignment.start,
                                                     children: [
-                                                      const Expanded(
-                                                        flex: 1,
-                                                        child: Text(
-                                                          'Programme Details',
-                                                          style: TextStyle(
-                                                              fontSize: 16),
+                                                      if (Responsive.isDesktop(
+                                                          context))
+                                                        const Expanded(
+                                                          flex: 1,
+                                                          child: Text(
+                                                            'Details',
+                                                            style: TextStyle(
+                                                                fontSize: 16),
+                                                          ),
                                                         ),
-                                                      ),
                                                       Expanded(
                                                         flex: 9,
                                                         child: CustomTextField(
@@ -429,9 +760,22 @@ class _ScheduleState extends State<Schedule> {
                                           },
                                           text: 'Add'),
                                       Padding(
-                                        padding: EdgeInsets.all(8.0),
+                                        padding: const EdgeInsets.all(8.0),
                                         child: Row(
                                           children: [
+                                            Expanded(
+                                              flex: 1,
+                                              child: Container(
+                                                decoration: BoxDecoration(
+                                                  border: Border.all(
+                                                      color: Colors.black),
+                                                ),
+                                                child: const Padding(
+                                                  padding: EdgeInsets.all(8.0),
+                                                  child: Text('Date'),
+                                                ),
+                                              ),
+                                            ),
                                             Expanded(
                                               flex: 2,
                                               child: Container(
@@ -439,35 +783,35 @@ class _ScheduleState extends State<Schedule> {
                                                   border: Border.all(
                                                       color: Colors.black),
                                                 ),
-                                                child: Padding(
-                                                  padding: EdgeInsets.all(8.0),
-                                                  child: Text('Date'),
-                                                ),
-                                              ),
-                                            ),
-                                            Expanded(
-                                              flex: 3,
-                                              child: Container(
-                                                decoration: BoxDecoration(
-                                                  border: Border.all(
-                                                      color: Colors.black),
-                                                ),
-                                                child: Padding(
+                                                child: const Padding(
                                                   padding: EdgeInsets.all(8.0),
                                                   child: Text('Time'),
                                                 ),
                                               ),
                                             ),
                                             Expanded(
-                                              flex: 8,
+                                              flex: 6,
                                               child: Container(
                                                 decoration: BoxDecoration(
                                                   border: Border.all(
                                                       color: Colors.black),
                                                 ),
-                                                child: Padding(
+                                                child: const Padding(
                                                   padding: EdgeInsets.all(8.0),
                                                   child: Text('Details'),
+                                                ),
+                                              ),
+                                            ),
+                                            Expanded(
+                                              flex: 1,
+                                              child: Container(
+                                                decoration: BoxDecoration(
+                                                  border: Border.all(
+                                                      color: Colors.black),
+                                                ),
+                                                child: const Padding(
+                                                  padding: EdgeInsets.all(8.0),
+                                                  child: Text('Action'),
                                                 ),
                                               ),
                                             ),
@@ -534,15 +878,42 @@ class ProgramItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      title: Text('Date: ${program.date.toLocal()}'),
-      subtitle: Text(
-          'Time: ${program.start.format(context)} - ${program.end.format(context)}'),
-      onTap: () {
-        _showDetailsDialog(context, program.details);
-      },
-      trailing: IconButton(
-        icon: Icon(Icons.delete),
-        onPressed: onDelete,
+      title: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 1,
+            child: Text(DateFormat('dd-MM-yyyy').format(program.date)),
+          ),
+          const Divider(thickness: 1, color: Colors.black),
+          Expanded(
+            flex: 2,
+            child: Text(
+              '${program.start.format(context)} - ${program.end.format(context)}',
+            ),
+          ),
+          const Divider(thickness: 1, color: Colors.black),
+          Expanded(
+            flex: 6,
+            child: Text('${program.details}'),
+          ),
+          const Divider(thickness: 1, color: Colors.black),
+          Expanded(
+            flex: 1,
+            child: Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.edit),
+                  onPressed: onDelete,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete),
+                  onPressed: onDelete,
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -552,14 +923,14 @@ class ProgramItem extends StatelessWidget {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Program Details'),
+          title: const Text('Programme Details'),
           content: Text(details),
           actions: <Widget>[
             TextButton(
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: Text('OK'),
+              child: const Text('OK'),
             ),
           ],
         );

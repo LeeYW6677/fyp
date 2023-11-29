@@ -373,6 +373,36 @@ class _AdvisorProfileState extends State<AdvisorProfile> {
                                                     flex: 4,
                                                     child: CustomTextField(
                                                       controller: dob,
+                                                      validator: (value) {
+                                                        final DateFormat
+                                                            dateFormat =
+                                                            DateFormat(
+                                                                'dd-MM-yyyy');
+
+                                                        if (value!.isEmpty) {
+                                                          return 'Please enter your date of birth';
+                                                        } else {
+                                                          try {
+                                                            DateTime
+                                                                enteredDate =
+                                                                dateFormat
+                                                                    .parseStrict(
+                                                                        value);
+
+                                                            if (enteredDate
+                                                                .isAfter(DateTime
+                                                                        .now()
+                                                                    .add(const Duration(
+                                                                        days:
+                                                                            -3650)))) {
+                                                              return 'You must be atleast 10 years old';
+                                                            }
+                                                          } catch (e) {
+                                                            return 'Invalid Date Format. Format: dd-MM-yyyy';
+                                                          }
+                                                          return null;
+                                                        }
+                                                      },
                                                       hintText:
                                                           'Enter your date of birth',
                                                       suffixIcon: const Icon(Icons
@@ -769,6 +799,36 @@ class _AdvisorProfileState extends State<AdvisorProfile> {
                                                     flex: 4,
                                                     child: CustomTextField(
                                                       controller: dob,
+                                                      validator: (value) {
+                                                        final DateFormat
+                                                            dateFormat =
+                                                            DateFormat(
+                                                                'dd-MM-yyyy');
+
+                                                        if (value!.isEmpty) {
+                                                          return 'Please enter your date of birth';
+                                                        } else {
+                                                          try {
+                                                            DateTime
+                                                                enteredDate =
+                                                                dateFormat
+                                                                    .parseStrict(
+                                                                        value);
+
+                                                            if (enteredDate
+                                                                .isAfter(DateTime
+                                                                        .now()
+                                                                    .add(const Duration(
+                                                                        days:
+                                                                            -3650)))) {
+                                                              return 'You must be atleast 10 years old';
+                                                            }
+                                                          } catch (e) {
+                                                            return 'Invalid Date Format. Format: dd-MM-yyyy';
+                                                          }
+                                                          return null;
+                                                        }
+                                                      },
                                                       hintText:
                                                           'Enter your date of birth',
                                                       suffixIcon: const Icon(Icons

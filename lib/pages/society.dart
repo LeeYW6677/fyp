@@ -18,6 +18,7 @@ class Society extends StatefulWidget {
 
 class _SocietyState extends State<Society> {
   final society = TextEditingController();
+    bool _isLoading = true;
   String selectedSociety = '';
   List<Map<String, dynamic>> advisorList = [];
   List<Map<String, dynamic>> coAdvisorList = [];
@@ -39,6 +40,9 @@ class _SocietyState extends State<Society> {
 
   Future<void> getData() async {
     try {
+      setState(() {
+        _isLoading = true;
+      });
       final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
       final QuerySnapshot societySnapshot =
@@ -54,7 +58,13 @@ class _SocietyState extends State<Society> {
           .map((doc) => doc['societyName'].toString())
           .toList();
       fetchSocietyDetails();
+      setState(() {
+        _isLoading = false;
+      });
     } catch (error) {
+      setState(() {
+        _isLoading = false;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Failed to fetch data. Please try again.'),
@@ -181,7 +191,11 @@ class _SocietyState extends State<Society> {
                     page: 'Society',
                   )
                 : null,
-            body: SafeArea(
+            body: _isLoading
+        ? Center(
+            child: CircularProgressIndicator(),
+          )
+        : SafeArea(
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

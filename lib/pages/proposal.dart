@@ -15,11 +15,15 @@ class Proposal extends StatefulWidget {
 
 class _ProposalState extends State<Proposal> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  bool _isLoading = true;
   bool enable = true;
   String status = '';
   List<String> progress = ['Planning', 'Checked', 'Recommended', 'Approved'];
   Future<void> getData() async {
     try {
+      setState(() {
+        _isLoading = true;
+      });
       final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
       // Fetch event data
@@ -40,9 +44,13 @@ class _ProposalState extends State<Proposal> {
         }
         setState(() {
           status = status;
+          _isLoading = false;
         });
       }
     } catch (error) {
+      setState(() {
+        _isLoading = false;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Failed to fetch data. Please try again.'),
@@ -79,7 +87,11 @@ class _ProposalState extends State<Proposal> {
               index: 2,
             )
           : null,
-      body: SafeArea(
+      body: _isLoading
+        ? Center(
+            child: CircularProgressIndicator(),
+          )
+        : SafeArea(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

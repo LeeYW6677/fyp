@@ -37,9 +37,13 @@ class _StudentSocietyState extends State<StudentSociety> {
     'Vice Treasurer',
     'Member',
   ];
+        bool _isLoading = true;
 
   Future<void> getData() async {
     try {
+      setState(() {
+        _isLoading = true;
+      });
       final FirebaseFirestore firestore = FirebaseFirestore.instance;
       QuerySnapshot societySnapshot;
 
@@ -78,7 +82,13 @@ class _StudentSocietyState extends State<StudentSociety> {
           .map((doc) => doc['societyName'].toString())
           .toList();
       fetchSocietyDetails();
+      setState(() {
+        _isLoading = false;
+      });
     } catch (error) {
+      setState(() {
+        _isLoading = false;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Failed to fetch data. Please try again.'),
@@ -198,7 +208,11 @@ class _StudentSocietyState extends State<StudentSociety> {
               index: 2,
             )
           : null,
-      body: SafeArea(
+      body:_isLoading
+        ? Center(
+            child: CircularProgressIndicator(),
+          )
+        : SafeArea(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

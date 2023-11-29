@@ -13,9 +13,13 @@ class Advisor extends StatefulWidget {
 
 class _AdvisorState extends State<Advisor> {
   List<Map<String, dynamic>> _advisor = [];
+  bool _isLoading = true;
 
   Future<void> getData() async {
     try {
+      setState(() {
+        _isLoading = true; // Set loading to true when starting to fetch data
+      });
       FirebaseFirestore firestore = FirebaseFirestore.instance;
       QuerySnapshot<Map<String, dynamic>> userDocuments = await firestore
           .collection('user')
@@ -49,8 +53,13 @@ class _AdvisorState extends State<Advisor> {
       }
       setState(() {
         _advisor = _advisor;
+        _isLoading = false;
       });
+      
     } catch (error) {
+      setState(() {
+        _isLoading = false;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Failed to fetch data. Please try again.'),
@@ -61,7 +70,7 @@ class _AdvisorState extends State<Advisor> {
       );
     }
   }
-  
+
   @override
   void initState() {
     super.initState();
@@ -70,15 +79,19 @@ class _AdvisorState extends State<Advisor> {
 
   @override
   Widget build(BuildContext context) {
-          return Scaffold(
-            appBar: const Header(),
-            drawer: !Responsive.isDesktop(context)
-                ? const CustomDrawer(
-                    index: 2,
-                    page: 'Advisor',
-                  )
-                : null,
-            body: SafeArea(
+    return Scaffold(
+      appBar: const Header(),
+      drawer: !Responsive.isDesktop(context)
+          ? const CustomDrawer(
+              index: 2,
+              page: 'Advisor',
+            )
+          : null,
+      body: _isLoading
+          ? Center(
+              child: CircularProgressIndicator(),
+            )
+          : SafeArea(
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -206,8 +219,8 @@ class _AdvisorState extends State<Advisor> {
                 ],
               ),
             ),
-            bottomNavigationBar: const Footer(),
-          );
+      bottomNavigationBar: const Footer(),
+    );
   }
 }
 

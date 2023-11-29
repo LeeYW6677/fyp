@@ -17,9 +17,13 @@ class OrganisedEvent extends StatefulWidget {
 
 class _OrganisedEventState extends State<OrganisedEvent> {
   List<Map<String, dynamic>> completedEvents = [];
+  bool _isLoading = true;
 
   Future<void> getData() async {
     try {
+      setState(() {
+        _isLoading = true;
+      });
       final FirebaseFirestore firestore = FirebaseFirestore.instance;
       // Fetch event and committee data
       final QuerySnapshot<Map<String, dynamic>> eventSnapshot = await firestore
@@ -55,8 +59,12 @@ class _OrganisedEventState extends State<OrganisedEvent> {
 
       setState(() {
         completedEvents = List.from(completedEvents);
+        _isLoading = false;
       });
     } catch (error) {
+      setState(() {
+        _isLoading = false;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Failed to fetch data. Please try again.'),
@@ -84,7 +92,11 @@ class _OrganisedEventState extends State<OrganisedEvent> {
               page: 'Society',
             )
           : null,
-      body: SafeArea(
+      body: _isLoading
+        ? Center(
+            child: CircularProgressIndicator(),
+          )
+        : SafeArea(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

@@ -16,6 +16,7 @@ class StudentOngoingEvent extends StatefulWidget {
 
 class _StudentOngoingEventState extends State<StudentOngoingEvent> {
   final LocalStorage storage = LocalStorage('user');
+  bool _isLoading = true;
   List<Map<String, dynamic>> ongoingEvents = [];
   List<String> position = [
     'President',
@@ -29,6 +30,9 @@ class _StudentOngoingEventState extends State<StudentOngoingEvent> {
 
   Future<void> getData() async {
     try {
+      setState(() {
+        _isLoading = true;
+      });
       final FirebaseFirestore firestore = FirebaseFirestore.instance;
       // Fetch event data
 
@@ -77,9 +81,13 @@ class _StudentOngoingEventState extends State<StudentOngoingEvent> {
         }
         setState(() {
           ongoingEvents = ongoingEvents;
+          _isLoading = false;
         });
       }
     } catch (error) {
+      setState(() {
+        _isLoading = false;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Failed to fetch data. Please try again.'),
@@ -106,7 +114,11 @@ class _StudentOngoingEventState extends State<StudentOngoingEvent> {
               index: 3,
             )
           : null,
-      body: SafeArea(
+      body: _isLoading
+        ? Center(
+            child: CircularProgressIndicator(),
+          )
+        : SafeArea(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

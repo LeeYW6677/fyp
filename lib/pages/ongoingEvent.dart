@@ -18,9 +18,13 @@ class OngoingEvent extends StatefulWidget {
 
 class _OngoingEventState extends State<OngoingEvent> {
   List<Map<String, dynamic>> ongoingEvents = [];
+  bool _isLoading = true;
 
   Future<void> getData() async {
     try {
+setState(() {
+        _isLoading = true;
+      });
       final FirebaseFirestore firestore = FirebaseFirestore.instance;
       // Fetch event and committee data
       final QuerySnapshot<Map<String, dynamic>> eventSnapshot = await firestore
@@ -57,8 +61,12 @@ class _OngoingEventState extends State<OngoingEvent> {
 
       setState(() {
         ongoingEvents = List.from(ongoingEvents);
+        _isLoading = false;
       });
     } catch (error) {
+      setState(() {
+        _isLoading = false;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Failed to fetch data. Please try again.'),
@@ -86,7 +94,11 @@ class _OngoingEventState extends State<OngoingEvent> {
               page: 'Society',
             )
           : null,
-      body: SafeArea(
+      body: _isLoading
+        ? Center(
+            child: CircularProgressIndicator(),
+          )
+        : SafeArea(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

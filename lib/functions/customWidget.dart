@@ -984,7 +984,7 @@ class CustomTimeline extends StatelessWidget {
               connectionDirection: ConnectionDirection.before,
               itemCount: 4,
               itemExtentBuilder: (_, __) {
-                return 400.0;
+                return (MediaQuery.of(context).size.width)/5.0;
               },
               oppositeContentsBuilder: (context, index) {
                 return Container();

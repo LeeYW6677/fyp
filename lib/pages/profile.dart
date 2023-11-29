@@ -29,8 +29,12 @@ class _ProfileState extends State<Profile> {
   List<String> programmeItems = [];
   final GlobalKey<FormState> _formKey1 = GlobalKey<FormState>();
   final GlobalKey<FormState> _formKey2 = GlobalKey<FormState>();
+  bool _isLoading = true;
 
   Future<void> getData() async {
+    setState(() {
+        _isLoading = true;
+      });
     User? user = FirebaseAuth.instance.currentUser;
     String? userEmail = user?.email;
 
@@ -58,6 +62,9 @@ class _ProfileState extends State<Profile> {
       ic.text = data.docs.first['ic'];
       contact.text = data.docs.first['contact'];
     }
+    setState(() {
+        _isLoading = false;
+      });
   }
 
   Future<void> updateProfile(BuildContext context) async {
@@ -108,7 +115,7 @@ class _ProfileState extends State<Profile> {
   }
 
   @override
-  void initState(){
+  void initState() {
     super.initState();
     getData();
   }
@@ -118,1014 +125,1189 @@ class _ProfileState extends State<Profile> {
     return Scaffold(
       appBar: const Header(),
       drawer: !Responsive.isDesktop(context) ? const CustomDrawer() : null,
-      body: SafeArea(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (Responsive.isDesktop(context))
-              const Expanded(
-                child: CustomDrawer(),
-              ),
-            Expanded(
-              flex: 5,
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    const NavigationMenu(
-                      buttonTexts: ['Profile'],
-                      destination: [Profile()],
+      body: _isLoading
+          ? Center(
+              child: CircularProgressIndicator(),
+            )
+          : SafeArea(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (Responsive.isDesktop(context))
+                    const Expanded(
+                      child: CustomDrawer(),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
+                  Expanded(
+                    flex: 5,
+                    child: SingleChildScrollView(
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Profile',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 20,
-                            ),
+                          const NavigationMenu(
+                            buttonTexts: ['Profile'],
+                            destination: [Profile()],
                           ),
-                          const Divider(
-                            thickness: 0.1,
-                            color: Colors.black,
-                          ),
-                          const Text(
-                            'Personal Information',
-                            style: TextStyle(
-                              color: Colors.blue,
-                              fontSize: 20,
-                            ),
-                          ),
-                          LayoutBuilder(
-                            builder: (context, constraints) {
-                              if (Responsive.isDesktop(context)) {
-                                return Form(
-                                  key: _formKey1,
-                                  child: Column(
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: Padding(
-                                              padding:
-                                                  const EdgeInsets.all(8.0),
-                                              child: Row(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.center,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.start,
-                                                children: [
-                                                  const Expanded(
-                                                    flex: 1,
-                                                    child: Text(
-                                                      'Student ID',
-                                                      style: TextStyle(
-                                                          fontSize: 16),
-                                                    ),
-                                                  ),
-                                                  Expanded(
-                                                    flex: 4,
-                                                    child: CustomTextField(
-                                                      controller: id,
-                                                      hintText:
-                                                          'Enter your student ID',
-                                                      enabled: false,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                          Expanded(
-                                            child: Padding(
-                                              padding:
-                                                  const EdgeInsets.all(8.0),
-                                              child: Row(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.center,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.start,
-                                                children: [
-                                                  const Expanded(
-                                                    flex: 1,
-                                                    child: Text(
-                                                      'Email',
-                                                      style: TextStyle(
-                                                          fontSize: 16),
-                                                    ),
-                                                  ),
-                                                  Expanded(
-                                                    flex: 4,
-                                                    child: CustomTextField(
-                                                      controller: email,
-                                                      hintText:
-                                                          'Enter your email',
-                                                      enabled: false,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: Padding(
-                                              padding:
-                                                  const EdgeInsets.all(8.0),
-                                              child: Row(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.center,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.start,
-                                                children: [
-                                                  const Expanded(
-                                                    flex: 1,
-                                                    child: Text(
-                                                      'Name',
-                                                      style: TextStyle(
-                                                          fontSize: 16),
-                                                    ),
-                                                  ),
-                                                  Expanded(
-                                                    flex: 4,
-                                                    child: CustomTextField(
-                                                      controller: name,
-                                                      hintText:
-                                                          'Enter your name',
-                                                      validator: (value) {
-                                                        if (value!.isEmpty) {
-                                                          return 'Please enter your name';
-                                                        }
-                                                        return null;
-                                                      },
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                          Expanded(
-                                            child: Padding(
-                                              padding:
-                                                  const EdgeInsets.all(8.0),
-                                              child: Row(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.center,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.start,
-                                                children: [
-                                                  const Expanded(
-                                                    flex: 1,
-                                                    child: Text(
-                                                      'Gender',
-                                                      style: TextStyle(
-                                                          fontSize: 16),
-                                                    ),
-                                                  ),
-                                                  Expanded(
-                                                    flex: 4,
+                          Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Profile',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                  ),
+                                ),
+                                const Divider(
+                                  thickness: 0.1,
+                                  color: Colors.black,
+                                ),
+                                const Text(
+                                  'Personal Information',
+                                  style: TextStyle(
+                                    color: Colors.blue,
+                                    fontSize: 20,
+                                  ),
+                                ),
+                                LayoutBuilder(
+                                  builder: (context, constraints) {
+                                    if (Responsive.isDesktop(context)) {
+                                      return Form(
+                                        key: _formKey1,
+                                        child: Column(
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Expanded(
+                                                  child: Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            8.0),
                                                     child: Row(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .center,
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .start,
                                                       children: [
-                                                        Expanded(
-                                                          child: Row(
-                                                            children: [
-                                                              Radio<String>(
-                                                                value: 'M',
-                                                                groupValue:
-                                                                    selectedGender,
-                                                                onChanged:
-                                                                    (value) {
-                                                                  setState(() {
-                                                                    selectedGender =
-                                                                        value!;
-                                                                  });
-                                                                },
-                                                              ),
-                                                              const Text(
-                                                                  'Male'),
-                                                            ],
+                                                        const Expanded(
+                                                          flex: 1,
+                                                          child: Text(
+                                                            'Student ID',
+                                                            style: TextStyle(
+                                                                fontSize: 16),
                                                           ),
                                                         ),
                                                         Expanded(
+                                                          flex: 4,
+                                                          child:
+                                                              CustomTextField(
+                                                            controller: id,
+                                                            hintText:
+                                                                'Enter your student ID',
+                                                            enabled: false,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                                Expanded(
+                                                  child: Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            8.0),
+                                                    child: Row(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .center,
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        const Expanded(
+                                                          flex: 1,
+                                                          child: Text(
+                                                            'Email',
+                                                            style: TextStyle(
+                                                                fontSize: 16),
+                                                          ),
+                                                        ),
+                                                        Expanded(
+                                                          flex: 4,
+                                                          child:
+                                                              CustomTextField(
+                                                            controller: email,
+                                                            hintText:
+                                                                'Enter your email',
+                                                            enabled: false,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            Row(
+                                              children: [
+                                                Expanded(
+                                                  child: Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            8.0),
+                                                    child: Row(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .center,
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        const Expanded(
+                                                          flex: 1,
+                                                          child: Text(
+                                                            'Name',
+                                                            style: TextStyle(
+                                                                fontSize: 16),
+                                                          ),
+                                                        ),
+                                                        Expanded(
+                                                          flex: 4,
+                                                          child:
+                                                              CustomTextField(
+                                                            controller: name,
+                                                            hintText:
+                                                                'Enter your name',
+                                                            validator: (value) {
+                                                              if (value!
+                                                                  .isEmpty) {
+                                                                return 'Please enter your name';
+                                                              }
+                                                              return null;
+                                                            },
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                                Expanded(
+                                                  child: Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            8.0),
+                                                    child: Row(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .center,
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        const Expanded(
+                                                          flex: 1,
+                                                          child: Text(
+                                                            'Gender',
+                                                            style: TextStyle(
+                                                                fontSize: 16),
+                                                          ),
+                                                        ),
+                                                        Expanded(
+                                                          flex: 4,
                                                           child: Row(
                                                             children: [
-                                                              Radio<String>(
-                                                                value: 'F',
-                                                                groupValue:
-                                                                    selectedGender,
-                                                                onChanged:
-                                                                    (value) {
-                                                                  setState(() {
-                                                                    selectedGender =
-                                                                        value!;
-                                                                  });
-                                                                },
+                                                              Expanded(
+                                                                child: Row(
+                                                                  children: [
+                                                                    Radio<
+                                                                        String>(
+                                                                      value:
+                                                                          'M',
+                                                                      groupValue:
+                                                                          selectedGender,
+                                                                      onChanged:
+                                                                          (value) {
+                                                                        setState(
+                                                                            () {
+                                                                          selectedGender =
+                                                                              value!;
+                                                                        });
+                                                                      },
+                                                                    ),
+                                                                    const Text(
+                                                                        'Male'),
+                                                                  ],
+                                                                ),
                                                               ),
-                                                              const Text(
-                                                                  'Female'),
+                                                              Expanded(
+                                                                child: Row(
+                                                                  children: [
+                                                                    Radio<
+                                                                        String>(
+                                                                      value:
+                                                                          'F',
+                                                                      groupValue:
+                                                                          selectedGender,
+                                                                      onChanged:
+                                                                          (value) {
+                                                                        setState(
+                                                                            () {
+                                                                          selectedGender =
+                                                                              value!;
+                                                                        });
+                                                                      },
+                                                                    ),
+                                                                    const Text(
+                                                                        'Female'),
+                                                                  ],
+                                                                ),
+                                                              ),
                                                             ],
                                                           ),
                                                         ),
                                                       ],
                                                     ),
                                                   ),
-                                                ],
-                                              ),
+                                                ),
+                                              ],
                                             ),
-                                          ),
-                                        ],
-                                      ),
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: Padding(
-                                              padding:
-                                                  const EdgeInsets.all(8.0),
-                                              child: Row(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.center,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.start,
-                                                children: [
-                                                  const Expanded(
-                                                    flex: 1,
-                                                    child: Text(
-                                                      'Date of Birth',
-                                                      style: TextStyle(
-                                                          fontSize: 16),
-                                                    ),
-                                                  ),
-                                                  Expanded(
-                                                    flex: 4,
-                                                    child: CustomTextField(
-                                                      controller: dob,
-                                                      hintText:
-                                                          'Enter your date of birth',
-                                                      suffixIcon: const Icon(Icons
-                                                          .calendar_today_rounded),
-                                                      onTap: () async {
-                                                        DateTime? pickedDate =
-                                                            await showDatePicker(
-                                                          context: context,
-                                                          initialDate:
-                                                              DateTime(2000),
-                                                          firstDate:
-                                                              DateTime(1900),
-                                                          lastDate:
-                                                              DateTime(2010),
-                                                        );
-
-                                                        if (pickedDate !=
-                                                            null) {
-                                                          setState(() {
-                                                            dob.text = DateFormat(
-                                                                    'dd-MM-yyyy')
-                                                                .format(
-                                                                    pickedDate);
-                                                          });
-                                                        }
-                                                      },
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                          Expanded(
-                                            child: Padding(
-                                              padding:
-                                                  const EdgeInsets.all(8.0),
-                                              child: Row(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.center,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.start,
-                                                children: [
-                                                  const Expanded(
-                                                    flex: 1,
-                                                    child: Text(
-                                                      'IC No.',
-                                                      style: TextStyle(
-                                                          fontSize: 16),
-                                                    ),
-                                                  ),
-                                                  Expanded(
-                                                    flex: 4,
-                                                    child: CustomTextField(
-                                                      controller: ic,
-                                                      hintText:
-                                                          'Enter your IC No. (Format: 123456-12-1234)',
-                                                      validator: (value) {
-                                                        if (value!.isEmpty) {
-                                                          return 'Please enter your IC No.';
-                                                        } else if (!RegExp(
-                                                                r'^[0-9]{6}-[0-9]{2}-[0-9]{4}$')
-                                                            .hasMatch(value)) {
-                                                          return 'Invalid IC number. Format: 123456-12-1234';
-                                                        }
-                                                        return null;
-                                                      },
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: Padding(
-                                              padding:
-                                                  const EdgeInsets.all(8.0),
-                                              child: Row(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.center,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.start,
-                                                children: [
-                                                  const Expanded(
-                                                    flex: 1,
-                                                    child: Text(
-                                                      'Contact No.',
-                                                      style: TextStyle(
-                                                          fontSize: 16),
-                                                    ),
-                                                  ),
-                                                  Expanded(
-                                                    flex: 4,
-                                                    child: CustomTextField(
-                                                      controller: contact,
-                                                      hintText:
-                                                          'Enter your contact No. (Format: +60123456789)',
-                                                      prefixText: '+60',
-                                                      validator: (value) {
-                                                        if (value!.isEmpty) {
-                                                          return 'Please enter your contact No.';
-                                                        } else if (!RegExp(
-                                                                r'^\+60[0-9]{9}$')
-                                                            .hasMatch(
-                                                                '+60$value')) {
-                                                          return 'Invalid Malaysian phone number. Format: +60123456789';
-                                                        }
-                                                        return null;
-                                                      },
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                          const Expanded(
-                                            child: SizedBox(),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 50),
-                                      const Row(
-                                        children: [
-                                          Text(
-                                            'Academic Information',
-                                            style: TextStyle(
-                                              color: Colors.blue,
-                                              fontSize: 20,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: Padding(
-                                              padding:
-                                                  const EdgeInsets.all(8.0),
-                                              child: Row(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.center,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.start,
-                                                children: [
-                                                  const Expanded(
-                                                    flex: 1,
-                                                    child: Text(
-                                                      'Programme',
-                                                      style: TextStyle(
-                                                          fontSize: 16),
-                                                    ),
-                                                  ),
-                                                  Expanded(
-                                                      flex: 4,
-                                                      child: CustomDDL<String>(
-                                                        controller: programme,
-                                                        hintText:
-                                                            'Select your programme',
-                                                        value:
-                                                            selectedProgramme,
-                                                        dropdownItems:
-                                                            programmeItems.map(
-                                                                (programme) {
-                                                          return DropdownMenuItem<
-                                                              String>(
-                                                            value: programme,
-                                                            child: Text(
-                                                                programme,
-                                                                overflow:
-                                                                    TextOverflow
-                                                                        .ellipsis),
-                                                          );
-                                                        }).toList(),
-                                                      )),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                          Expanded(
-                                            child: Padding(
-                                              padding:
-                                                  const EdgeInsets.all(8.0),
-                                              child: Row(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.center,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.start,
-                                                children: [
-                                                  const Expanded(
-                                                    flex: 1,
-                                                    child: Text(
-                                                      'Faculty',
-                                                      style: TextStyle(
-                                                          fontSize: 16),
-                                                    ),
-                                                  ),
-                                                  Expanded(
-                                                      flex: 4,
-                                                      child: CustomDDL<String>(
-                                                        controller: faculty,
-                                                        hintText:
-                                                            'Select your faculty',
-                                                        value: selectedFaculty,
-                                                        onChanged:
-                                                            (String? newValue) {
-                                                          setState(() {
-                                                            selectedFaculty =
-                                                                newValue!;
-                                                            getProgrammesForFaculty(
-                                                                selectedFaculty);
-                                                          });
-                                                        },
-                                                        dropdownItems: const [
-                                                          DropdownMenuItem<
-                                                              String>(
-                                                            value:
-                                                                'Faculty of Computing and Information Technology',
-                                                            child: Text(
-                                                                'Faculty of Computing and Information Technology',
-                                                                overflow:
-                                                                    TextOverflow
-                                                                        .ellipsis),
-                                                          ),
-                                                          DropdownMenuItem<
-                                                              String>(
-                                                            value:
-                                                                'Faculty of Applied Science',
-                                                            child: Text(
-                                                                'Faculty of Applied Science',
-                                                                overflow:
-                                                                    TextOverflow
-                                                                        .ellipsis),
-                                                          ),
-                                                          DropdownMenuItem<
-                                                              String>(
-                                                            value:
-                                                                'Faculty of Accountancy, Finance and Business',
-                                                            child: Text(
-                                                                'Faculty of Accountancy, Finance and Business',
-                                                                overflow:
-                                                                    TextOverflow
-                                                                        .ellipsis),
-                                                          ),
-                                                        ],
-                                                      )),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              } else {
-                                return Form(
-                                  key: _formKey2,
-                                  child: Column(
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: Padding(
-                                              padding:
-                                                  const EdgeInsets.all(8.0),
-                                              child: Row(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.center,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.start,
-                                                children: [
-                                                  const Expanded(
-                                                    flex: 1,
-                                                    child: Text(
-                                                      'Student ID',
-                                                      style: TextStyle(
-                                                          fontSize: 16),
-                                                    ),
-                                                  ),
-                                                  Expanded(
-                                                    flex: 4,
-                                                    child: CustomTextField(
-                                                      controller: id,
-                                                      hintText:
-                                                          'Enter your student ID',
-                                                      enabled: false,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      Row(children: [
-                                        Expanded(
-                                          child: Padding(
-                                            padding: const EdgeInsets.all(8.0),
-                                            child: Row(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.center,
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.start,
+                                            Row(
                                               children: [
-                                                const Expanded(
-                                                  flex: 1,
-                                                  child: Text(
-                                                    'Email',
-                                                    style:
-                                                        TextStyle(fontSize: 16),
+                                                Expanded(
+                                                  child: Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            8.0),
+                                                    child: Row(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .center,
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        const Expanded(
+                                                          flex: 1,
+                                                          child: Text(
+                                                            'Date of Birth',
+                                                            style: TextStyle(
+                                                                fontSize: 16),
+                                                          ),
+                                                        ),
+                                                        Expanded(
+                                                          flex: 4,
+                                                          child:
+                                                              CustomTextField(
+                                                            controller: dob,
+                                                            validator: (value) {
+                                                              final DateFormat
+                                                                  dateFormat =
+                                                                  DateFormat(
+                                                                      'dd-MM-yyyy');
+
+                                                              if (value!
+                                                                  .isEmpty) {
+                                                                return 'Please enter your date of birth';
+                                                              } else {
+                                                                try {
+                                                                  DateTime
+                                                                      enteredDate =
+                                                                      dateFormat
+                                                                          .parseStrict(
+                                                                              value);
+
+                                                                  if (enteredDate.isAfter(DateTime
+                                                                          .now()
+                                                                      .add(const Duration(
+                                                                          days:
+                                                                              -3650)))) {
+                                                                    return 'You must be atleast 10 years old';
+                                                                  }
+                                                                } catch (e) {
+                                                                  return 'Invalid Date Format. Format: dd-MM-yyyy';
+                                                                }
+                                                                return null;
+                                                              }
+                                                            },
+                                                            hintText:
+                                                                'Enter your date of birth',
+                                                            suffixIcon:
+                                                                const Icon(Icons
+                                                                    .calendar_today_rounded),
+                                                            onTap: () async {
+                                                              DateTime?
+                                                                  pickedDate =
+                                                                  await showDatePicker(
+                                                                context:
+                                                                    context,
+                                                                initialDate:
+                                                                    DateTime(
+                                                                        2000),
+                                                                firstDate:
+                                                                    DateTime(
+                                                                        1900),
+                                                                lastDate:
+                                                                    DateTime(
+                                                                        2010),
+                                                              );
+
+                                                              if (pickedDate !=
+                                                                  null) {
+                                                                setState(() {
+                                                                  dob.text = DateFormat(
+                                                                          'dd-MM-yyyy')
+                                                                      .format(
+                                                                          pickedDate);
+                                                                });
+                                                              }
+                                                            },
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
                                                   ),
                                                 ),
                                                 Expanded(
-                                                  flex: 4,
-                                                  child: CustomTextField(
-                                                    controller: email,
-                                                    hintText:
-                                                        'Enter your email',
-                                                    enabled: false,
+                                                  child: Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            8.0),
+                                                    child: Row(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .center,
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        const Expanded(
+                                                          flex: 1,
+                                                          child: Text(
+                                                            'IC No.',
+                                                            style: TextStyle(
+                                                                fontSize: 16),
+                                                          ),
+                                                        ),
+                                                        Expanded(
+                                                          flex: 4,
+                                                          child:
+                                                              CustomTextField(
+                                                            controller: ic,
+                                                            hintText:
+                                                                'Enter your IC No. (Format: 123456-12-1234)',
+                                                            validator: (value) {
+                                                              if (value!
+                                                                  .isEmpty) {
+                                                                return 'Please enter your IC No.';
+                                                              } else if (!RegExp(
+                                                                      r'^[0-9]{6}-[0-9]{2}-[0-9]{4}$')
+                                                                  .hasMatch(
+                                                                      value)) {
+                                                                return 'Invalid IC number. Format: 123456-12-1234';
+                                                              }
+                                                              return null;
+                                                            },
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
                                                   ),
                                                 ),
                                               ],
                                             ),
-                                          ),
-                                        ),
-                                      ]),
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: Padding(
-                                              padding:
-                                                  const EdgeInsets.all(8.0),
-                                              child: Row(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.center,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.start,
-                                                children: [
-                                                  const Expanded(
-                                                    flex: 1,
-                                                    child: Text(
-                                                      'Name',
-                                                      style: TextStyle(
-                                                          fontSize: 16),
-                                                    ),
-                                                  ),
-                                                  Expanded(
-                                                    flex: 4,
-                                                    child: CustomTextField(
-                                                      controller: name,
-                                                      hintText:
-                                                          'Enter your name',
-                                                      validator: (value) {
-                                                        if (value!.isEmpty) {
-                                                          return 'Please enter your name';
-                                                        }
-                                                        return null;
-                                                      },
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      Row(children: [
-                                        Expanded(
-                                          child: Padding(
-                                            padding: const EdgeInsets.all(8.0),
-                                            child: Row(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.center,
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.start,
+                                            Row(
                                               children: [
+                                                Expanded(
+                                                  child: Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            8.0),
+                                                    child: Row(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .center,
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        const Expanded(
+                                                          flex: 1,
+                                                          child: Text(
+                                                            'Contact No.',
+                                                            style: TextStyle(
+                                                                fontSize: 16),
+                                                          ),
+                                                        ),
+                                                        Expanded(
+                                                          flex: 4,
+                                                          child:
+                                                              CustomTextField(
+                                                            controller: contact,
+                                                            hintText:
+                                                                'Enter your contact No. (Format: +60123456789)',
+                                                            prefixText: '+60',
+                                                            validator: (value) {
+                                                              if (value!
+                                                                  .isEmpty) {
+                                                                return 'Please enter your contact No.';
+                                                              } else if (!RegExp(
+                                                                      r'^\+60[0-9]{9}$')
+                                                                  .hasMatch(
+                                                                      '+60$value')) {
+                                                                return 'Invalid Malaysian phone number. Format: +60123456789';
+                                                              }
+                                                              return null;
+                                                            },
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
                                                 const Expanded(
-                                                  flex: 1,
-                                                  child: Text(
-                                                    'Gender',
-                                                    style:
-                                                        TextStyle(fontSize: 16),
+                                                  child: SizedBox(),
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 50),
+                                            const Row(
+                                              children: [
+                                                Text(
+                                                  'Academic Information',
+                                                  style: TextStyle(
+                                                    color: Colors.blue,
+                                                    fontSize: 20,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            Row(
+                                              children: [
+                                                Expanded(
+                                                  child: Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            8.0),
+                                                    child: Row(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .center,
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        const Expanded(
+                                                          flex: 1,
+                                                          child: Text(
+                                                            'Programme',
+                                                            style: TextStyle(
+                                                                fontSize: 16),
+                                                          ),
+                                                        ),
+                                                        Expanded(
+                                                            flex: 4,
+                                                            child: CustomDDL<
+                                                                String>(
+                                                              controller:
+                                                                  programme,
+                                                              hintText:
+                                                                  'Select your programme',
+                                                              value:
+                                                                  selectedProgramme,
+                                                              dropdownItems:
+                                                                  programmeItems
+                                                                      .map(
+                                                                          (programme) {
+                                                                return DropdownMenuItem<
+                                                                    String>(
+                                                                  value:
+                                                                      programme,
+                                                                  child: Text(
+                                                                      programme,
+                                                                      overflow:
+                                                                          TextOverflow
+                                                                              .ellipsis),
+                                                                );
+                                                              }).toList(),
+                                                            )),
+                                                      ],
+                                                    ),
                                                   ),
                                                 ),
                                                 Expanded(
-                                                  flex: 4,
-                                                  child: Row(
-                                                    children: [
-                                                      Expanded(
-                                                        child: Row(
-                                                          children: [
-                                                            Radio<String>(
-                                                              value: 'M',
-                                                              groupValue:
-                                                                  selectedGender,
-                                                              onChanged:
-                                                                  (value) {
+                                                  child: Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            8.0),
+                                                    child: Row(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .center,
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        const Expanded(
+                                                          flex: 1,
+                                                          child: Text(
+                                                            'Faculty',
+                                                            style: TextStyle(
+                                                                fontSize: 16),
+                                                          ),
+                                                        ),
+                                                        Expanded(
+                                                            flex: 4,
+                                                            child: CustomDDL<
+                                                                String>(
+                                                              controller:
+                                                                  faculty,
+                                                              hintText:
+                                                                  'Select your faculty',
+                                                              value:
+                                                                  selectedFaculty,
+                                                              onChanged: (String?
+                                                                  newValue) {
                                                                 setState(() {
-                                                                  selectedGender =
-                                                                      value!;
+                                                                  selectedFaculty =
+                                                                      newValue!;
+                                                                  getProgrammesForFaculty(
+                                                                      selectedFaculty);
                                                                 });
                                                               },
-                                                            ),
-                                                            const Text('Male'),
-                                                          ],
+                                                              dropdownItems: const [
+                                                                DropdownMenuItem<
+                                                                    String>(
+                                                                  value:
+                                                                      'Faculty of Computing and Information Technology',
+                                                                  child: Text(
+                                                                      'Faculty of Computing and Information Technology',
+                                                                      overflow:
+                                                                          TextOverflow
+                                                                              .ellipsis),
+                                                                ),
+                                                                DropdownMenuItem<
+                                                                    String>(
+                                                                  value:
+                                                                      'Faculty of Applied Science',
+                                                                  child: Text(
+                                                                      'Faculty of Applied Science',
+                                                                      overflow:
+                                                                          TextOverflow
+                                                                              .ellipsis),
+                                                                ),
+                                                                DropdownMenuItem<
+                                                                    String>(
+                                                                  value:
+                                                                      'Faculty of Accountancy, Finance and Business',
+                                                                  child: Text(
+                                                                      'Faculty of Accountancy, Finance and Business',
+                                                                      overflow:
+                                                                          TextOverflow
+                                                                              .ellipsis),
+                                                                ),
+                                                              ],
+                                                            )),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    } else {
+                                      return Form(
+                                        key: _formKey2,
+                                        child: Column(
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Expanded(
+                                                  child: Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            8.0),
+                                                    child: Row(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .center,
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        const Expanded(
+                                                          flex: 1,
+                                                          child: Text(
+                                                            'Student ID',
+                                                            style: TextStyle(
+                                                                fontSize: 16),
+                                                          ),
+                                                        ),
+                                                        Expanded(
+                                                          flex: 4,
+                                                          child:
+                                                              CustomTextField(
+                                                            controller: id,
+                                                            hintText:
+                                                                'Enter your student ID',
+                                                            enabled: false,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            Row(children: [
+                                              Expanded(
+                                                child: Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(8.0),
+                                                  child: Row(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .center,
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment.start,
+                                                    children: [
+                                                      const Expanded(
+                                                        flex: 1,
+                                                        child: Text(
+                                                          'Email',
+                                                          style: TextStyle(
+                                                              fontSize: 16),
                                                         ),
                                                       ),
                                                       Expanded(
+                                                        flex: 4,
+                                                        child: CustomTextField(
+                                                          controller: email,
+                                                          hintText:
+                                                              'Enter your email',
+                                                          enabled: false,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                            ]),
+                                            Row(
+                                              children: [
+                                                Expanded(
+                                                  child: Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            8.0),
+                                                    child: Row(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .center,
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        const Expanded(
+                                                          flex: 1,
+                                                          child: Text(
+                                                            'Name',
+                                                            style: TextStyle(
+                                                                fontSize: 16),
+                                                          ),
+                                                        ),
+                                                        Expanded(
+                                                          flex: 4,
+                                                          child:
+                                                              CustomTextField(
+                                                            controller: name,
+                                                            hintText:
+                                                                'Enter your name',
+                                                            validator: (value) {
+                                                              if (value!
+                                                                  .isEmpty) {
+                                                                return 'Please enter your name';
+                                                              }
+                                                              return null;
+                                                            },
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            Row(children: [
+                                              Expanded(
+                                                child: Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(8.0),
+                                                  child: Row(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .center,
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment.start,
+                                                    children: [
+                                                      const Expanded(
+                                                        flex: 1,
+                                                        child: Text(
+                                                          'Gender',
+                                                          style: TextStyle(
+                                                              fontSize: 16),
+                                                        ),
+                                                      ),
+                                                      Expanded(
+                                                        flex: 4,
                                                         child: Row(
                                                           children: [
-                                                            Radio<String>(
-                                                              value: 'F',
-                                                              groupValue:
-                                                                  selectedGender,
-                                                              onChanged:
-                                                                  (value) {
-                                                                setState(() {
-                                                                  selectedGender =
-                                                                      value!;
-                                                                });
-                                                              },
+                                                            Expanded(
+                                                              child: Row(
+                                                                children: [
+                                                                  Radio<String>(
+                                                                    value: 'M',
+                                                                    groupValue:
+                                                                        selectedGender,
+                                                                    onChanged:
+                                                                        (value) {
+                                                                      setState(
+                                                                          () {
+                                                                        selectedGender =
+                                                                            value!;
+                                                                      });
+                                                                    },
+                                                                  ),
+                                                                  const Text(
+                                                                      'Male'),
+                                                                ],
+                                                              ),
                                                             ),
-                                                            const Text(
-                                                                'Female'),
+                                                            Expanded(
+                                                              child: Row(
+                                                                children: [
+                                                                  Radio<String>(
+                                                                    value: 'F',
+                                                                    groupValue:
+                                                                        selectedGender,
+                                                                    onChanged:
+                                                                        (value) {
+                                                                      setState(
+                                                                          () {
+                                                                        selectedGender =
+                                                                            value!;
+                                                                      });
+                                                                    },
+                                                                  ),
+                                                                  const Text(
+                                                                      'Female'),
+                                                                ],
+                                                              ),
+                                                            ),
                                                           ],
                                                         ),
                                                       ),
                                                     ],
                                                   ),
                                                 ),
+                                              ),
+                                            ]),
+                                            Row(
+                                              children: [
+                                                Expanded(
+                                                  child: Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            8.0),
+                                                    child: Row(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .center,
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        const Expanded(
+                                                          flex: 1,
+                                                          child: Text(
+                                                            'Date of Birth',
+                                                            style: TextStyle(
+                                                                fontSize: 16),
+                                                          ),
+                                                        ),
+                                                        Expanded(
+                                                          flex: 4,
+                                                          child:
+                                                              CustomTextField(
+                                                            controller: dob,
+                                                            validator: (value) {
+                                                              final DateFormat
+                                                                  dateFormat =
+                                                                  DateFormat(
+                                                                      'dd-MM-yyyy');
+
+                                                              if (value!
+                                                                  .isEmpty) {
+                                                                return 'Please enter your date of birth';
+                                                              } else {
+                                                                try {
+                                                                  DateTime
+                                                                      enteredDate =
+                                                                      dateFormat
+                                                                          .parseStrict(
+                                                                              value);
+
+                                                                  if (enteredDate.isAfter(DateTime
+                                                                          .now()
+                                                                      .add(const Duration(
+                                                                          days:
+                                                                              -3650)))) {
+                                                                    return 'You must be atleast 10 years old';
+                                                                  }
+                                                                } catch (e) {
+                                                                  return 'Invalid Date Format. Format: dd-MM-yyyy';
+                                                                }
+                                                                return null;
+                                                              }
+                                                            },
+                                                            hintText:
+                                                                'Enter your date of birth',
+                                                            suffixIcon:
+                                                                const Icon(Icons
+                                                                    .calendar_today_rounded),
+                                                            onTap: () async {
+                                                              DateTime?
+                                                                  pickedDate =
+                                                                  await showDatePicker(
+                                                                context:
+                                                                    context,
+                                                                initialDate:
+                                                                    DateTime(
+                                                                        2000),
+                                                                firstDate:
+                                                                    DateTime(
+                                                                        1900),
+                                                                lastDate:
+                                                                    DateTime(
+                                                                        2010),
+                                                              );
+
+                                                              if (pickedDate !=
+                                                                  null) {
+                                                                dob.text = DateFormat(
+                                                                        'dd-MM-yyyy')
+                                                                    .format(
+                                                                        pickedDate);
+                                                              }
+                                                            },
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
                                               ],
                                             ),
-                                          ),
+                                            Row(
+                                              children: [
+                                                Expanded(
+                                                  child: Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            8.0),
+                                                    child: Row(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .center,
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        const Expanded(
+                                                          flex: 1,
+                                                          child: Text(
+                                                            'IC No.',
+                                                            style: TextStyle(
+                                                                fontSize: 16),
+                                                          ),
+                                                        ),
+                                                        Expanded(
+                                                          flex: 4,
+                                                          child:
+                                                              CustomTextField(
+                                                            controller: ic,
+                                                            hintText:
+                                                                'Enter your IC No. (Format: 123456-12-1234)',
+                                                            validator: (value) {
+                                                              if (value!
+                                                                  .isEmpty) {
+                                                                return 'Please enter your IC No.';
+                                                              } else if (!RegExp(
+                                                                      r'^[0-9]{6}-[0-9]{2}-[0-9]{4}$')
+                                                                  .hasMatch(
+                                                                      value)) {
+                                                                return 'Invalid IC number. Format: 123456-12-1234';
+                                                              }
+                                                              return null;
+                                                            },
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            Row(
+                                              children: [
+                                                Expanded(
+                                                  child: Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            8.0),
+                                                    child: Row(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .center,
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        const Expanded(
+                                                          flex: 1,
+                                                          child: Text(
+                                                            'Contact No.',
+                                                            style: TextStyle(
+                                                                fontSize: 16),
+                                                          ),
+                                                        ),
+                                                        Expanded(
+                                                          flex: 4,
+                                                          child:
+                                                              CustomTextField(
+                                                            controller: contact,
+                                                            hintText:
+                                                                'Enter your contact No. (Format: +60123456789)',
+                                                            prefixText: '+60',
+                                                            validator: (value) {
+                                                              if (value!
+                                                                  .isEmpty) {
+                                                                return 'Please enter your contact No.';
+                                                              } else if (!RegExp(
+                                                                      r'^\+60[0-9]{9}$')
+                                                                  .hasMatch(
+                                                                      '+60$value')) {
+                                                                return 'Invalid Malaysian phone number. Format: +60123456789';
+                                                              }
+                                                              return null;
+                                                            },
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 50),
+                                            const Row(
+                                              children: [
+                                                Text(
+                                                  'Academic Information',
+                                                  style: TextStyle(
+                                                    color: Colors.blue,
+                                                    fontSize: 20,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            Row(
+                                              children: [
+                                                Expanded(
+                                                  child: Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            8.0),
+                                                    child: Row(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .center,
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        const Expanded(
+                                                          flex: 1,
+                                                          child: Text(
+                                                            'Programme',
+                                                            style: TextStyle(
+                                                                fontSize: 16),
+                                                          ),
+                                                        ),
+                                                        Expanded(
+                                                            flex: 4,
+                                                            child: CustomDDL<
+                                                                String>(
+                                                              controller:
+                                                                  programme,
+                                                              hintText:
+                                                                  'Select your programme',
+                                                              value:
+                                                                  selectedProgramme,
+                                                              dropdownItems:
+                                                                  programmeItems
+                                                                      .map(
+                                                                          (programme) {
+                                                                return DropdownMenuItem<
+                                                                    String>(
+                                                                  value:
+                                                                      programme,
+                                                                  child: Text(
+                                                                      programme,
+                                                                      overflow:
+                                                                          TextOverflow
+                                                                              .ellipsis),
+                                                                );
+                                                              }).toList(),
+                                                            )),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            Row(
+                                              children: [
+                                                Expanded(
+                                                  child: Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            8.0),
+                                                    child: Row(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .center,
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        const Expanded(
+                                                          flex: 1,
+                                                          child: Text(
+                                                            'Faculty',
+                                                            style: TextStyle(
+                                                                fontSize: 16),
+                                                          ),
+                                                        ),
+                                                        Expanded(
+                                                            flex: 4,
+                                                            child: CustomDDL<
+                                                                String>(
+                                                              controller:
+                                                                  faculty,
+                                                              hintText:
+                                                                  'Select your faculty',
+                                                              value:
+                                                                  selectedFaculty,
+                                                              onChanged: (String?
+                                                                  newValue) {
+                                                                setState(() {
+                                                                  selectedFaculty =
+                                                                      newValue!;
+                                                                  getProgrammesForFaculty(
+                                                                      selectedFaculty);
+                                                                });
+                                                              },
+                                                              dropdownItems: const [
+                                                                DropdownMenuItem<
+                                                                    String>(
+                                                                  value:
+                                                                      'Faculty of Computing and Information Technology',
+                                                                  child: Text(
+                                                                      'Faculty of Computing and Information Technology',
+                                                                      overflow:
+                                                                          TextOverflow
+                                                                              .ellipsis),
+                                                                ),
+                                                                DropdownMenuItem<
+                                                                    String>(
+                                                                  value:
+                                                                      'Faculty of Applied Science',
+                                                                  child: Text(
+                                                                      'Faculty of Applied Science',
+                                                                      overflow:
+                                                                          TextOverflow
+                                                                              .ellipsis),
+                                                                ),
+                                                                DropdownMenuItem<
+                                                                    String>(
+                                                                  value:
+                                                                      'Faculty of Accountancy, Finance and Business',
+                                                                  child: Text(
+                                                                      'Faculty of Accountancy, Finance and Business',
+                                                                      overflow:
+                                                                          TextOverflow
+                                                                              .ellipsis),
+                                                                ),
+                                                              ],
+                                                            )),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            )
+                                          ],
                                         ),
-                                      ]),
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: Padding(
-                                              padding:
-                                                  const EdgeInsets.all(8.0),
-                                              child: Row(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.center,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.start,
-                                                children: [
-                                                  const Expanded(
-                                                    flex: 1,
-                                                    child: Text(
-                                                      'Date of Birth',
-                                                      style: TextStyle(
-                                                          fontSize: 16),
-                                                    ),
-                                                  ),
-                                                  Expanded(
-                                                    flex: 4,
-                                                    child: CustomTextField(
-                                                      controller: dob,
-                                                      hintText:
-                                                          'Enter your date of birth',
-                                                      suffixIcon: const Icon(Icons
-                                                          .calendar_today_rounded),
-                                                      onTap: () async {
-                                                        DateTime? pickedDate =
-                                                            await showDatePicker(
-                                                          context: context,
-                                                          initialDate:
-                                                              DateTime(2000),
-                                                          firstDate:
-                                                              DateTime(1900),
-                                                          lastDate:
-                                                              DateTime(2010),
-                                                        );
-
-                                                        if (pickedDate !=
-                                                            null) {
-                                                          dob.text = DateFormat(
-                                                                  'dd-MM-yyyy')
-                                                              .format(
-                                                                  pickedDate);
-                                                        }
-                                                      },
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: Padding(
-                                              padding:
-                                                  const EdgeInsets.all(8.0),
-                                              child: Row(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.center,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.start,
-                                                children: [
-                                                  const Expanded(
-                                                    flex: 1,
-                                                    child: Text(
-                                                      'IC No.',
-                                                      style: TextStyle(
-                                                          fontSize: 16),
-                                                    ),
-                                                  ),
-                                                  Expanded(
-                                                    flex: 4,
-                                                    child: CustomTextField(
-                                                      controller: ic,
-                                                      hintText:
-                                                          'Enter your IC No. (Format: 123456-12-1234)',
-                                                      validator: (value) {
-                                                        if (value!.isEmpty) {
-                                                          return 'Please enter your IC No.';
-                                                        } else if (!RegExp(
-                                                                r'^[0-9]{6}-[0-9]{2}-[0-9]{4}$')
-                                                            .hasMatch(value)) {
-                                                          return 'Invalid IC number. Format: 123456-12-1234';
-                                                        }
-                                                        return null;
-                                                      },
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: Padding(
-                                              padding:
-                                                  const EdgeInsets.all(8.0),
-                                              child: Row(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.center,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.start,
-                                                children: [
-                                                  const Expanded(
-                                                    flex: 1,
-                                                    child: Text(
-                                                      'Contact No.',
-                                                      style: TextStyle(
-                                                          fontSize: 16),
-                                                    ),
-                                                  ),
-                                                  Expanded(
-                                                    flex: 4,
-                                                    child: CustomTextField(
-                                                      controller: contact,
-                                                      hintText:
-                                                          'Enter your contact No. (Format: +60123456789)',
-                                                      prefixText: '+60',
-                                                      validator: (value) {
-                                                        if (value!.isEmpty) {
-                                                          return 'Please enter your contact No.';
-                                                        } else if (!RegExp(
-                                                                r'^\+60[0-9]{9}$')
-                                                            .hasMatch(
-                                                                '+60$value')) {
-                                                          return 'Invalid Malaysian phone number. Format: +60123456789';
-                                                        }
-                                                        return null;
-                                                      },
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 50),
-                                      const Row(
-                                        children: [
-                                          Text(
-                                            'Academic Information',
-                                            style: TextStyle(
-                                              color: Colors.blue,
-                                              fontSize: 20,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: Padding(
-                                              padding:
-                                                  const EdgeInsets.all(8.0),
-                                              child: Row(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.center,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.start,
-                                                children: [
-                                                  const Expanded(
-                                                    flex: 1,
-                                                    child: Text(
-                                                      'Programme',
-                                                      style: TextStyle(
-                                                          fontSize: 16),
-                                                    ),
-                                                  ),
-                                                  Expanded(
-                                                      flex: 4,
-                                                      child: CustomDDL<String>(
-                                                        controller: programme,
-                                                        hintText:
-                                                            'Select your programme',
-                                                        value:
-                                                            selectedProgramme,
-                                                        dropdownItems:
-                                                            programmeItems.map(
-                                                                (programme) {
-                                                          return DropdownMenuItem<
-                                                              String>(
-                                                            value: programme,
-                                                            child: Text(
-                                                                programme,
-                                                                overflow:
-                                                                    TextOverflow
-                                                                        .ellipsis),
-                                                          );
-                                                        }).toList(),
-                                                      )),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: Padding(
-                                              padding:
-                                                  const EdgeInsets.all(8.0),
-                                              child: Row(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.center,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.start,
-                                                children: [
-                                                  const Expanded(
-                                                    flex: 1,
-                                                    child: Text(
-                                                      'Faculty',
-                                                      style: TextStyle(
-                                                          fontSize: 16),
-                                                    ),
-                                                  ),
-                                                  Expanded(
-                                                      flex: 4,
-                                                      child: CustomDDL<String>(
-                                                        controller: faculty,
-                                                        hintText:
-                                                            'Select your faculty',
-                                                        value: selectedFaculty,
-                                                        onChanged:
-                                                            (String? newValue) {
-                                                          setState(() {
-                                                            selectedFaculty =
-                                                                newValue!;
-                                                            getProgrammesForFaculty(
-                                                                selectedFaculty);
-                                                          });
-                                                        },
-                                                        dropdownItems: const [
-                                                          DropdownMenuItem<
-                                                              String>(
-                                                            value:
-                                                                'Faculty of Computing and Information Technology',
-                                                            child: Text(
-                                                                'Faculty of Computing and Information Technology',
-                                                                overflow:
-                                                                    TextOverflow
-                                                                        .ellipsis),
-                                                          ),
-                                                          DropdownMenuItem<
-                                                              String>(
-                                                            value:
-                                                                'Faculty of Applied Science',
-                                                            child: Text(
-                                                                'Faculty of Applied Science',
-                                                                overflow:
-                                                                    TextOverflow
-                                                                        .ellipsis),
-                                                          ),
-                                                          DropdownMenuItem<
-                                                              String>(
-                                                            value:
-                                                                'Faculty of Accountancy, Finance and Business',
-                                                            child: Text(
-                                                                'Faculty of Accountancy, Finance and Business',
-                                                                overflow:
-                                                                    TextOverflow
-                                                                        .ellipsis),
-                                                          ),
-                                                        ],
-                                                      )),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      )
-                                    ],
-                                  ),
-                                );
-                              }
-                            },
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 30, horizontal: 50),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                CustomButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) {
-                                          return const ResetPassword();
-                                        },
-                                      ),
-                                    );
-                                  },
-                                  text: 'Reset Password',
-                                  width: 150,
-                                ),
-                                const SizedBox(
-                                  width: 25,
-                                ),
-                                CustomButton(
-                                  onPressed: () {
-                                    if (Responsive.isDesktop(context)) {
-                                      if (_formKey1.currentState!.validate()) {
-                                        updateProfile(context);
-                                      }
-                                    } else {
-                                      if (_formKey2.currentState!.validate()) {
-                                        updateProfile(context);
-                                      }
+                                      );
                                     }
                                   },
-                                  text: 'Edit Profile',
-                                  width: 150,
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 30, horizontal: 50),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      CustomButton(
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) {
+                                                return const ResetPassword();
+                                              },
+                                            ),
+                                          );
+                                        },
+                                        text: 'Reset Password',
+                                        width: 150,
+                                      ),
+                                      const SizedBox(
+                                        width: 25,
+                                      ),
+                                      CustomButton(
+                                        onPressed: () {
+                                          if (Responsive.isDesktop(context)) {
+                                            if (_formKey1.currentState!
+                                                .validate()) {
+                                              updateProfile(context);
+                                            }
+                                          } else {
+                                            if (_formKey2.currentState!
+                                                .validate()) {
+                                              updateProfile(context);
+                                            }
+                                          }
+                                        },
+                                        text: 'Edit Profile',
+                                        width: 150,
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
@@ -1133,13 +1315,10 @@ class _ProfileState extends State<Profile> {
                         ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
       bottomNavigationBar: const Footer(),
     );
   }

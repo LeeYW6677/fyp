@@ -33,6 +33,7 @@ class _AdvisorFirstLoginState extends State<AdvisorFirstLogin> {
   String? idErrorText;
   String? icErrorText;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  bool _isLoading = true;
 
   Future<void> getData() async {
     FirebaseFirestore firestore = FirebaseFirestore.instance;
@@ -46,6 +47,9 @@ class _AdvisorFirstLoginState extends State<AdvisorFirstLogin> {
       name.text = data.docs.first['name'];
       id.text = data.docs.first.id;
     }
+    setState(() {
+      _isLoading = false;
+    });
   }
 
   Future<void> signUp() async {
@@ -133,401 +137,412 @@ class _AdvisorFirstLoginState extends State<AdvisorFirstLogin> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: Container(
-            height: MediaQuery.of(context).size.height,
-            decoration: const BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('lib/Images/tarumtbg.png'),
-                fit: BoxFit.fitWidth,
-                alignment: Alignment.bottomCenter,
-              ),
-            ),
-            child: SingleChildScrollView(
-                child: Center(
-              child: Column(
-                children: [
-                  const SizedBox(height: 50),
-                  Image.asset(
-                    'lib/Images/tarumt.png',
-                    height: 120,
+        body: _isLoading
+            ? Center(
+                child: CircularProgressIndicator(),
+              )
+            : Container(
+                height: MediaQuery.of(context).size.height,
+                decoration: const BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage('lib/Images/tarumtbg.png'),
+                    fit: BoxFit.fitWidth,
+                    alignment: Alignment.bottomCenter,
                   ),
-                  const SizedBox(height: 50),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                    child: Container(
-                        width: 650,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          border: Border.all(
-                            color: Colors.grey,
-                            width: 1.0,
-                          ),
-                        ),
-                        child: Form(
-                          key: _formKey,
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
+                ),
+                child: SingleChildScrollView(
+                    child: Center(
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 50),
+                      Image.asset(
+                        'lib/Images/tarumt.png',
+                        height: 120,
+                      ),
+                      const SizedBox(height: 50),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                        child: Container(
+                            width: 650,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              border: Border.all(
+                                color: Colors.grey,
+                                width: 1.0,
+                              ),
+                            ),
+                            child: Form(
+                              key: _formKey,
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  IconButton(
-                                      onPressed: () {
-                                        Navigator.of(context).pop();
-                                      },
-                                      icon: const Icon(Icons.arrow_back)),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: [
+                                      IconButton(
+                                          onPressed: () {
+                                            Navigator.of(context).pop();
+                                          },
+                                          icon: const Icon(Icons.arrow_back)),
+                                    ],
+                                  ),
+                                  Text(
+                                    'Register',
+                                    style: TextStyle(
+                                      color: Colors.grey[700],
+                                      fontSize: 24,
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(12.0),
+                                    child: Row(
+                                      children: [
+                                        const SizedBox(
+                                          width: 200,
+                                          child: Text(
+                                            'Name:',
+                                            style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: CustomTextField(
+                                            controller: name,
+                                            hintText: 'Enter your name',
+                                            validator: (value) {
+                                              if (value!.isEmpty) {
+                                                return 'Please enter your name';
+                                              }
+                                              return null;
+                                            },
+                                          ),
+                                        )
+                                      ],
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(12.0),
+                                    child: Row(
+                                      children: [
+                                        const SizedBox(
+                                          width: 200,
+                                          child: Text(
+                                            'Advisor ID:',
+                                            style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: CustomTextField(
+                                            controller: id,
+                                            hintText: 'Enter your advisor ID',
+                                            errorText: idErrorText,
+                                            validator: (value) {
+                                              if (value!.isEmpty) {
+                                                return 'Please enter your advisor ID';
+                                              } else if (!RegExp(r'^A\d{3}$')
+                                                  .hasMatch(value)) {
+                                                return 'Invalid advisor ID. Format: A001';
+                                              }
+                                              return null;
+                                            },
+                                          ),
+                                        )
+                                      ],
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(12.0),
+                                    child: Row(
+                                      children: [
+                                        const SizedBox(
+                                          width: 200,
+                                          child: Text(
+                                            'Password:',
+                                            style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: CustomTextField(
+                                            controller: password,
+                                            hintText: 'Enter your password',
+                                            hiding: true,
+                                            validator: (value) {
+                                              if (value!.isEmpty) {
+                                                return 'Please enter your new password';
+                                              } else if (!RegExp(
+                                                      r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$')
+                                                  .hasMatch(value)) {
+                                                return 'Incorrect Password Format.';
+                                              }
+                                              return null;
+                                            },
+                                          ),
+                                        )
+                                      ],
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(12.0),
+                                    child: Row(
+                                      children: [
+                                        const SizedBox(
+                                          width: 200,
+                                          child: Text(
+                                            'Confirm Password:',
+                                            style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: CustomTextField(
+                                            controller: cfmPassword,
+                                            hintText: 'Confirm your password',
+                                            hiding: true,
+                                            validator: (value) {
+                                              if (value!.isEmpty) {
+                                                return 'Please confirm your new password';
+                                              } else if (value !=
+                                                  password.text) {
+                                                return 'Password does not match';
+                                              }
+                                              return null;
+                                            },
+                                          ),
+                                        )
+                                      ],
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(12.0),
+                                    child: Row(
+                                      children: [
+                                        const SizedBox(
+                                          width: 200,
+                                          child: Text(
+                                            'Gender:',
+                                            style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          flex: 4,
+                                          child: Row(
+                                            children: [
+                                              Expanded(
+                                                child: Row(
+                                                  children: [
+                                                    Radio<String>(
+                                                      value: 'M',
+                                                      groupValue:
+                                                          selectedGender,
+                                                      onChanged: (value) {
+                                                        setState(() {
+                                                          selectedGender =
+                                                              value!;
+                                                        });
+                                                      },
+                                                    ),
+                                                    const Text('Male'),
+                                                  ],
+                                                ),
+                                              ),
+                                              Expanded(
+                                                child: Row(
+                                                  children: [
+                                                    Radio<String>(
+                                                      value: 'F',
+                                                      groupValue:
+                                                          selectedGender,
+                                                      onChanged: (value) {
+                                                        setState(() {
+                                                          selectedGender =
+                                                              value!;
+                                                        });
+                                                      },
+                                                    ),
+                                                    const Text('Female'),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(12.0),
+                                    child: Row(
+                                      children: [
+                                        const SizedBox(
+                                          width: 200,
+                                          child: Text(
+                                            'Date of Birth:',
+                                            style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          flex: 4,
+                                          child: CustomTextField(
+                                            controller: dob,
+                                            hintText:
+                                                'Enter your date of birth',
+                                            suffixIcon: const Icon(
+                                                Icons.calendar_today_rounded),
+                                            onTap: () async {
+                                              DateTime? pickedDate =
+                                                  await showDatePicker(
+                                                context: context,
+                                                initialDate: DateTime(2000),
+                                                firstDate: DateTime(1900),
+                                                lastDate: DateTime(2010),
+                                              );
+
+                                              if (pickedDate != null) {
+                                                setState(() {
+                                                  dob.text =
+                                                      DateFormat('dd-MM-yyyy')
+                                                          .format(pickedDate);
+                                                });
+                                              }
+                                            },
+                                            validator: (value) {
+                                              if (value!.isEmpty) {
+                                                return 'Please enter your date of birth.';
+                                              }
+                                              return null;
+                                            },
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(12.0),
+                                    child: Row(
+                                      children: [
+                                        const SizedBox(
+                                          width: 200,
+                                          child: Text(
+                                            'IC:',
+                                            style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: CustomTextField(
+                                            controller: ic,
+                                            hintText: 'Enter your IC',
+                                            validator: (value) {
+                                              if (value!.isEmpty) {
+                                                return 'Please enter your IC No. (Format: 123456-12-1234)';
+                                              } else if (!RegExp(
+                                                      r'^[0-9]{6}-[0-9]{2}-[0-9]{4}$')
+                                                  .hasMatch(value)) {
+                                                return 'Invalid IC number. Format: 123456-12-1234';
+                                              }
+                                              return null;
+                                            },
+                                          ),
+                                        )
+                                      ],
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(12.0),
+                                    child: Row(
+                                      children: [
+                                        const SizedBox(
+                                          width: 200,
+                                          child: Text(
+                                            'Contact No:',
+                                            style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: CustomTextField(
+                                            controller: contact,
+                                            hintText:
+                                                'Enter your contact No. (Format: +60123456789)',
+                                            prefixText: '+60',
+                                            validator: (value) {
+                                              if (value!.isEmpty) {
+                                                return 'Please enter your contact No.';
+                                              } else if (!RegExp(
+                                                      r'^\+60[0-9]{9}$')
+                                                  .hasMatch('+60$value')) {
+                                                return 'Invalid Malaysian phone number. Format: +60123456789';
+                                              }
+                                              return null;
+                                            },
+                                          ),
+                                        )
+                                      ],
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(12.0),
+                                    child: Row(
+                                      children: [
+                                        const SizedBox(
+                                          width: 200,
+                                          child: Text(
+                                            'Programme:',
+                                            style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        ),
+                                        Expanded(
+                                            flex: 4,
+                                            child: CustomDDL<String>(
+                                              controller: department,
+                                              hintText:
+                                                  'Select your department',
+                                              value: selectedDepartment,
+                                              dropdownItems: departmentItems
+                                                  .map((department) {
+                                                return DropdownMenuItem<String>(
+                                                  value: department,
+                                                  child: Text(department,
+                                                      overflow: TextOverflow
+                                                          .ellipsis),
+                                                );
+                                              }).toList(),
+                                            )),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 25),
+                                  CustomButton(
+                                    text: 'Sign up',
+                                    onPressed: () {
+                                      if (_formKey.currentState!.validate()) {
+                                        signUp();
+                                      }
+                                    },
+                                    width: 400,
+                                  ),
+                                  const SizedBox(height: 25),
                                 ],
                               ),
-                              const SizedBox(height: 25),
-                              Text(
-                                'Register',
-                                style: TextStyle(
-                                  color: Colors.grey[700],
-                                  fontSize: 24,
-                                ),
-                              ),
-                              const SizedBox(height: 25),
-                              Padding(
-                                padding: const EdgeInsets.all(12.0),
-                                child: Row(
-                                  children: [
-                                    const SizedBox(
-                                      width: 200,
-                                      child: Text(
-                                        'Name:',
-                                        style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      child: CustomTextField(
-                                        controller: name,
-                                        hintText: 'Enter your name',
-                                        validator: (value) {
-                                          if (value!.isEmpty) {
-                                            return 'Please enter your name';
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                    )
-                                  ],
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(12.0),
-                                child: Row(
-                                  children: [
-                                    const SizedBox(
-                                      width: 200,
-                                      child: Text(
-                                        'Advisor ID:',
-                                        style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      child: CustomTextField(
-                                        controller: id,
-                                        hintText: 'Enter your advisor ID',
-                                        errorText: idErrorText,
-                                        validator: (value) {
-                                          if (value!.isEmpty) {
-                                            return 'Please enter your advisor ID';
-                                          } else if (!RegExp(r'^A\d{3}$')
-                                              .hasMatch(value)) {
-                                            return 'Invalid advisor ID. Format: A001';
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                    )
-                                  ],
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(12.0),
-                                child: Row(
-                                  children: [
-                                    const SizedBox(
-                                      width: 200,
-                                      child: Text(
-                                        'Password:',
-                                        style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      child: CustomTextField(
-                                        controller: password,
-                                        hintText: 'Enter your password',
-                                        hiding: true,
-                                        validator: (value) {
-                                          if (value!.isEmpty) {
-                                            return 'Please enter your new password';
-                                          } else if (!RegExp(
-                                                  r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$')
-                                              .hasMatch(value)) {
-                                            return 'Incorrect Password Format.';
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                    )
-                                  ],
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(12.0),
-                                child: Row(
-                                  children: [
-                                    const SizedBox(
-                                      width: 200,
-                                      child: Text(
-                                        'Confirm Password:',
-                                        style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      child: CustomTextField(
-                                        controller: cfmPassword,
-                                        hintText: 'Confirm your password',
-                                        hiding: true,
-                                        validator: (value) {
-                                          if (value!.isEmpty) {
-                                            return 'Please confirm your new password';
-                                          } else if (value != password.text) {
-                                            return 'Password does not match';
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                    )
-                                  ],
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(12.0),
-                                child: Row(
-                                  children: [
-                                    const SizedBox(
-                                      width: 200,
-                                      child: Text(
-                                        'Gender:',
-                                        style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 4,
-                                      child: Row(
-                                        children: [
-                                          Expanded(
-                                            child: Row(
-                                              children: [
-                                                Radio<String>(
-                                                  value: 'M',
-                                                  groupValue: selectedGender,
-                                                  onChanged: (value) {
-                                                    setState(() {
-                                                      selectedGender = value!;
-                                                    });
-                                                  },
-                                                ),
-                                                const Text('Male'),
-                                              ],
-                                            ),
-                                          ),
-                                          Expanded(
-                                            child: Row(
-                                              children: [
-                                                Radio<String>(
-                                                  value: 'F',
-                                                  groupValue: selectedGender,
-                                                  onChanged: (value) {
-                                                    setState(() {
-                                                      selectedGender = value!;
-                                                    });
-                                                  },
-                                                ),
-                                                const Text('Female'),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(12.0),
-                                child: Row(
-                                  children: [
-                                    const SizedBox(
-                                      width: 200,
-                                      child: Text(
-                                        'Date of Birth:',
-                                        style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 4,
-                                      child: CustomTextField(
-                                        controller: dob,
-                                        hintText: 'Enter your date of birth',
-                                        suffixIcon: const Icon(
-                                            Icons.calendar_today_rounded),
-                                        onTap: () async {
-                                          DateTime? pickedDate =
-                                              await showDatePicker(
-                                            context: context,
-                                            initialDate: DateTime(2000),
-                                            firstDate: DateTime(1900),
-                                            lastDate: DateTime(2010),
-                                          );
-
-                                          if (pickedDate != null) {
-                                            setState(() {
-                                              dob.text =
-                                                  DateFormat('dd-MM-yyyy')
-                                                      .format(pickedDate);
-                                            });
-                                          }
-                                        },
-                                        validator: (value) {
-                                          if (value!.isEmpty) {
-                                            return 'Please enter your date of birth.';
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(12.0),
-                                child: Row(
-                                  children: [
-                                    const SizedBox(
-                                      width: 200,
-                                      child: Text(
-                                        'IC:',
-                                        style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      child: CustomTextField(
-                                        controller: ic,
-                                        hintText: 'Enter your IC',
-                                        validator: (value) {
-                                          if (value!.isEmpty) {
-                                            return 'Please enter your IC No. (Format: 123456-12-1234)';
-                                          } else if (!RegExp(
-                                                  r'^[0-9]{6}-[0-9]{2}-[0-9]{4}$')
-                                              .hasMatch(value)) {
-                                            return 'Invalid IC number. Format: 123456-12-1234';
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                    )
-                                  ],
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(12.0),
-                                child: Row(
-                                  children: [
-                                    const SizedBox(
-                                      width: 200,
-                                      child: Text(
-                                        'Contact No:',
-                                        style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      child: CustomTextField(
-                                        controller: contact,
-                                        hintText:
-                                            'Enter your contact No. (Format: +60123456789)',
-                                        prefixText: '+60',
-                                        validator: (value) {
-                                          if (value!.isEmpty) {
-                                            return 'Please enter your contact No.';
-                                          } else if (!RegExp(r'^\+60[0-9]{9}$')
-                                              .hasMatch('+60$value')) {
-                                            return 'Invalid Malaysian phone number. Format: +60123456789';
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                    )
-                                  ],
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(12.0),
-                                child: Row(
-                                  children: [
-                                    const SizedBox(
-                                      width: 200,
-                                      child: Text(
-                                        'Programme:',
-                                        style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold),
-                                      ),
-                                    ),
-                                    Expanded(
-                                        flex: 4,
-                                        child: CustomDDL<String>(
-                                          controller: department,
-                                          hintText: 'Select your department',
-                                          value: selectedDepartment,
-                                          dropdownItems:
-                                              departmentItems.map((department) {
-                                            return DropdownMenuItem<String>(
-                                              value: department,
-                                              child: Text(department,
-                                                  overflow:
-                                                      TextOverflow.ellipsis),
-                                            );
-                                          }).toList(),
-                                        )),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 25),
-                              CustomButton(
-                                text: 'Sign up',
-                                onPressed: () {
-                                  if (_formKey.currentState!.validate()) {
-                                    signUp();
-                                  }
-                                },
-                                width: 400,
-                              ),
-                              const SizedBox(height: 50),
-                            ],
-                          ),
-                        )),
+                            )),
+                      ),
+                      const SizedBox(height: 25),
+                    ],
                   ),
-                ],
-              ),
-            ))));
+                ))));
   }
 }

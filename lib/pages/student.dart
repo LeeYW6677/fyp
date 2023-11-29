@@ -12,9 +12,13 @@ class Student extends StatefulWidget {
 
 class _StudentState extends State<Student> {
   List<Map<String, dynamic>> _student = [];
+  bool _isLoading = true;
 
   Future<void> getData() async {
     try {
+      setState(() {
+        _isLoading = true;
+      });
       FirebaseFirestore firestore = FirebaseFirestore.instance;
       QuerySnapshot<Map<String, dynamic>> userDocuments =
           await firestore.collection('user').get();
@@ -30,8 +34,12 @@ class _StudentState extends State<Student> {
       }
       setState(() {
         _student = _student;
+        _isLoading = false;
       });
     } catch (error) {
+      setState(() {
+        _isLoading = false;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Failed to fetch data. Please try again.'),
@@ -59,102 +67,113 @@ class _StudentState extends State<Student> {
               page: 'Student',
             )
           : null,
-      body: SafeArea(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (Responsive.isDesktop(context))
-              const Expanded(
-                child: CustomDrawer(
-                  index: 2,
-                  page: 'Student',
-                ),
-              ),
-            Expanded(
-              flex: 5,
-              child: SingleChildScrollView(
-                child: Column(children: [
-                  const NavigationMenu(
-                    buttonTexts: ['Student'],
-                    destination: [Student()],
-                  ),
-                  Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Student',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 20,
-                              ),
-                            ),
-                            const Divider(
-                              thickness: 0.1,
-                              color: Colors.black,
-                            ),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 20.0),
-                              child: Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    border: Border.all(
-                                      color: Colors.grey,
-                                      width: 1.0,
+      body: _isLoading
+          ? Center(
+              child: CircularProgressIndicator(),
+            )
+          : SafeArea(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (Responsive.isDesktop(context))
+                    const Expanded(
+                      child: CustomDrawer(
+                        index: 2,
+                        page: 'Student',
+                      ),
+                    ),
+                  Expanded(
+                    flex: 5,
+                    child: SingleChildScrollView(
+                      child: Column(children: [
+                        const NavigationMenu(
+                          buttonTexts: ['Student'],
+                          destination: [Student()],
+                        ),
+                        Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Student',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20,
                                     ),
                                   ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(16.0),
-                                    child: Column(
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: SizedBox(
-                                                width: MediaQuery.of(context)
-                                                    .size
-                                                    .width,
-                                                child: CustomDataTable(
-                                                  context: context,
-                                                  columns: const [
-                                                    DataColumn(
-                                                      label: Text('Name'),
-                                                    ),
-                                                    DataColumn(
-                                                        label:
-                                                            Text('Student ID')),
-                                                    DataColumn(
-                                                        label: Text('Email')),
-                                                    DataColumn(
-                                                        label: Text('IC No.')),
-                                                    DataColumn(
-                                                        label: Text('Contact')),
-                                                    DataColumn(
-                                                        label:
-                                                            Text('Programme')),
-                                                    DataColumn(
-                                                        label: Text('Action')),
-                                                  ],
-                                                  source: _StudentDataSource(
-                                                      _student, context),
-                                                ),
-                                              ),
-                                            ),
-                                          ],
+                                  const Divider(
+                                    thickness: 0.1,
+                                    color: Colors.black,
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 20.0),
+                                    child: Container(
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          border: Border.all(
+                                            color: Colors.grey,
+                                            width: 1.0,
+                                          ),
                                         ),
-                                      ],
-                                    ),
-                                  )),
-                            ),
-                          ]))
-                ]),
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(16.0),
+                                          child: Column(
+                                            children: [
+                                              Row(
+                                                children: [
+                                                  Expanded(
+                                                    child: SizedBox(
+                                                      width:
+                                                          MediaQuery.of(context)
+                                                              .size
+                                                              .width,
+                                                      child: CustomDataTable(
+                                                        context: context,
+                                                        columns: const [
+                                                          DataColumn(
+                                                            label: Text('Name'),
+                                                          ),
+                                                          DataColumn(
+                                                              label: Text(
+                                                                  'Student ID')),
+                                                          DataColumn(
+                                                              label: Text(
+                                                                  'Email')),
+                                                          DataColumn(
+                                                              label: Text(
+                                                                  'IC No.')),
+                                                          DataColumn(
+                                                              label: Text(
+                                                                  'Contact')),
+                                                          DataColumn(
+                                                              label: Text(
+                                                                  'Programme')),
+                                                          DataColumn(
+                                                              label: Text(
+                                                                  'Action')),
+                                                        ],
+                                                        source:
+                                                            _StudentDataSource(
+                                                                _student,
+                                                                context),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        )),
+                                  ),
+                                ]))
+                      ]),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
       bottomNavigationBar: const Footer(),
     );
   }
