@@ -68,7 +68,7 @@ class _StudentState extends State<Student> {
             )
           : null,
       body: _isLoading
-          ? Center(
+          ? const Center(
               child: CircularProgressIndicator(),
             )
           : SafeArea(
@@ -413,14 +413,14 @@ class _StudentDataSource extends DataTableSource {
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
             ),
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
                 updateStudentStatus(index, student['id'], !student['status']);
               },
-              child: Text('Confirm'),
+              child: const Text('Confirm'),
             ),
           ],
         );

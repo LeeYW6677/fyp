@@ -209,7 +209,7 @@ class _StudentSocietyState extends State<StudentSociety> {
             )
           : null,
       body:_isLoading
-        ? Center(
+        ? const Center(
             child: CircularProgressIndicator(),
           )
         : SafeArea(
@@ -948,7 +948,7 @@ class AddDialog extends StatefulWidget {
   final String selectedSociety;
   final VoidCallback? function;
 
-  AddDialog({required this.selectedSociety, this.function});
+  const AddDialog({required this.selectedSociety, this.function});
   @override
   _AddDialogState createState() => _AddDialogState();
 }
@@ -1070,7 +1070,7 @@ class EditDialog extends StatefulWidget {
   final List<Map<String, dynamic>> highcomm;
   final List<Map<String, dynamic>> lowcomm;
 
-  EditDialog(
+  const EditDialog(
       {required this.selectedSociety,
       this.function,
       required this.highcomm,
@@ -1225,7 +1225,7 @@ class DeleteDialog extends StatefulWidget {
   final VoidCallback? function;
   final List<String> selectedStudentIDs;
 
-  DeleteDialog({
+  const DeleteDialog({
     required this.selectedSociety,
     this.function,
     required this.selectedStudentIDs,

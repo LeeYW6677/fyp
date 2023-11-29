@@ -192,7 +192,7 @@ class _SocietyState extends State<Society> {
                   )
                 : null,
             body: _isLoading
-        ? Center(
+        ? const Center(
             child: CircularProgressIndicator(),
           )
         : SafeArea(

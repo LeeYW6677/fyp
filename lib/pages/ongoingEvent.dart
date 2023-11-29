@@ -95,7 +95,7 @@ setState(() {
             )
           : null,
       body: _isLoading
-        ? Center(
+        ? const Center(
             child: CircularProgressIndicator(),
           )
         : SafeArea(
@@ -114,7 +114,7 @@ setState(() {
               child: SingleChildScrollView(
                 child: Column(children: [
                   NavigationMenu(
-                    buttonTexts: ['Society', 'Event'],
+                    buttonTexts: const ['Society', 'Event'],
                     destination: [
                       const Society(),
                       OngoingEvent(selectedSociety: widget.selectedSociety)

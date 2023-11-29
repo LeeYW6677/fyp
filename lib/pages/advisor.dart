@@ -88,7 +88,7 @@ class _AdvisorState extends State<Advisor> {
             )
           : null,
       body: _isLoading
-          ? Center(
+          ? const Center(
               child: CircularProgressIndicator(),
             )
           : SafeArea(
@@ -464,7 +464,7 @@ class _AdvisorDataSource extends DataTableSource {
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
             ),
             TextButton(
               onPressed: () {
@@ -472,7 +472,7 @@ class _AdvisorDataSource extends DataTableSource {
                 updateAdvisorStatus(
                     index, advisor['advisorID'], !advisor['status']);
               },
-              child: Text('Confirm'),
+              child: const Text('Confirm'),
             ),
           ],
         );

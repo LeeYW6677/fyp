@@ -138,7 +138,7 @@ class _AdvisorFirstLoginState extends State<AdvisorFirstLogin> {
   Widget build(BuildContext context) {
     return Scaffold(
         body: _isLoading
-            ? Center(
+            ? const Center(
                 child: CircularProgressIndicator(),
               )
             : Container(

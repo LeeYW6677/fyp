@@ -93,7 +93,7 @@ class _OrganisedEventState extends State<OrganisedEvent> {
             )
           : null,
       body: _isLoading
-        ? Center(
+        ? const Center(
             child: CircularProgressIndicator(),
           )
         : SafeArea(
@@ -112,7 +112,7 @@ class _OrganisedEventState extends State<OrganisedEvent> {
               child: SingleChildScrollView(
                 child: Column(children: [
                   NavigationMenu(
-                    buttonTexts: ['Society', 'Event'],
+                    buttonTexts: const ['Society', 'Event'],
                     destination: [
                       const Society(),
                       OngoingEvent(selectedSociety: widget.selectedSociety)

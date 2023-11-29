@@ -126,7 +126,7 @@ class _ProfileState extends State<Profile> {
       appBar: const Header(),
       drawer: !Responsive.isDesktop(context) ? const CustomDrawer() : null,
       body: _isLoading
-          ? Center(
+          ? const Center(
               child: CircularProgressIndicator(),
             )
           : SafeArea(

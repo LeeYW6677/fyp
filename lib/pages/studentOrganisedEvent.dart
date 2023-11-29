@@ -117,7 +117,7 @@ class _StudentOrganisedEventState extends State<StudentOrganisedEvent> {
             )
           : null,
       body: _isLoading
-          ? Center(
+          ? const Center(
               child: CircularProgressIndicator(),
             )
           : SafeArea(

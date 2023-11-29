@@ -26,7 +26,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Schedule'),
+        title: const Text('Schedule'),
       ),
       body: Column(
         children: [
@@ -47,7 +47,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
             onPressed: () {
               _addProgram();
             },
-            child: Text('Add Program'),
+            child: const Text('Add Program'),
           ),
         ],
       ),
@@ -113,7 +113,7 @@ class ProgramItem extends StatelessWidget {
         // Add navigation to a detailed view if needed
       },
       trailing: IconButton(
-        icon: Icon(Icons.delete),
+        icon: const Icon(Icons.delete),
         onPressed: onDelete,
       ),
     );

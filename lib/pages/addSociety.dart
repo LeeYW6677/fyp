@@ -1264,7 +1264,7 @@ class _AddSocietyState extends State<AddSociety> {
                                                           behavior:
                                                               SnackBarBehavior
                                                                   .floating,
-                                                          duration: Duration(
+                                                          duration: const Duration(
                                                               seconds: 3),
                                                         ),
                                                       );

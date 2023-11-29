@@ -2,8 +2,6 @@ import 'dart:ui';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:fyp/pages/advisorFirstLogin.dart';
-import 'package:fyp/pages/home.dart';
 import 'package:fyp/pages/login.dart';
 import 'package:fyp/functions/firebase_options.dart';
 import 'package:fyp/pages/schedule.dart';
