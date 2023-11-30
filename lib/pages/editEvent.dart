@@ -2,25 +2,29 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
-import 'package:fyp/pages/society.dart';
 import 'package:fyp/pages/ongoingEvent.dart';
+import 'package:fyp/pages/society.dart';
 
-class AddEvent extends StatefulWidget {
+class EditEvent extends StatefulWidget {
+  final String selectedEvent;
   final String selectedSociety;
-  const AddEvent({super.key, required this.selectedSociety});
+  const EditEvent(
+      {super.key, required this.selectedEvent, required this.selectedSociety});
 
   @override
-  State<AddEvent> createState() => _AddEventState();
+  State<EditEvent> createState() => _EditEventState();
 }
 
-class _AddEventState extends State<AddEvent> {
+class _EditEventState extends State<EditEvent> {
   final name = TextEditingController();
+
   final presidentName = TextEditingController();
   final presidentID = TextEditingController();
   final secretaryName = TextEditingController();
   final secretaryID = TextEditingController();
   final treasurerName = TextEditingController();
   final treasurerID = TextEditingController();
+
   final vpresidentName = TextEditingController();
   final vpresidentID = TextEditingController();
   final vsecretaryName = TextEditingController();
@@ -28,85 +32,86 @@ class _AddEventState extends State<AddEvent> {
   final vtreasurerName = TextEditingController();
   final vtreasurerID = TextEditingController();
 
+  List<String> restrictedPositions = [
+    'President',
+    'Vice President',
+    'Secretary',
+    'Vice Secretary',
+    'Treasurer',
+    'Vice Treasurer',
+  ];
   final GlobalKey<FormState> _formKey1 = GlobalKey<FormState>();
+  bool _isLoading = false;
 
-  bool hasDuplicateTextValues() {
-    List<String> textValues = [
-      presidentID.text,
-      secretaryID.text,
-      treasurerID.text,
-      vpresidentID.text,
-      vsecretaryID.text,
-      vtreasurerID.text,
-    ];
-    Set<String> uniqueTextValues = Set<String>.from(textValues);
-    return textValues.length != uniqueTextValues.length;
-  }
-
-  Future<String> createEvent(String eventName) async {
+  Future<void> getData() async {
     try {
-      FirebaseFirestore firestore = FirebaseFirestore.instance;
-
-      QuerySnapshot<Map<String, dynamic>> snapshot =
-          await firestore.collection('event').get();
-
-      int totalCount = snapshot.size;
-
-      String eventID = 'E${(totalCount + 1).toString().padLeft(3, '0')}';
-
-      DocumentReference<Map<String, dynamic>> societyReference =
-          firestore.collection('event').doc(eventID);
-
-      await societyReference.set({
-        'eventID': eventID,
-        'eventName': eventName,
-        'societyID': widget.selectedSociety,
-        'eventStatus': 'Planning',
+      setState(() {
+        _isLoading = true;
       });
-      return eventID;
-    } catch (e) {
+
+      final FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+      CollectionReference events = firestore.collection('event');
+      QuerySnapshot<Map<String, dynamic>> querySnapshot = await events
+          .where('eventID', isEqualTo: widget.selectedEvent)
+          .limit(1)
+          .get() as QuerySnapshot<Map<String, dynamic>>;
+
+      if (querySnapshot.docs.isNotEmpty) {
+        name.text = querySnapshot.docs[0].data()!['eventName'];
+      }
+      final QuerySnapshot<Map<String, dynamic>> committeeSnapshot =
+          await firestore
+              .collection('committee')
+              .where('eventID', isEqualTo: widget.selectedEvent)
+              .where('position', whereIn: restrictedPositions)
+              .get();
+
+      if (committeeSnapshot.docs.isNotEmpty) {
+        for (QueryDocumentSnapshot<Map<String, dynamic>> documentSnapshot
+            in committeeSnapshot.docs) {
+          String position = documentSnapshot.data()!['position'].toLowerCase();
+
+          switch (position) {
+            case 'president':
+              presidentID.text = documentSnapshot.data()!['studentID'];
+              presidentName.text = documentSnapshot.data()!['name'];
+              break;
+            case 'vice president':
+              vpresidentID.text = documentSnapshot.data()!['studentID'];
+              vpresidentName.text = documentSnapshot.data()!['name'];
+              break;
+            case 'secretary':
+              secretaryID.text = documentSnapshot.data()!['studentID'];
+              secretaryName.text = documentSnapshot.data()!['name'];
+              break;
+            case 'vice secretary':
+              vsecretaryID.text = documentSnapshot.data()!['studentID'];
+              vsecretaryName.text = documentSnapshot.data()!['name'];
+              break;
+            case 'treasurer':
+              treasurerID.text = documentSnapshot.data()!['studentID'];
+              treasurerName.text = documentSnapshot.data()!['name'];
+              break;
+            case 'vice treasurer':
+              vtreasurerID.text = documentSnapshot.data()!['studentID'];
+              vtreasurerName.text = documentSnapshot.data()!['name'];
+              break;
+            default:
+              break;
+          }
+        }
+      }
+      setState(() {
+        _isLoading = false;
+      });
+    } catch (error) {
+      setState(() {
+        _isLoading = false;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Failed to add event. Please try again.'),
-          width: 225.0,
-          behavior: SnackBarBehavior.floating,
-          duration: Duration(seconds: 3),
-        ),
-      );
-      return 'S100';
-    }
-  }
-
-  Future<String> getContactNo(String userID) async {
-    FirebaseFirestore firestore = FirebaseFirestore.instance;
-    DocumentSnapshot<Map<String, dynamic>> userSnapshot =
-        await firestore.collection('user').doc(userID).get();
-
-    if (userSnapshot.exists) {
-      return userSnapshot['contact'];
-    } else {
-      return '';
-    }
-  }
-
-  Future<void> addCommittee(String eventID, String studentID, String position,
-      String committeeName, String contactNo) async {
-    try {
-      FirebaseFirestore firestore = FirebaseFirestore.instance;
-      CollectionReference committee =
-          firestore.collection('organisingCommittee');
-
-      await committee.add({
-        'eventID': eventID,
-        'name': committeeName,
-        'studentID': studentID,
-        'position': position,
-        'contact': contactNo,
-      });
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to register committee. Please try again.'),
+          content: Text('Failed to fetch data. Please try again.'),
           width: 225.0,
           behavior: SnackBarBehavior.floating,
           duration: Duration(seconds: 3),
@@ -115,7 +120,8 @@ class _AddEventState extends State<AddEvent> {
     }
   }
 
-   Future<void> onTextChanged(String value, TextEditingController controller) async {
+  Future<void> onTextChanged(
+      String value, TextEditingController controller) async {
     if (RegExp(r'^\d{2}[A-Z]{3}\d{5}$').hasMatch(value)) {
       DocumentSnapshot<Map<String, dynamic>> student =
           await FirebaseFirestore.instance.collection('user').doc(value).get();
@@ -135,6 +141,75 @@ class _AddEventState extends State<AddEvent> {
         controller.text = '';
       });
     }
+  }
+
+  bool hasDuplicateTextValues() {
+    List<String> textValues = [
+      presidentID.text,
+      secretaryID.text,
+      treasurerID.text,
+      vpresidentID.text,
+      vsecretaryID.text,
+      vtreasurerID.text,
+    ];
+    Set<String> uniqueTextValues = Set<String>.from(textValues);
+    return textValues.length != uniqueTextValues.length;
+  }
+
+  Future<String> getContactNo(String userID) async {
+    FirebaseFirestore firestore = FirebaseFirestore.instance;
+    DocumentSnapshot<Map<String, dynamic>> userSnapshot =
+        await firestore.collection('user').doc(userID).get();
+
+    if (userSnapshot.exists) {
+      return userSnapshot['contact'];
+    } else {
+      return '';
+    }
+  }
+
+  Future<void> updateCommittee(
+    String eventID,
+    String studentID,
+    String position,
+    String committeeName,
+    String contactNo,
+  ) async {
+    try {
+      FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+      CollectionReference committee = firestore.collection('committee');
+
+      QuerySnapshot<Map<String, dynamic>> querySnapshot = await committee
+          .where('position', isEqualTo: position)
+          .where('eventID', isEqualTo: eventID)
+          .get() as QuerySnapshot<Map<String, dynamic>>;
+
+      if (querySnapshot.docs.isNotEmpty) {
+        String committeeID = querySnapshot.docs[0].id;
+
+        await committee.doc(committeeID).update({
+          'name': committeeName,
+          'position': position,
+          'contact': contactNo,
+          'studentID': studentID,
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to update committee. Please try again.'),
+          width: 225.0,
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
+  void initState() {
+    super.initState();
+    getData();
   }
 
   @override
@@ -162,11 +237,14 @@ class _AddEventState extends State<AddEvent> {
               child: SingleChildScrollView(
                 child: Column(children: [
                   NavigationMenu(
-                    buttonTexts: const ['Society', 'Event', 'Add Event'],
+                    buttonTexts: const ['Society', 'Event', 'Change Committee'],
                     destination: [
                       const Society(),
                       OngoingEvent(selectedSociety: widget.selectedSociety),
-                      AddEvent(selectedSociety: widget.selectedSociety)
+                      EditEvent(
+                        selectedSociety: widget.selectedSociety,
+                        selectedEvent: widget.selectedEvent,
+                      )
                     ],
                   ),
                   Padding(
@@ -175,7 +253,7 @@ class _AddEventState extends State<AddEvent> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              'Add Event',
+                              'Change Committee',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 20,
@@ -209,6 +287,7 @@ class _AddEventState extends State<AddEvent> {
                                               Expanded(
                                                 flex: 4,
                                                 child: CustomTextField(
+                                                  enabled: false,
                                                   controller: name,
                                                   hintText: 'Enter event name',
                                                   validator: (value) {
@@ -223,10 +302,10 @@ class _AddEventState extends State<AddEvent> {
                                           ),
                                         ),
                                       ),
-                                      if(Responsive.isDesktop(context))
-                                      const Expanded(
-                                        child: SizedBox(),
-                                      ),
+                                      if (Responsive.isDesktop(context))
+                                        const Expanded(
+                                          child: SizedBox(),
+                                        ),
                                     ],
                                   ),
                                   const SizedBox(height: 50),
@@ -291,9 +370,12 @@ class _AddEventState extends State<AddEvent> {
                                               Expanded(
                                                 flex: 4,
                                                 child: CustomTextField(
-                                                  screen: !Responsive.isDesktop(context),
+                                                  screen: !Responsive.isDesktop(
+                                                      context),
                                                   labelText: 'Student ID',
-                                                  onChanged: (value) => onTextChanged(value, presidentName),
+                                                  onChanged: (value) =>
+                                                      onTextChanged(
+                                                          value, presidentName),
                                                   validator: (value) {
                                                     if (value!.isEmpty) {
                                                       return 'Please enter student ID';
@@ -331,9 +413,12 @@ class _AddEventState extends State<AddEvent> {
                                               Expanded(
                                                 flex: 4,
                                                 child: CustomTextField(
-                                                  screen: !Responsive.isDesktop(context),
+                                                  screen: !Responsive.isDesktop(
+                                                      context),
                                                   labelText: 'Student ID',
-                                                  onChanged: (value) => onTextChanged(value, secretaryName),
+                                                  onChanged: (value) =>
+                                                      onTextChanged(
+                                                          value, secretaryName),
                                                   validator: (value) {
                                                     if (value!.isEmpty) {
                                                       return 'Please enter student ID';
@@ -371,9 +456,12 @@ class _AddEventState extends State<AddEvent> {
                                               Expanded(
                                                 flex: 4,
                                                 child: CustomTextField(
-                                                  screen: !Responsive.isDesktop(context),
+                                                  screen: !Responsive.isDesktop(
+                                                      context),
                                                   labelText: 'Student ID',
-                                                  onChanged: (value) => onTextChanged(value, treasurerName),
+                                                  onChanged: (value) =>
+                                                      onTextChanged(
+                                                          value, treasurerName),
                                                   validator: (value) {
                                                     if (value!.isEmpty) {
                                                       return 'Please enter student ID';
@@ -415,13 +503,13 @@ class _AddEventState extends State<AddEvent> {
                                               Expanded(
                                                 flex: 4,
                                                 child: CustomTextField(
-                                                  enabled: false,
                                                   validator: (value) {
                                                     if (value!.isEmpty) {
                                                       return 'No Student Found';
                                                     }
                                                     return null;
                                                   },
+                                                  enabled: false,
                                                   controller: presidentName,
                                                   hintText:
                                                       'Associated Student Name',
@@ -450,13 +538,13 @@ class _AddEventState extends State<AddEvent> {
                                               Expanded(
                                                 flex: 4,
                                                 child: CustomTextField(
-                                                  enabled: false,
                                                   validator: (value) {
                                                     if (value!.isEmpty) {
                                                       return 'No Student Found';
                                                     }
                                                     return null;
                                                   },
+                                                  enabled: false,
                                                   controller: secretaryName,
                                                   hintText:
                                                       'Associated Student Name',
@@ -485,13 +573,13 @@ class _AddEventState extends State<AddEvent> {
                                               Expanded(
                                                 flex: 4,
                                                 child: CustomTextField(
-                                                  enabled: false,
                                                   validator: (value) {
                                                     if (value!.isEmpty) {
                                                       return 'No Student Found';
                                                     }
                                                     return null;
                                                   },
+                                                  enabled: false,
                                                   controller: treasurerName,
                                                   hintText:
                                                       'Associated Student Name',
@@ -554,9 +642,12 @@ class _AddEventState extends State<AddEvent> {
                                               Expanded(
                                                 flex: 4,
                                                 child: CustomTextField(
-                                                  screen: !Responsive.isDesktop(context),
+                                                  screen: !Responsive.isDesktop(
+                                                      context),
                                                   labelText: 'Student ID',
-                                                  onChanged: (value) => onTextChanged(value, vpresidentName),
+                                                  onChanged: (value) =>
+                                                      onTextChanged(value,
+                                                          vpresidentName),
                                                   validator: (value) {
                                                     if (value!.isEmpty) {
                                                       return 'Please enter student ID';
@@ -594,9 +685,12 @@ class _AddEventState extends State<AddEvent> {
                                               Expanded(
                                                 flex: 4,
                                                 child: CustomTextField(
-                                                  screen: !Responsive.isDesktop(context),
+                                                  screen: !Responsive.isDesktop(
+                                                      context),
                                                   labelText: 'Student ID',
-                                                  onChanged: (value) => onTextChanged(value, vsecretaryName),
+                                                  onChanged: (value) =>
+                                                      onTextChanged(value,
+                                                          vsecretaryName),
                                                   validator: (value) {
                                                     if (value!.isEmpty) {
                                                       return 'Please enter student ID';
@@ -634,9 +728,12 @@ class _AddEventState extends State<AddEvent> {
                                               Expanded(
                                                 flex: 4,
                                                 child: CustomTextField(
-                                                  screen: !Responsive.isDesktop(context),
+                                                  screen: !Responsive.isDesktop(
+                                                      context),
                                                   labelText: 'Student ID',
-                                                  onChanged: (value) => onTextChanged(value, vtreasurerName),
+                                                  onChanged: (value) =>
+                                                      onTextChanged(value,
+                                                          vtreasurerName),
                                                   validator: (value) {
                                                     if (value!.isEmpty) {
                                                       return 'Please enter student ID';
@@ -792,14 +889,11 @@ class _AddEventState extends State<AddEvent> {
                                               } else {
                                                 try {
                                                   String contactNo;
-                                                  String eventID =
-                                                      await createEvent(
-                                                          name.text);
                                                   contactNo =
                                                       await getContactNo(
                                                           presidentID.text);
-                                                  addCommittee(
-                                                      eventID,
+                                                  updateCommittee(
+                                                      widget.selectedEvent,
                                                       presidentID.text,
                                                       'President',
                                                       presidentName.text,
@@ -807,8 +901,8 @@ class _AddEventState extends State<AddEvent> {
                                                   contactNo =
                                                       await getContactNo(
                                                           vpresidentID.text);
-                                                  addCommittee(
-                                                      eventID,
+                                                  updateCommittee(
+                                                      widget.selectedEvent,
                                                       vpresidentID.text,
                                                       'Vice President',
                                                       vpresidentName.text,
@@ -816,8 +910,8 @@ class _AddEventState extends State<AddEvent> {
                                                   contactNo =
                                                       await getContactNo(
                                                           secretaryID.text);
-                                                  addCommittee(
-                                                      eventID,
+                                                  updateCommittee(
+                                                      widget.selectedEvent,
                                                       secretaryID.text,
                                                       'Secretary',
                                                       secretaryName.text,
@@ -825,8 +919,8 @@ class _AddEventState extends State<AddEvent> {
                                                   contactNo =
                                                       await getContactNo(
                                                           vsecretaryID.text);
-                                                  addCommittee(
-                                                      eventID,
+                                                  updateCommittee(
+                                                      widget.selectedEvent,
                                                       vsecretaryID.text,
                                                       'Vice Secretary',
                                                       vsecretaryName.text,
@@ -834,8 +928,8 @@ class _AddEventState extends State<AddEvent> {
                                                   contactNo =
                                                       await getContactNo(
                                                           treasurerID.text);
-                                                  addCommittee(
-                                                      eventID,
+                                                  updateCommittee(
+                                                      widget.selectedEvent,
                                                       treasurerID.text,
                                                       'Treasurer',
                                                       treasurerName.text,
@@ -843,8 +937,8 @@ class _AddEventState extends State<AddEvent> {
                                                   contactNo =
                                                       await getContactNo(
                                                           vtreasurerID.text);
-                                                  addCommittee(
-                                                      eventID,
+                                                  updateCommittee(
+                                                      widget.selectedEvent,
                                                       vtreasurerID.text,
                                                       'Vice Treasurer',
                                                       vtreasurerName.text,
@@ -863,7 +957,7 @@ class _AddEventState extends State<AddEvent> {
                                                       .showSnackBar(
                                                     SnackBar(
                                                       content: Text(
-                                                          '${name.text} has been registered.'),
+                                                          '${name.text}\'s committee has been updated.'),
                                                       width: 225.0,
                                                       behavior: SnackBarBehavior
                                                           .floating,
@@ -876,7 +970,7 @@ class _AddEventState extends State<AddEvent> {
                                                       .showSnackBar(
                                                     const SnackBar(
                                                       content: Text(
-                                                          'Failed to add event. Please try again.'),
+                                                          'Failed to update committee. Please try again.'),
                                                       width: 225.0,
                                                       behavior: SnackBarBehavior
                                                           .floating,
@@ -888,7 +982,7 @@ class _AddEventState extends State<AddEvent> {
                                               }
                                             }
                                           },
-                                          text: 'Add Event',
+                                          text: 'Change Committee',
                                           width: 200,
                                         ),
                                       ),

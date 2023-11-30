@@ -537,7 +537,7 @@ class _ProposalState extends State<Proposal> {
                                                             const SnackBar(
                                                               content: Text(
                                                                   'Proposal saved.'),
-                                                              width: 125.0,
+                                                              width: 150.0,
                                                               behavior:
                                                                   SnackBarBehavior
                                                                       .floating,

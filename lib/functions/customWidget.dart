@@ -890,7 +890,7 @@ class TabContainer extends StatelessWidget {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const Committee(),
+                                  builder: (context) => OrgCommittee(selectedEvent: selectedEvent,),
                                 ),
                               );
                             },

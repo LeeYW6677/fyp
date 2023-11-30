@@ -692,7 +692,7 @@ class _CustomDataTableState extends State<CustomDataTable> {
           height: 10,
         ),
         if (storage.getItem('role') == 'advisor' ||
-            widget.position.contains('President'))
+            widget.position == 'President' || widget.position == 'Vice President')
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
