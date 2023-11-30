@@ -6,7 +6,9 @@ import 'package:fyp/pages/committee.dart';
 import 'package:fyp/pages/editEvent.dart';
 import 'package:fyp/pages/login.dart';
 import 'package:fyp/functions/firebase_options.dart';
+import 'package:fyp/pages/ongoingEvent.dart';
 import 'package:fyp/pages/schedule.dart';
+import 'package:fyp/pages/test2.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,7 +45,7 @@ class _SocietyManagementSystemState extends State<SocietyManagementSystem> {
           thumbVisibility: MaterialStateProperty.all<bool>(true),
         ),
       ),
-      home: user != null ? EditEvent(selectedEvent: 'E001', selectedSociety: 'S001',) : const Login(),
+      home: user != null ? OrgCommittee(selectedEvent: 'E001') : const Login(),
     );
   }
 }

@@ -41,7 +41,7 @@ class _EditEventState extends State<EditEvent> {
     'Vice Treasurer',
   ];
   final GlobalKey<FormState> _formKey1 = GlobalKey<FormState>();
-  bool _isLoading = false;
+  bool _isLoading = true;
 
   Future<void> getData() async {
     try {
@@ -74,28 +74,28 @@ class _EditEventState extends State<EditEvent> {
 
           switch (position) {
             case 'president':
-              presidentID.text = documentSnapshot.data()!['studentID'];
-              presidentName.text = documentSnapshot.data()!['name'];
+              presidentID.text = documentSnapshot.data()['studentID'];
+              presidentName.text = documentSnapshot.data()['name'];
               break;
             case 'vice president':
-              vpresidentID.text = documentSnapshot.data()!['studentID'];
-              vpresidentName.text = documentSnapshot.data()!['name'];
+              vpresidentID.text = documentSnapshot.data()['studentID'];
+              vpresidentName.text = documentSnapshot.data()['name'];
               break;
             case 'secretary':
-              secretaryID.text = documentSnapshot.data()!['studentID'];
-              secretaryName.text = documentSnapshot.data()!['name'];
+              secretaryID.text = documentSnapshot.data()['studentID'];
+              secretaryName.text = documentSnapshot.data()['name'];
               break;
             case 'vice secretary':
-              vsecretaryID.text = documentSnapshot.data()!['studentID'];
-              vsecretaryName.text = documentSnapshot.data()!['name'];
+              vsecretaryID.text = documentSnapshot.data()['studentID'];
+              vsecretaryName.text = documentSnapshot.data()['name'];
               break;
             case 'treasurer':
-              treasurerID.text = documentSnapshot.data()!['studentID'];
-              treasurerName.text = documentSnapshot.data()!['name'];
+              treasurerID.text = documentSnapshot.data()['studentID'];
+              treasurerName.text = documentSnapshot.data()['name'];
               break;
             case 'vice treasurer':
-              vtreasurerID.text = documentSnapshot.data()!['studentID'];
-              vtreasurerName.text = documentSnapshot.data()!['name'];
+              vtreasurerID.text = documentSnapshot.data()['studentID'];
+              vtreasurerName.text = documentSnapshot.data()['name'];
               break;
             default:
               break;

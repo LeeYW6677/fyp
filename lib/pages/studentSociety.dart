@@ -144,7 +144,10 @@ class _StudentSocietyState extends State<StudentSociety> {
           userData['studentID'] = memberDocSnapshot['studentID'];
           userData['position'] = memberDocSnapshot['position'];
           if (userData['studentID'] == storage.getItem('id')) {
-            position = userData['position'];
+            setState(() {
+              position = userData['position'];
+            });
+          
           }
         }
 
@@ -287,7 +290,7 @@ class _StudentSocietyState extends State<StudentSociety> {
                                       context,
                                       MaterialPageRoute(
                                         builder: (context) => OngoingEvent(
-                                            selectedSociety: selectedSociety),
+                                            selectedSociety: selectedSociety, position : position),
                                       ),
                                     );
                                   },

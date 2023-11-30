@@ -76,6 +76,8 @@ class _StudentOngoingEventState extends State<StudentOngoingEvent> {
             if (eventIndex != -1) {
               ongoingEvents[eventIndex]['president'] =
                   committeeData['name'] ?? 'Unassigned';
+              ongoingEvents[eventIndex]['presidentID'] =
+                  committeeData['studentID'] ?? 'Unassigned';
             }
           }
         }
@@ -342,6 +344,8 @@ class _CustomDataTableState extends State<CustomDataTable> {
                           return member['president'];
                         case 2:
                           return member['date'];
+                        case 3:
+                          return member['status'];
                         default:
                           return '';
                       }
@@ -366,6 +370,7 @@ class _CustomDataTableState extends State<CustomDataTable> {
 }
 
 class _EventDataSource extends DataTableSource {
+  final LocalStorage storage = LocalStorage('user');
   final List<Map<String, dynamic>> originalEvent;
   List<Map<String, dynamic>> displayedEvent = [];
   final Set<int> selectedRows = {};
@@ -411,6 +416,17 @@ class _EventDataSource extends DataTableSource {
               },
               text: 'View',
               width: 100,
+            ),
+            if(event['presidentID'] == storage.getItem('id'))
+            const SizedBox(
+              width: 15,
+            ),
+            if(event['presidentID'] == storage.getItem('id'))
+            CustomButton(
+              onPressed: () {},
+              text: 'Edit',
+              width: 100,
+              buttonColor: Colors.green,
             ),
             const SizedBox(
               width: 15,

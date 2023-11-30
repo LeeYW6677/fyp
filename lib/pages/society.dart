@@ -18,7 +18,7 @@ class Society extends StatefulWidget {
 
 class _SocietyState extends State<Society> {
   final society = TextEditingController();
-    bool _isLoading = true;
+  bool _isLoading = true;
   String selectedSociety = '';
   List<Map<String, dynamic>> advisorList = [];
   List<Map<String, dynamic>> coAdvisorList = [];
@@ -175,7 +175,7 @@ class _SocietyState extends State<Society> {
     }
   }
 
- @override
+  @override
   void initState() {
     super.initState();
     getData();
@@ -183,19 +183,19 @@ class _SocietyState extends State<Society> {
 
   @override
   Widget build(BuildContext context) {
-          return Scaffold(
-            appBar: const Header(),
-            drawer: !Responsive.isDesktop(context)
-                ? const CustomDrawer(
-                    index: 2,
-                    page: 'Society',
-                  )
-                : null,
-            body: _isLoading
-        ? const Center(
-            child: CircularProgressIndicator(),
-          )
-        : SafeArea(
+    return Scaffold(
+      appBar: const Header(),
+      drawer: !Responsive.isDesktop(context)
+          ? const CustomDrawer(
+              index: 2,
+              page: 'Society',
+            )
+          : null,
+      body: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(),
+            )
+          : SafeArea(
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -288,7 +288,8 @@ class _SocietyState extends State<Society> {
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder: (context) => OngoingEvent(
+                                              builder: (context) =>
+                                                  OngoingEvent(
                                                 selectedSociety:
                                                     selectedSociety,
                                               ),
@@ -577,8 +578,8 @@ class _SocietyState extends State<Society> {
                 ],
               ),
             ),
-            bottomNavigationBar: const Footer(),
-          );
+      bottomNavigationBar: const Footer(),
+    );
   }
 }
 
@@ -1016,7 +1017,10 @@ class _AddDialogState extends State<AddDialog> {
                       .where('societyID', isEqualTo: widget.selectedSociety)
                       .get();
               if (existingMembers.docs.isEmpty) {
-                await FirebaseFirestore.instance.collection('member').doc(widget.selectedSociety + '/' + id.text).set({
+                await FirebaseFirestore.instance
+                    .collection('member')
+                    .doc(widget.selectedSociety + '/' + id.text)
+                    .set({
                   'studentID': id.text,
                   'societyID': widget.selectedSociety,
                   'position': 'Member'

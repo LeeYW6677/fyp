@@ -3,14 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
 import 'package:fyp/pages/addEvent.dart';
+import 'package:fyp/pages/editEvent.dart';
 import 'package:fyp/pages/organisedEvent.dart';
 import 'package:fyp/pages/proposal.dart';
 import 'package:fyp/pages/society.dart';
 import 'package:intl/intl.dart';
+import 'package:localstorage/localstorage.dart';
 
 class OngoingEvent extends StatefulWidget {
   final String selectedSociety;
-  const OngoingEvent({super.key, required this.selectedSociety});
+  final String position;
+  const OngoingEvent({super.key, required this.selectedSociety, this.position = ''});
 
   @override
   State<OngoingEvent> createState() => _OngoingEventState();
@@ -21,8 +24,9 @@ class _OngoingEventState extends State<OngoingEvent> {
   bool _isLoading = true;
 
   Future<void> getData() async {
+
     try {
-setState(() {
+      setState(() {
         _isLoading = true;
       });
       final FirebaseFirestore firestore = FirebaseFirestore.instance;
@@ -95,162 +99,176 @@ setState(() {
             )
           : null,
       body: _isLoading
-        ? const Center(
-            child: CircularProgressIndicator(),
-          )
-        : SafeArea(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (Responsive.isDesktop(context))
-              const Expanded(
-                child: CustomDrawer(
-                  index: 2,
-                  page: 'Society',
-                ),
-              ),
-            Expanded(
-              flex: 5,
-              child: SingleChildScrollView(
-                child: Column(children: [
-                  NavigationMenu(
-                    buttonTexts: const ['Society', 'Event'],
-                    destination: [
-                      const Society(),
-                      OngoingEvent(selectedSociety: widget.selectedSociety)
-                    ],
-                  ),
-                  Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Event',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 20,
-                              ),
-                            ),
-                            const Divider(
-                              thickness: 0.1,
-                              color: Colors.black,
-                            ),
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) => OngoingEvent(
-                                              selectedSociety:
-                                                  widget.selectedSociety)),
-                                    );
-                                  },
-                                  style: TextButton.styleFrom(
-                                    padding: const EdgeInsets.all(24.0),
-                                    backgroundColor: Colors.white,
-                                    foregroundColor: Colors.black,
-                                    side: const BorderSide(
-                                        color: Colors.grey, width: 1.0),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(0.0),
+          ? const Center(
+              child: CircularProgressIndicator(),
+            )
+          : SafeArea(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (Responsive.isDesktop(context))
+                    const Expanded(
+                      child: CustomDrawer(
+                        index: 2,
+                        page: 'Society',
+                      ),
+                    ),
+                  Expanded(
+                    flex: 5,
+                    child: SingleChildScrollView(
+                      child: Column(children: [
+                        NavigationMenu(
+                          buttonTexts: const ['Society', 'Event'],
+                          destination: [
+                            const Society(),
+                            OngoingEvent(
+                                selectedSociety: widget.selectedSociety)
+                          ],
+                        ),
+                        Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Event',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20,
                                     ),
                                   ),
-                                  child: const Text('Ongoing'),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) => OrganisedEvent(
-                                                selectedSociety:
-                                                    widget.selectedSociety,
-                                              )),
-                                    );
-                                  },
-                                  style: TextButton.styleFrom(
-                                    padding: const EdgeInsets.all(24.0),
-                                    backgroundColor: Colors.grey[200],
-                                    foregroundColor: Colors.black,
-                                    side: const BorderSide(
-                                        color: Colors.grey, width: 1.0),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(0.0),
-                                    ),
+                                  const Divider(
+                                    thickness: 0.1,
+                                    color: Colors.black,
                                   ),
-                                  child: const Text('Organising'),
-                                ),
-                              ],
-                            ),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      border: Border.all(
-                                          width: 1.0, color: Colors.grey),
-                                    ),
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(16.0),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.end,
-                                        children: [
-                                          CustomDataTable(
-                                            columns: const [
-                                              DataColumn(label: Text('Name')),
-                                              DataColumn(
-                                                  label: Text('President')),
-                                              DataColumn(label: Text('Date')),
-                                              DataColumn(label: Text('Action')),
-                                            ],
-                                            source: _EventDataSource(
-                                                ongoingEvents, context),
-                                            refresh: getData,
-                                            context: context,
+                                  Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    OngoingEvent(
+                                                        selectedSociety: widget
+                                                            .selectedSociety)),
+                                          );
+                                        },
+                                        style: TextButton.styleFrom(
+                                          padding: const EdgeInsets.all(24.0),
+                                          backgroundColor: Colors.white,
+                                          foregroundColor: Colors.black,
+                                          side: const BorderSide(
+                                              color: Colors.grey, width: 1.0),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(0.0),
                                           ),
-                                          const SizedBox(
-                                            height: 15,
-                                          ),
-                                          CustomButton(
-                                            onPressed: () {
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      AddEvent(
-                                                    selectedSociety:
-                                                        widget.selectedSociety,
-                                                  ),
-                                                ),
-                                              );
-                                            },
-                                            buttonColor: Colors.green,
-                                            text: 'Add Event',
-                                            width: 150,
-                                          ),
-                                          const SizedBox(
-                                            height: 15,
-                                          ),
-                                        ],
+                                        ),
+                                        child: const Text('Ongoing'),
                                       ),
-                                    ),
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    OrganisedEvent(
+                                                      selectedSociety: widget
+                                                          .selectedSociety,
+                                                    )),
+                                          );
+                                        },
+                                        style: TextButton.styleFrom(
+                                          padding: const EdgeInsets.all(24.0),
+                                          backgroundColor: Colors.grey[200],
+                                          foregroundColor: Colors.black,
+                                          side: const BorderSide(
+                                              color: Colors.grey, width: 1.0),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(0.0),
+                                          ),
+                                        ),
+                                        child: const Text('Organising'),
+                                      ),
+                                    ],
                                   ),
-                                ),
-                              ],
-                            )
-                          ]))
-                ]),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            border: Border.all(
+                                                width: 1.0, color: Colors.grey),
+                                          ),
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(16.0),
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.end,
+                                              children: [
+                                                CustomDataTable(
+                                                  columns: const [
+                                                    DataColumn(
+                                                        label: Text('Name')),
+                                                    DataColumn(
+                                                        label:
+                                                            Text('President')),
+                                                    DataColumn(
+                                                        label: Text('Date')),
+                                                        DataColumn(
+                                                        label: Text('Status')),
+                                                    DataColumn(
+                                                        label: Text('Action')),
+                                                  ],
+                                                  source: _EventDataSource(
+                                                      ongoingEvents,
+                                                      context,
+                                                      widget.selectedSociety, widget.position),
+                                                  refresh: getData,
+                                                  context: context,
+                                                ),
+                                                const SizedBox(
+                                                  height: 15,
+                                                ),
+                                                CustomButton(
+                                                  onPressed: () {
+                                                    Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                        builder: (context) =>
+                                                            AddEvent(
+                                                          selectedSociety: widget
+                                                              .selectedSociety,
+                                                        ),
+                                                      ),
+                                                    );
+                                                  },
+                                                  buttonColor: Colors.green,
+                                                  text: 'Add Event',
+                                                  width: 150,
+                                                ),
+                                                const SizedBox(
+                                                  height: 15,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                ]))
+                      ]),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
       bottomNavigationBar: const Footer(),
     );
   }
@@ -345,6 +363,8 @@ class _CustomDataTableState extends State<CustomDataTable> {
                           return member['president'];
                         case 2:
                           return member['date'];
+                          case 3:
+                          return member['status'];
                         default:
                           return '';
                       }
@@ -369,13 +389,16 @@ class _CustomDataTableState extends State<CustomDataTable> {
 }
 
 class _EventDataSource extends DataTableSource {
+  final LocalStorage storage = LocalStorage('user');
   final List<Map<String, dynamic>> originalEvent;
   List<Map<String, dynamic>> displayedEvent = [];
   final Set<int> selectedRows = {};
   final BuildContext context;
+  final String selectedSociety;
+  final String position;
   int rowsPerPage = 10;
 
-  _EventDataSource(this.originalEvent, this.context) {
+  _EventDataSource(this.originalEvent, this.context, this.selectedSociety, this.position) {
     _initializeDisplayedEvent();
   }
 
@@ -400,6 +423,9 @@ class _EventDataSource extends DataTableSource {
               ? DateFormat('dd-MM-yyyy').format(event['date'].toDate())
               : 'Not decided',
         )),
+        DataCell(Text(
+          event['status'].toString(),
+        )),
         DataCell(Row(
           children: [
             CustomButton(
@@ -414,6 +440,26 @@ class _EventDataSource extends DataTableSource {
               },
               text: 'View',
               width: 100,
+            ),
+            if(storage.getItem('role') != 'student' || position == 'President' || position =='Vice President')
+            const SizedBox(
+              width: 15,
+            ),
+            if(storage.getItem('role') != 'student' || position == 'President' || position =='Vice President')
+            CustomButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EditEvent(
+                        selectedSociety: selectedSociety,
+                        selectedEvent: event['eventID']),
+                  ),
+                );
+              },
+              text: 'Edit',
+              width: 100,
+              buttonColor: Colors.green,
             ),
             const SizedBox(
               width: 15,

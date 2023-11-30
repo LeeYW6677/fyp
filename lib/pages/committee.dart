@@ -1,4 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:excel/excel.dart' hide BorderStyle;
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
@@ -385,38 +387,128 @@ class _OrgCommitteeState extends State<OrgCommittee> {
                                                 ),
                                               ],
                                             ),
-                                            CustomButton(
-                                                width: 150,
-                                                onPressed: () {
-                                                  if (_formKey.currentState!
-                                                      .validate()) {
-                                                    setState(() {
-                                                      positionError = null;
-                                                      idError = null;
-                                                    });
-
-                                                    Committee newCommittee =
-                                                        Committee(
-                                                      studentID: id.text,
-                                                      name: name.text,
-                                                      position: position.text,
-                                                      contact: contact.text,
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.end,
+                                              children: [
+                                                CustomButton(
+                                                  width: 150,
+                                                  onPressed: () async {
+                                                    FilePickerResult?
+                                                        pickedFile =
+                                                        await FilePicker
+                                                            .platform
+                                                            .pickFiles(
+                                                      type: FileType.custom,
+                                                      allowedExtensions: [
+                                                        'xlsx'
+                                                      ],
+                                                      allowMultiple: false,
                                                     );
 
-                                                    committeeList
-                                                        .add(newCommittee);
-                                                    setState(() {
-                                                      committeeList =
-                                                          committeeList;
-                                                    });
+                                                    if (pickedFile != null) {
+                                                      String extension =
+                                                          pickedFile
+                                                                  .files
+                                                                  .single
+                                                                  .extension ??
+                                                              '';
 
-                                                    id.clear();
-                                                    name.clear();
-                                                    position.clear();
-                                                    contact.clear();
-                                                  }
-                                                },
-                                                text: 'Add'),
+                                                      if (extension
+                                                              .toLowerCase() ==
+                                                          'xlsx') {
+                                                        var bytes = pickedFile
+                                                            .files.single.bytes;
+                                                        var excel =
+                                                            Excel.decodeBytes(
+                                                                bytes!);
+
+                                                        List<Committee>
+                                                            committees = [];
+
+                                                        for (var table in excel
+                                                            .tables.keys) {
+                                                          for (var row in excel
+                                                              .tables[table]!
+                                                              .rows) {
+                                                            if (row
+                                                                .isNotEmpty) {
+                                                              committees.add(
+                                                                  Committee(
+                                                                studentID: (row[0]
+                                                                            ?.value ??
+                                                                        '')
+                                                                    .toString(),
+                                                                position: (row[1]
+                                                                            ?.value ??
+                                                                        '')
+                                                                    .toString(),
+                                                                name: (row[2]
+                                                                            ?.value ??
+                                                                        '')
+                                                                    .toString(),
+                                                                contact: (row[3]
+                                                                            ?.value ??
+                                                                        '')
+                                                                    .toString(),
+                                                              ));
+                                                            }
+                                                          }
+                                                        }
+
+                                                        // Now you have a list of Committee objects in the 'committees' list.
+                                                        // You can use this list as needed.
+                                                        print(committees);
+                                                      } else {
+                                                        // Show an error message or handle the case when the selected file is not an Excel file.
+                                                        print(
+                                                            'Invalid file format. Please select an Excel file (xlsx).');
+                                                      }
+                                                    }
+                                                  },
+                                                  text: 'Import',
+                                                ),
+                                                const SizedBox(
+                                                  width: 15,
+                                                ),
+                                                CustomButton(
+                                                    width: 150,
+                                                    onPressed: () {
+                                                      if (_formKey.currentState!
+                                                          .validate()) {
+                                                        setState(() {
+                                                          positionError = null;
+                                                          idError = null;
+                                                        });
+
+                                                        Committee newCommittee =
+                                                            Committee(
+                                                          studentID: id.text,
+                                                          name: name.text,
+                                                          position:
+                                                              position.text,
+                                                          contact: contact.text,
+                                                        );
+
+                                                        committeeList
+                                                            .add(newCommittee);
+                                                        setState(() {
+                                                          committeeList =
+                                                              committeeList;
+                                                        });
+
+                                                        id.clear();
+                                                        name.clear();
+                                                        position.clear();
+                                                        contact.clear();
+                                                      }
+                                                    },
+                                                    text: 'Add'),
+                                                const SizedBox(
+                                                  width: 15,
+                                                ),
+                                              ],
+                                            ),
                                             const SizedBox(
                                               height: 15,
                                             ),
