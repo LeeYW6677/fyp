@@ -33,8 +33,8 @@ class _ProfileState extends State<Profile> {
 
   Future<void> getData() async {
     setState(() {
-        _isLoading = true;
-      });
+      _isLoading = true;
+    });
     User? user = FirebaseAuth.instance.currentUser;
     String? userEmail = user?.email;
 
@@ -63,8 +63,8 @@ class _ProfileState extends State<Profile> {
       contact.text = data.docs.first['contact'];
     }
     setState(() {
-        _isLoading = false;
-      });
+      _isLoading = false;
+    });
   }
 
   Future<void> updateProfile(BuildContext context) async {
@@ -428,41 +428,49 @@ class _ProfileState extends State<Profile> {
                                                                 } catch (e) {
                                                                   return 'Invalid Date Format. Format: dd-MM-yyyy';
                                                                 }
+                                                                if (!RegExp(r'^\d{2}-\d{2}-\d{4}$')
+                                                                    .hasMatch(
+                                                                        value)) {
+                                                                  return 'Invalid Date Format. Format: dd-MM-yyyy';
+                                                                }
                                                                 return null;
                                                               }
                                                             },
                                                             hintText:
                                                                 'Enter your date of birth',
                                                             suffixIcon:
-                                                                const Icon(Icons
-                                                                    .calendar_today_rounded),
-                                                            onTap: () async {
-                                                              DateTime?
-                                                                  pickedDate =
-                                                                  await showDatePicker(
-                                                                context:
-                                                                    context,
-                                                                initialDate:
-                                                                    DateTime(
-                                                                        2000),
-                                                                firstDate:
-                                                                    DateTime(
-                                                                        1900),
-                                                                lastDate:
-                                                                    DateTime(
-                                                                        2010),
-                                                              );
+                                                                IconButton(
+                                                              icon: const Icon(Icons
+                                                                  .calendar_today_rounded),
+                                                              onPressed:
+                                                                  () async {
+                                                                DateTime?
+                                                                    pickedDate =
+                                                                    await showDatePicker(
+                                                                  context:
+                                                                      context,
+                                                                  initialDate:
+                                                                      DateTime(
+                                                                          2000),
+                                                                  firstDate:
+                                                                      DateTime(
+                                                                          1900),
+                                                                  lastDate:
+                                                                      DateTime(
+                                                                          2010),
+                                                                );
 
-                                                              if (pickedDate !=
-                                                                  null) {
-                                                                setState(() {
-                                                                  dob.text = DateFormat(
-                                                                          'dd-MM-yyyy')
-                                                                      .format(
-                                                                          pickedDate);
-                                                                });
-                                                              }
-                                                            },
+                                                                if (pickedDate !=
+                                                                    null) {
+                                                                  setState(() {
+                                                                    dob.text = DateFormat(
+                                                                            'dd-MM-yyyy')
+                                                                        .format(
+                                                                            pickedDate);
+                                                                  });
+                                                                }
+                                                              },
+                                                            ),
                                                           ),
                                                         ),
                                                       ],
@@ -610,6 +618,13 @@ class _ProfileState extends State<Profile> {
                                                             flex: 4,
                                                             child: CustomDDL<
                                                                 String>(
+                                                              onChanged: (String?
+                                                                  newValue) {
+                                                                setState(() {
+                                                                  selectedProgramme =
+                                                                      newValue!;
+                                                                });
+                                                              },
                                                               controller:
                                                                   programme,
                                                               hintText:
@@ -959,7 +974,6 @@ class _ProfileState extends State<Profile> {
                                                                       dateFormat
                                                                           .parseStrict(
                                                                               value);
-
                                                                   if (enteredDate.isAfter(DateTime
                                                                           .now()
                                                                       .add(const Duration(
@@ -970,14 +984,49 @@ class _ProfileState extends State<Profile> {
                                                                 } catch (e) {
                                                                   return 'Invalid Date Format. Format: dd-MM-yyyy';
                                                                 }
+                                                                if (!RegExp(r'^\d{2}-\d{2}-\d{4}$')
+                                                                    .hasMatch(
+                                                                        value)) {
+                                                                  return 'Invalid Date Format. Format: dd-MM-yyyy';
+                                                                }
                                                                 return null;
                                                               }
                                                             },
                                                             hintText:
                                                                 'Enter your date of birth',
                                                             suffixIcon:
-                                                                const Icon(Icons
-                                                                    .calendar_today_rounded),
+                                                                IconButton(
+                                                              icon: const Icon(Icons
+                                                                  .calendar_today_rounded),
+                                                              onPressed:
+                                                                  () async {
+                                                                DateTime?
+                                                                    pickedDate =
+                                                                    await showDatePicker(
+                                                                  context:
+                                                                      context,
+                                                                  initialDate:
+                                                                      DateTime(
+                                                                          2000),
+                                                                  firstDate:
+                                                                      DateTime(
+                                                                          1900),
+                                                                  lastDate:
+                                                                      DateTime(
+                                                                          2010),
+                                                                );
+
+                                                                if (pickedDate !=
+                                                                    null) {
+                                                                  setState(() {
+                                                                    dob.text = DateFormat(
+                                                                            'dd-MM-yyyy')
+                                                                        .format(
+                                                                            pickedDate);
+                                                                  });
+                                                                }
+                                                              },
+                                                            ),
                                                             onTap: () async {
                                                               DateTime?
                                                                   pickedDate =
@@ -1151,6 +1200,13 @@ class _ProfileState extends State<Profile> {
                                                             flex: 4,
                                                             child: CustomDDL<
                                                                 String>(
+                                                              onChanged: (String?
+                                                                  newValue) {
+                                                                setState(() {
+                                                                  selectedProgramme =
+                                                                      newValue!;
+                                                                });
+                                                              },
                                                               controller:
                                                                   programme,
                                                               hintText:

@@ -61,7 +61,8 @@ class _AddEventState extends State<AddEvent> {
         'eventID': eventID,
         'eventName': eventName,
         'societyID': widget.selectedSociety,
-        'eventStatus': 'Planning',
+        'status': 'Planning',
+        'progress' : 0
       });
       return eventID;
     } catch (e) {

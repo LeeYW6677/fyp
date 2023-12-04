@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:fyp/pages/accountStatement.dart';
 import 'package:fyp/pages/advisor.dart';
 import 'package:fyp/pages/advisorProfile.dart';
 import 'package:fyp/pages/budget.dart';
 import 'package:fyp/pages/committee.dart';
+import 'package:fyp/pages/evaluation.dart';
 import 'package:fyp/pages/home.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:fyp/pages/participant.dart';
 import 'package:fyp/pages/proposal.dart';
 import 'package:fyp/pages/schedule.dart';
 import 'package:fyp/pages/society.dart';
@@ -351,7 +354,7 @@ class CustomTextField extends StatefulWidget {
   final bool enabled;
   final VoidCallback? onTap;
   final void Function(String)? onChanged;
-  final Icon? suffixIcon;
+  final IconButton? suffixIcon;
   final int maxLine;
   final List<TextInputFormatter>? inputFormatters;
   final String? labelText;
@@ -791,8 +794,7 @@ class TabContainer extends StatelessWidget {
               },
               style: TextButton.styleFrom(
                 padding: const EdgeInsets.all(16.0),
-                backgroundColor:
-                    tab == 'Pre' ? Colors.white : Colors.grey[200],
+                backgroundColor: tab == 'Pre' ? Colors.white : Colors.grey[200],
                 foregroundColor: Colors.black,
                 side: const BorderSide(color: Colors.grey, width: 1.0),
                 shape: RoundedRectangleBorder(
@@ -807,7 +809,7 @@ class TabContainer extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                     builder: (context) =>
-                        Schedule(selectedEvent: selectedEvent),
+                        Evaluation(selectedEvent: selectedEvent),
                   ),
                 );
               },
@@ -841,92 +843,184 @@ class TabContainer extends StatelessWidget {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          TextButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      Proposal(selectedEvent: selectedEvent),
+                          if (tab == 'Pre')
+                            TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        Proposal(selectedEvent: selectedEvent),
+                                  ),
+                                );
+                              },
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.all(16.0),
+                                backgroundColor: form == 'Proposal'
+                                    ? Colors.white
+                                    : Colors.grey[200],
+                                foregroundColor: Colors.black,
+                                side: const BorderSide(
+                                    color: Colors.grey, width: 1.0),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(0.0),
                                 ),
-                              );
-                            },
-                            style: TextButton.styleFrom(
-                              padding: const EdgeInsets.all(16.0),
-                              backgroundColor:  form == 'Proposal'? Colors.white : Colors.grey[200],
-                              foregroundColor: Colors.black,
-                              side: const BorderSide(
-                                  color: Colors.grey, width: 1.0),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(0.0),
                               ),
+                              child: const Text('Proposal'),
                             ),
-                            child: const Text('Proposal'),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      Schedule(selectedEvent: selectedEvent),
+                          if (tab == 'Pre')
+                            TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        Schedule(selectedEvent: selectedEvent),
+                                  ),
+                                );
+                              },
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.all(16.0),
+                                backgroundColor: form == 'Schedule'
+                                    ? Colors.white
+                                    : Colors.grey[200],
+                                foregroundColor: Colors.black,
+                                side: const BorderSide(
+                                    color: Colors.grey, width: 1.0),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(0.0),
                                 ),
-                              );
-                            },
-                            style: TextButton.styleFrom(
-                              padding: const EdgeInsets.all(16.0),
-                              backgroundColor:  form == 'Schedule'? Colors.white : Colors.grey[200],
-                              foregroundColor: Colors.black,
-                              side: const BorderSide(
-                                  color: Colors.grey, width: 1.0),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(0.0),
                               ),
+                              child: const Text('Schedule'),
                             ),
-                            child: const Text('Schedule'),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => OrgCommittee(selectedEvent: selectedEvent,),
+                          if (tab == 'Pre')
+                            TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => OrgCommittee(
+                                      selectedEvent: selectedEvent,
+                                    ),
+                                  ),
+                                );
+                              },
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.all(16.0),
+                                backgroundColor: form == 'Committee'
+                                    ? Colors.white
+                                    : Colors.grey[200],
+                                foregroundColor: Colors.black,
+                                side: const BorderSide(
+                                    color: Colors.grey, width: 1.0),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(0.0),
                                 ),
-                              );
-                            },
-                            style: TextButton.styleFrom(
-                              padding: const EdgeInsets.all(16.0),
-                              backgroundColor:  form == 'Committee'? Colors.white : Colors.grey[200],
-                              foregroundColor: Colors.black,
-                              side: const BorderSide(
-                                  color: Colors.grey, width: 1.0),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(0.0),
                               ),
+                              child: const Text('Committee'),
                             ),
-                            child: const Text('Committee'),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const Budget(),
+                          if (tab == 'Pre')
+                            TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => Budget(
+                                      selectedEvent: selectedEvent,
+                                    ),
+                                  ),
+                                );
+                              },
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.all(16.0),
+                                foregroundColor: Colors.black,
+                                backgroundColor: form == 'Budget'
+                                    ? Colors.white
+                                    : Colors.grey[200],
+                                side: const BorderSide(
+                                    color: Colors.grey, width: 1.0),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(0.0),
                                 ),
-                              );
-                            },
-                            style: TextButton.styleFrom(
-                              padding: const EdgeInsets.all(16.0),
-                              foregroundColor: Colors.black,
-                              backgroundColor:  form == 'Budget'? Colors.white : Colors.grey[200],
-                              side: const BorderSide(
-                                  color: Colors.grey, width: 1.0),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(0.0),
                               ),
+                              child: const Text('Budget'),
                             ),
-                            child: const Text('Budget'),
-                          ),
+                          if (tab == 'Post')
+                            TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => Evaluation(
+                                        selectedEvent: selectedEvent),
+                                  ),
+                                );
+                              },
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.all(16.0),
+                                backgroundColor: form == 'Evaluation'
+                                    ? Colors.white
+                                    : Colors.grey[200],
+                                foregroundColor: Colors.black,
+                                side: const BorderSide(
+                                    color: Colors.grey, width: 1.0),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(0.0),
+                                ),
+                              ),
+                              child: const Text('Evaluation'),
+                            ),
+                          if (tab == 'Post')
+                            TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => Participant(
+                                        selectedEvent: selectedEvent),
+                                  ),
+                                );
+                              },
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.all(16.0),
+                                backgroundColor: form == 'Participant'
+                                    ? Colors.white
+                                    : Colors.grey[200],
+                                foregroundColor: Colors.black,
+                                side: const BorderSide(
+                                    color: Colors.grey, width: 1.0),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(0.0),
+                                ),
+                              ),
+                              child: const Text('Participant'),
+                            ),
+                          if (tab == 'Post')
+                            TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => Account(
+                                      selectedEvent: selectedEvent,
+                                    ),
+                                  ),
+                                );
+                              },
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.all(16.0),
+                                backgroundColor: form == 'Account'
+                                    ? Colors.white
+                                    : Colors.grey[200],
+                                foregroundColor: Colors.black,
+                                side: const BorderSide(
+                                    color: Colors.grey, width: 1.0),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(0.0),
+                                ),
+                              ),
+                              child: const Text('Account'),
+                            ),
                         ],
                       ),
                       Row(
@@ -963,11 +1057,28 @@ class TabContainer extends StatelessWidget {
 
 class CustomTimeline extends StatelessWidget {
   final String status;
-  const CustomTimeline({super.key, required this.status});
+  final String eventID;
+  final List<String> checkStatus;
+  final List<String> name;
+  final int progress;
+  const CustomTimeline(
+      {super.key,
+      required this.status,
+      required this.eventID,
+      required this.progress,
+      required this.checkStatus,
+      required this.name});
 
   @override
   Widget build(BuildContext context) {
-    List<String> progress = ['Planning', 'Checked', 'Recommended', 'Approved'];
+    List<String> preProgress = [
+      'Planning',
+      'Checked',
+      'Recommended',
+      'Approved'
+    ];
+    List<String> postProgress = ['Closing', 'Checked', 'Verified', 'Accepted'];
+
     return Column(
       children: [
         SizedBox(
@@ -984,7 +1095,7 @@ class CustomTimeline extends StatelessWidget {
               connectionDirection: ConnectionDirection.before,
               itemCount: 4,
               itemExtentBuilder: (_, __) {
-                return (MediaQuery.of(context).size.width)/5.0;
+                return (MediaQuery.of(context).size.width) / 5.0;
               },
               oppositeContentsBuilder: (context, index) {
                 return Container();
@@ -992,16 +1103,29 @@ class CustomTimeline extends StatelessWidget {
               contentsBuilder: (context, index) {
                 return Column(
                   children: [
-                    Text(progress[index]),
+                    Text(status == 'Planning'
+                        ? preProgress[index]
+                        : postProgress[index]),
                     const SizedBox(height: 10),
                   ],
                 );
               },
               indicatorBuilder: (_, index) {
-                if (index <= progress.indexOf(status)) {
-                  return const DotIndicator(
-                    size: 20.0,
-                    color: Colors.green,
+                if (index < progress) {
+                  return Column(
+                    children: [
+                      DotIndicator(
+                        size: 20.0,
+                        color: checkStatus[index] == 'Approved'
+                            ? Colors.green
+                            : Colors.red,
+                      ),
+                      Text(
+                        name[index],
+                        style: const TextStyle(
+                            fontSize: 12.0, color: Colors.black),
+                      ),
+                    ],
                   );
                 } else {
                   return const OutlinedDotIndicator(
@@ -1025,10 +1149,138 @@ class CustomTimeline extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            CustomButton(
-                width: 150,
-                onPressed: status == 'Planning' ? () {} : () {},
-                text: status == 'Planning' ? 'Submit' : 'Unsubmit'),
+            if (status == 'Planning')
+              CustomButton(
+                  width: 150,
+                  onPressed: status == 'Planning' && progress == 0
+                      ? () async {
+                          bool description = false;
+                          final FirebaseFirestore firestore =
+                              FirebaseFirestore.instance;
+
+                          final QuerySnapshot<Map<String, dynamic>>
+                              eventSnapshot = await firestore
+                                  .collection('event')
+                                  .where('eventID', isEqualTo: eventID)
+                                  .get();
+
+                          if (eventSnapshot.docs.isNotEmpty) {
+                            Map<String, dynamic> eventData =
+                                eventSnapshot.docs.first.data();
+                            description = eventData['description'] == null;
+                          }
+
+                          final QuerySnapshot<Map<String, dynamic>>
+                              scheduleSnapshot = await firestore
+                                  .collection('schedule')
+                                  .where('eventID', isEqualTo: eventID)
+                                  .get();
+                          bool schedule = scheduleSnapshot.docs.isEmpty;
+
+                          if (schedule || description) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                    'Please save the required document before submitting.'),
+                                width: 200.0,
+                                behavior: SnackBarBehavior.floating,
+                                duration: Duration(seconds: 3),
+                              ),
+                            );
+                          } else {
+                            await firestore
+                                .collection('event')
+                                .doc(eventID)
+                                .update({
+                              'status': 'Planning',
+                              'progress': '1',
+                            });
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                    'Event document submitted for approval.'),
+                                width: 200.0,
+                                behavior: SnackBarBehavior.floating,
+                                duration: Duration(seconds: 3),
+                              ),
+                            );
+                          }
+                        }
+                      : () {},
+                  text: progress == 0 ? 'Submit' : 'Unsubmit'),
+            if (status == 'Closing')
+              CustomButton(
+                  width: 150,
+                  onPressed: status == 'Closing' && progress == 0
+                      ? () async {
+                          final FirebaseFirestore firestore =
+                              FirebaseFirestore.instance;
+
+                          final QuerySnapshot<Map<String, dynamic>>
+                              participantSnapshot = await firestore
+                                  .collection('participant')
+                                  .where('eventID', isEqualTo: eventID)
+                                  .get();
+                          bool participant = participantSnapshot.docs.isEmpty;
+
+                          final QuerySnapshot<Map<String, dynamic>>
+                              evaluationSnapshot = await firestore
+                                  .collection('evaluation')
+                                  .where('eventID', isEqualTo: eventID)
+                                  .get();
+                          bool evaluation = evaluationSnapshot.docs.isEmpty;
+
+                          final QuerySnapshot<Map<String, dynamic>>
+                              claimSnapshot = await firestore
+                                  .collection('claim')
+                                  .where('eventID', isEqualTo: eventID)
+                                  .where('status', isEqualTo: 'Pending')
+                                  .get();
+                          bool claim = claimSnapshot.docs.isNotEmpty;
+
+                          if (participant || evaluation) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                    'Please save the required document before submitting.'),
+                                width: 200.0,
+                                behavior: SnackBarBehavior.floating,
+                                duration: Duration(seconds: 3),
+                              ),
+                            );
+                          } else if (claim) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                    'Please process all the claim request before submitting'),
+                                width: 200.0,
+                                behavior: SnackBarBehavior.floating,
+                                duration: Duration(seconds: 3),
+                              ),
+                            );
+                          }else{
+                            await firestore
+                                .collection('event')
+                                .doc(eventID)
+                                .update({
+                              'status': 'Closing',
+                              'progress': '1',
+                            });
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                    'Event document submitted for approval.'),
+                                width: 200.0,
+                                behavior: SnackBarBehavior.floating,
+                                duration: Duration(seconds: 3),
+                              ),
+                            );
+                          }
+                        }
+                      : () {},
+                  text: progress == 0 ? 'Submit' : 'Unsubmit'),
           ],
         ),
       ],

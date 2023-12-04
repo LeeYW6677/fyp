@@ -4,32 +4,28 @@ import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
 import 'package:fyp/pages/studentOrganisedEvent.dart';
 
-class OrgCommittee extends StatefulWidget {
+class Participant extends StatefulWidget {
   final String selectedEvent;
-  const OrgCommittee({super.key, required this.selectedEvent});
+  const Participant({super.key, required this.selectedEvent});
 
   @override
-  State<OrgCommittee> createState() => _OrgCommitteeState();
+  State<Participant> createState() => _ParticipantState();
 }
 
-class _OrgCommitteeState extends State<OrgCommittee> {
-  List<String> restrictedPositions = [
-    'president',
-    'vice president',
-    'secretary',
-    'vice secretary',
-    'treasurer',
-    'vice treasurer',
-  ];
+class _ParticipantState extends State<Participant> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  bool _isLoading = false;
-  List<Committee> committeeList = [];
+  bool _isLoading = true;
   bool enable = true;
   String status = '';
+  final id = TextEditingController();
+  final name = TextEditingController();
+  final contact = TextEditingController();
+  List<Participants> participantList = [];
+  String? idError;
 
   void resetTable() {
     setState(() {
-      committeeList = committeeList;
+      participantList = participantList;
     });
   }
 
@@ -38,7 +34,6 @@ class _OrgCommitteeState extends State<OrgCommittee> {
       setState(() {
         _isLoading = true;
       });
-
       final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
       // Fetch event data
@@ -46,32 +41,32 @@ class _OrgCommitteeState extends State<OrgCommittee> {
           .collection('event')
           .where('eventID', isEqualTo: widget.selectedEvent)
           .get();
+
       if (eventSnapshot.docs.isNotEmpty) {
         Map<String, dynamic> eventData = eventSnapshot.docs.first.data();
         status = eventData['status'];
 
-        final QuerySnapshot<Map<String, dynamic>> committeeSnapshot =
+        final QuerySnapshot<Map<String, dynamic>> participantSnapshot =
             await firestore
-                .collection('committee')
+                .collection('participant')
                 .where('eventID', isEqualTo: widget.selectedEvent)
                 .get();
 
-        if (committeeSnapshot.docs.isNotEmpty) {
-          committeeList = committeeSnapshot.docs
+        if (participantSnapshot.docs.isNotEmpty) {
+          participantList = participantSnapshot.docs
               .map((DocumentSnapshot<Map<String, dynamic>> doc) {
-            return Committee(
+            return Participants(
               studentID: doc.data()!['studentID'],
               name: doc.data()!['name'],
-              position: doc.data()!['position'],
               contact: doc.data()!['contact'],
             );
           }).toList();
         }
+        setState(() {
+          status = status;
+          _isLoading = false;
+        });
       }
-
-      setState(() {
-        _isLoading = false;
-      });
     } catch (error) {
       setState(() {
         _isLoading = false;
@@ -92,11 +87,11 @@ class _OrgCommitteeState extends State<OrgCommittee> {
     setState(() {
       idError = null;
     });
-    bool isCommittee =
-        committeeList.any((committee) => committee.studentID == value);
-    if (isCommittee) {
+    bool isParticipant =
+        participantList.any((participant) => participant.studentID == value);
+    if (isParticipant) {
       setState(() {
-        idError = 'Already registered as committee';
+        idError = 'Already registered as participant';
       });
       return;
     }
@@ -130,12 +125,6 @@ class _OrgCommitteeState extends State<OrgCommittee> {
     getData();
   }
 
-  final id = TextEditingController();
-  final name = TextEditingController();
-  final contact = TextEditingController();
-  final position = TextEditingController();
-  String? idError;
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -164,10 +153,10 @@ class _OrgCommitteeState extends State<OrgCommittee> {
                     child: SingleChildScrollView(
                       child: Column(children: [
                         NavigationMenu(
-                          buttonTexts: const ['Event', 'Committee'],
+                          buttonTexts: const ['Event', 'Participant'],
                           destination: [
                             const StudentOrganisedEvent(),
-                            OrgCommittee(selectedEvent: widget.selectedEvent)
+                            Participant(selectedEvent: widget.selectedEvent)
                           ],
                         ),
                         Padding(
@@ -190,8 +179,8 @@ class _OrgCommitteeState extends State<OrgCommittee> {
                                       key: _formKey,
                                       child: TabContainer(
                                           selectedEvent: widget.selectedEvent,
-                                          tab: 'Pre',
-                                          form: 'Committee',
+                                          tab: 'Post',
+                                          form: 'Participant',
                                           children: [
                                             Row(
                                               children: [
@@ -251,62 +240,15 @@ class _OrgCommitteeState extends State<OrgCommittee> {
                                                             },
                                                           ),
                                                         ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                                Expanded(
-                                                  child: Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            8.0),
-                                                    child: Row(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .center,
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .start,
-                                                      children: [
                                                         if (Responsive
                                                             .isDesktop(context))
                                                           const Expanded(
-                                                            flex: 1,
-                                                            child: Text(
-                                                              'Position',
-                                                              style: TextStyle(
-                                                                  fontSize: 16),
-                                                            ),
-                                                          ),
-                                                        Expanded(
-                                                          flex: 4,
-                                                          child:
-                                                              CustomTextField(
-                                                            validator: (value) {
-                                                              if (value!
-                                                                  .isEmpty) {
-                                                                return 'Please enter position';
-                                                              }
-
-                                                              if (restrictedPositions
-                                                                  .contains(value
-                                                                      .toLowerCase())) {
-                                                                return 'Position not allowed';
-                                                              }
-
-                                                              return null;
-                                                            },
-                                                            screen: !Responsive
-                                                                .isDesktop(
-                                                                    context),
-                                                            labelText:
-                                                                'Position',
-                                                            controller:
-                                                                position,
-                                                            hintText:
-                                                                'Enter position',
-                                                          ),
-                                                        ),
+                                                              flex: 1,
+                                                              child:
+                                                                  SizedBox()),
+                                                        const Expanded(
+                                                            flex: 4,
+                                                            child: SizedBox()),
                                                       ],
                                                     ),
                                                   ),
@@ -411,26 +353,23 @@ class _OrgCommitteeState extends State<OrgCommittee> {
                                                       if (_formKey.currentState!
                                                           .validate()) {
                                                         if (idError == null) {
-                                                          Committee
-                                                              newCommittee =
-                                                              Committee(
+                                                          Participants
+                                                              newParticipants =
+                                                              Participants(
                                                             studentID: id.text,
                                                             name: name.text,
-                                                            position:
-                                                                position.text,
                                                             contact:
                                                                 contact.text,
                                                           );
 
-                                                          committeeList.add(
-                                                              newCommittee);
+                                                          participantList.add(
+                                                              newParticipants);
                                                           setState(() {
-                                                            committeeList =
-                                                                committeeList;
+                                                            participantList =
+                                                                participantList;
                                                           });
                                                           id.clear();
                                                           name.clear();
-                                                          position.clear();
                                                           contact.clear();
                                                         }
                                                       }
@@ -465,80 +404,71 @@ class _OrgCommitteeState extends State<OrgCommittee> {
                                                                 'Student ID')),
                                                         DataColumn(
                                                             label: Text(
-                                                                'Position')),
-                                                        DataColumn(
-                                                            label: Text(
                                                                 'Contact No.')),
                                                         DataColumn(
                                                             label:
                                                                 Text('Action')),
                                                       ],
-                                                      rows: committeeList
+                                                      rows: participantList
                                                           .asMap()
                                                           .entries
                                                           .map((entry) {
                                                         final int index =
                                                             entry.key;
-                                                        final Committee
-                                                            committee =
+                                                        final Participants
+                                                            participant =
                                                             entry.value;
 
                                                         return DataRow(
                                                           cells: [
                                                             DataCell(Text(
-                                                                committee
+                                                                participant
                                                                     .name)),
                                                             DataCell(Text(
-                                                                committee
+                                                                participant
                                                                     .studentID)),
                                                             DataCell(Text(
-                                                                committee
-                                                                    .position)),
-                                                            DataCell(Text(
-                                                                '+60${committee.contact}')),
+                                                                '+60${participant.contact}')),
                                                             DataCell(Row(
                                                               children: [
-                                                                if (!restrictedPositions
-                                                                    .contains(committee
-                                                                        .position
-                                                                        .toLowerCase()))
-                                                                  IconButton(
-                                                                    icon: const Icon(
-                                                                        Icons
-                                                                            .edit),
-                                                                    onPressed:
+                                                                IconButton(
+                                                                  icon: const Icon(
+                                                                      Icons
+                                                                          .edit),
+                                                                  onPressed:
+                                                                      () {
+                                                                    showDialog(
+                                                                        context:
+                                                                            context,
+                                                                        builder:
+                                                                            (_) {
+                                                                          return EditDialog(
+                                                                            participant:
+                                                                                participant,
+                                                                            index:
+                                                                                index,
+                                                                            list:
+                                                                                participantList,
+                                                                            function:
+                                                                                resetTable,
+                                                                          );
+                                                                        });
+                                                                  },
+                                                                ),
+                                                                IconButton(
+                                                                  icon: const Icon(
+                                                                      Icons
+                                                                          .delete),
+                                                                  onPressed:
+                                                                      () {
+                                                                    setState(
                                                                         () {
-                                                                      showDialog(
-                                                                          context:
-                                                                              context,
-                                                                          builder:
-                                                                              (_) {
-                                                                            return EditDialog(
-                                                                              committee: committee,
-                                                                              index: index,
-                                                                              list: committeeList,
-                                                                              function: resetTable,
-                                                                            );
-                                                                          });
-                                                                    },
-                                                                  ),
-                                                                if (!restrictedPositions
-                                                                    .contains(committee
-                                                                        .position
-                                                                        .toLowerCase()))
-                                                                  IconButton(
-                                                                    icon: const Icon(
-                                                                        Icons
-                                                                            .delete),
-                                                                    onPressed:
-                                                                        () {
-                                                                      setState(
-                                                                          () {
-                                                                        committeeList
-                                                                            .removeAt(index);
-                                                                      });
-                                                                    },
-                                                                  ),
+                                                                      participantList
+                                                                          .removeAt(
+                                                                              index);
+                                                                    });
+                                                                  },
+                                                                ),
                                                               ],
                                                             )),
                                                           ],
@@ -552,7 +482,7 @@ class _OrgCommitteeState extends State<OrgCommittee> {
                                             CustomButton(
                                                 width: 150,
                                                 onPressed: () async {
-                                                  if (committeeList
+                                                  if (participantList
                                                       .isNotEmpty) {
                                                     FirebaseFirestore
                                                         firestore =
@@ -560,13 +490,13 @@ class _OrgCommitteeState extends State<OrgCommittee> {
                                                             .instance;
 
                                                     CollectionReference
-                                                        committees =
+                                                        participants =
                                                         firestore.collection(
-                                                            'committee');
+                                                            'participant');
 
                                                     QuerySnapshot
                                                         querySnapshot =
-                                                        await committees
+                                                        await participants
                                                             .where('eventID',
                                                                 isEqualTo: widget
                                                                     .selectedEvent)
@@ -581,22 +511,21 @@ class _OrgCommitteeState extends State<OrgCommittee> {
 
                                                     for (int index = 0;
                                                         index <
-                                                            committeeList
+                                                            participantList
                                                                 .length;
                                                         index++) {
-                                                      Committee committee =
-                                                          committeeList[index];
+                                                      Participants person =
+                                                          participantList[
+                                                              index];
 
-                                                      await committees.add({
+                                                      await participants.add({
                                                         'eventID': widget
                                                             .selectedEvent,
                                                         'studentID':
-                                                            committee.studentID,
-                                                        'name': committee.name,
-                                                        'position':
-                                                            committee.position,
+                                                            person.studentID,
+                                                        'name': person.name,
                                                         'contact':
-                                                            committee.contact,
+                                                            person.contact,
                                                       });
                                                     }
                                                     ScaffoldMessenger.of(
@@ -604,7 +533,7 @@ class _OrgCommitteeState extends State<OrgCommittee> {
                                                         .showSnackBar(
                                                       const SnackBar(
                                                         content: Text(
-                                                            'Committee List saved.'),
+                                                            'Participant List saved.'),
                                                         width: 150.0,
                                                         behavior:
                                                             SnackBarBehavior
@@ -636,28 +565,24 @@ class _OrgCommitteeState extends State<OrgCommittee> {
   }
 }
 
-class Committee {
+class Participants {
   String studentID;
-  String position;
   String name;
   String contact;
 
-  Committee(
-      {required this.studentID,
-      required this.position,
-      required this.name,
-      required this.contact});
+  Participants(
+      {required this.studentID, required this.name, required this.contact});
 }
 
 class EditDialog extends StatefulWidget {
-  final Committee committee;
+  final Participants participant;
   final int index;
   final VoidCallback function;
-  final List<Committee> list;
+  final List<Participants> list;
 
   const EditDialog({
     required this.index,
-    required this.committee,
+    required this.participant,
     required this.function,
     required this.list,
   });
@@ -670,24 +595,14 @@ class _EditDialogState extends State<EditDialog> {
   TextEditingController name = TextEditingController();
   TextEditingController id = TextEditingController();
   TextEditingController contact = TextEditingController();
-  TextEditingController position = TextEditingController();
   String? idError;
-  List<String> restrictedPositions = [
-    'president',
-    'vice president',
-    'secretary',
-    'vice secretary',
-    'treasurer',
-    'vice treasurer',
-  ];
 
   @override
   void initState() {
     super.initState();
-    name.text = widget.committee.name;
-    id.text = widget.committee.studentID;
-    position.text = widget.committee.position;
-    contact.text = widget.committee.contact;
+    name.text = widget.participant.name;
+    id.text = widget.participant.studentID;
+    contact.text = widget.participant.contact;
   }
 
   Future<void> onTextChanged(String value, TextEditingController name,
@@ -695,11 +610,11 @@ class _EditDialogState extends State<EditDialog> {
     setState(() {
       idError = null;
     });
-    bool isCommittee =
-        widget.list.any((committee) => committee.studentID == value);
-    if (isCommittee) {
+    bool isParticipant =
+        widget.list.any((participant) => participant.studentID == value);
+    if (isParticipant) {
       setState(() {
-        idError = 'Already registered as committee';
+        idError = 'Already registered as participant';
       });
       return;
     }
@@ -730,7 +645,7 @@ class _EditDialogState extends State<EditDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Edit Committee Details'),
+      title: const Text('Edit Participant Details'),
       content: Form(
         key: _formKey,
         child: Column(
@@ -778,23 +693,6 @@ class _EditDialogState extends State<EditDialog> {
             const SizedBox(
               height: 15,
             ),
-            CustomTextField(
-              validator: (value) {
-                if (value!.isEmpty) {
-                  return 'Please enter position';
-                }
-
-                if (restrictedPositions.contains(value.toLowerCase())) {
-                  return 'Position not allowed';
-                }
-
-                return null;
-              },
-              screen: true,
-              labelText: 'Position',
-              controller: position,
-              hintText: 'Enter position',
-            ),
           ],
         ),
       ),
@@ -809,14 +707,13 @@ class _EditDialogState extends State<EditDialog> {
           onPressed: () async {
             if (_formKey.currentState!.validate()) {
               if (idError == null) {
-                Committee newCommittee = Committee(
+                Participants newParticipant = Participants(
                   studentID: id.text,
                   name: name.text,
-                  position: position.text,
                   contact: contact.text,
                 );
 
-                widget.list[widget.index] = newCommittee;
+                widget.list[widget.index] = newParticipant;
                 widget.function();
                 Navigator.of(context).pop();
               }

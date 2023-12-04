@@ -400,35 +400,45 @@ class _AdvisorProfileState extends State<AdvisorProfile> {
                                                           } catch (e) {
                                                             return 'Invalid Date Format. Format: dd-MM-yyyy';
                                                           }
+                                                          if (!RegExp(r'^\d{2}-\d{2}-\d{4}$')
+                                                                    .hasMatch(
+                                                                        value)) {
+                                                                  return 'Invalid Date Format. Format: dd-MM-yyyy';
+                                                                }
                                                           return null;
                                                         }
                                                       },
                                                       hintText:
                                                           'Enter your date of birth',
-                                                      suffixIcon: const Icon(Icons
-                                                          .calendar_today_rounded),
-                                                      onTap: () async {
-                                                        DateTime? pickedDate =
-                                                            await showDatePicker(
-                                                          context: context,
-                                                          initialDate:
-                                                              DateTime(2000),
-                                                          firstDate:
-                                                              DateTime(1900),
-                                                          lastDate:
-                                                              DateTime(2010),
-                                                        );
+                                                      suffixIcon: IconButton(
+                                                          icon: const Icon(Icons
+                                                              .calendar_today_rounded),
+                                                          onPressed: () async {
+                                                            DateTime?
+                                                                pickedDate =
+                                                                await showDatePicker(
+                                                              context: context,
+                                                              initialDate:
+                                                                  DateTime(
+                                                                      2000),
+                                                              firstDate:
+                                                                  DateTime(
+                                                                      1900),
+                                                              lastDate:
+                                                                  DateTime(
+                                                                      2010),
+                                                            );
 
-                                                        if (pickedDate !=
-                                                            null) {
-                                                          setState(() {
-                                                            dob.text = DateFormat(
-                                                                    'dd-MM-yyyy')
-                                                                .format(
-                                                                    pickedDate);
-                                                          });
-                                                        }
-                                                      },
+                                                            if (pickedDate !=
+                                                                null) {
+                                                              setState(() {
+                                                                dob.text = DateFormat(
+                                                                        'dd-MM-yyyy')
+                                                                    .format(
+                                                                        pickedDate);
+                                                              });
+                                                            }
+                                                          }),
                                                     ),
                                                   ),
                                                 ],
@@ -545,6 +555,13 @@ class _AdvisorProfileState extends State<AdvisorProfile> {
                                                         flex: 4,
                                                         child:
                                                             CustomDDL<String>(
+                                                          onChanged: (String?
+                                                              newValue) {
+                                                            setState(() {
+                                                              selectedDepartment =
+                                                                  newValue!;
+                                                            });
+                                                          },
                                                           controller:
                                                               department,
                                                           hintText:
@@ -826,33 +843,43 @@ class _AdvisorProfileState extends State<AdvisorProfile> {
                                                           } catch (e) {
                                                             return 'Invalid Date Format. Format: dd-MM-yyyy';
                                                           }
+                                                          if (!RegExp(r'^\d{2}-\d{2}-\d{4}$')
+                                                                    .hasMatch(
+                                                                        value)) {
+                                                                  return 'Invalid Date Format. Format: dd-MM-yyyy';
+                                                                }
                                                           return null;
                                                         }
                                                       },
                                                       hintText:
                                                           'Enter your date of birth',
-                                                      suffixIcon: const Icon(Icons
-                                                          .calendar_today_rounded),
-                                                      onTap: () async {
-                                                        DateTime? pickedDate =
-                                                            await showDatePicker(
-                                                          context: context,
-                                                          initialDate:
-                                                              DateTime(2000),
-                                                          firstDate:
-                                                              DateTime(1900),
-                                                          lastDate:
-                                                              DateTime(2010),
-                                                        );
+                                                      suffixIcon: IconButton(
+                                                          icon: const Icon(Icons
+                                                              .calendar_today_rounded),
+                                                          onPressed: () async {
+                                                            DateTime?
+                                                                pickedDate =
+                                                                await showDatePicker(
+                                                              context: context,
+                                                              initialDate:
+                                                                  DateTime(
+                                                                      2000),
+                                                              firstDate:
+                                                                  DateTime(
+                                                                      1900),
+                                                              lastDate:
+                                                                  DateTime(
+                                                                      2010),
+                                                            );
 
-                                                        if (pickedDate !=
-                                                            null) {
-                                                          dob.text = DateFormat(
-                                                                  'dd-MM-yyyy')
-                                                              .format(
-                                                                  pickedDate);
-                                                        }
-                                                      },
+                                                            if (pickedDate !=
+                                                                null) {
+                                                              dob.text = DateFormat(
+                                                                      'dd-MM-yyyy')
+                                                                  .format(
+                                                                      pickedDate);
+                                                            }
+                                                          }),
                                                     ),
                                                   ),
                                                 ],

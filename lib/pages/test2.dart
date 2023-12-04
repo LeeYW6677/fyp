@@ -1,82 +1,65 @@
+import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:excel/excel.dart';
-import 'package:file_picker/file_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
-class MyApp extends StatelessWidget {
+class ImageDownloadScreen extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: ExcelImportScreen(),
-    );
+  _ImageDownloadScreenState createState() => _ImageDownloadScreenState();
+}
+
+class _ImageDownloadScreenState extends State<ImageDownloadScreen> {
+  Uint8List imageData = Uint8List(8); // Store the downloaded image bytes
+
+  // Function to download the image from Firebase Storage
+  Future<void> downloadImage() async {
+    String imagePath = 'E001/image_0.jpg'; // Replace with your actual image path
+    Reference ref = FirebaseStorage.instance.ref().child(imagePath);
+
+    try {
+      // Get download URL
+      String url = await ref.getDownloadURL();
+
+      // Download image bytes
+      HttpClientRequest request = await HttpClient().getUrl(Uri.parse(url));
+      HttpClientResponse response = await request.close();
+      Uint8List bytes = await consolidateHttpClientResponseBytes(response);
+
+      // Set the image bytes
+      setState(() {
+        imageData = bytes;
+      });
+
+    } catch (e) {
+      // Handle errors (e.g., image not found)
+      print('Error downloading image: $e');
+    }
   }
-}
-
-class ExcelImportScreen extends StatefulWidget {
-  @override
-  _ExcelImportScreenState createState() => _ExcelImportScreenState();
-}
-
-class _ExcelImportScreenState extends State<ExcelImportScreen> {
-  List<List<String>> excelData = [];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Excel Import'),
+        title: Text('Image Download Example'),
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            if (imageData != null)
+              // Display the downloaded image as bytes
+              Image.memory(imageData),
+            SizedBox(height: 20),
             ElevatedButton(
-              onPressed: () async {
-                /// Use FilePicker to pick files in Flutter Web
-
-                FilePickerResult? pickedFile =
-                    await FilePicker.platform.pickFiles(
-                  type: FileType.custom,
-                  allowedExtensions: ['xlsx'],
-                  allowMultiple: false,
-                );
-
-                if (pickedFile != null) {
-                  var bytes = pickedFile.files.single.bytes;
-                  var excel = Excel.decodeBytes(bytes!);
-                  for (var table in excel.tables.keys) {
-                    print(table);
-                    print(excel.tables[table]!.maxColumns);
-                    print(excel.tables[table]!.maxRows);
-                    for (var row in excel.tables[table]!.rows) {
-                      print("${row.map((e) => e?.value)}");
-                    }
-                  }
-                }
+              onPressed: () {
+                // Trigger image download on button click
+                downloadImage();
               },
-              child: Text('Pick and Import Excel'),
+              child: Text('Download Image'),
             ),
-            if (excelData.isNotEmpty)
-              Expanded(
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.vertical,
-                  child: DataTable(
-                    columns: List.generate(
-                      excelData[0].length,
-                      (index) => DataColumn(label: Text('Column ${index + 1}')),
-                    ),
-                    rows: List.generate(
-                      excelData.length - 1,
-                      (rowIndex) => DataRow(
-                        cells: List.generate(
-                          excelData[rowIndex + 1].length,
-                          (cellIndex) => DataCell(
-                              Text(excelData[rowIndex + 1][cellIndex])),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
           ],
         ),
       ),

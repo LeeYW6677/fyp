@@ -212,6 +212,13 @@ class _ProposalState extends State<Proposal> {
                                                             flex: 4,
                                                             child: CustomDDL<
                                                                 String>(
+                                                              onChanged: (String?
+                                                                  newValue) {
+                                                                setState(() {
+                                                                  selectedType =
+                                                                      newValue!;
+                                                                });
+                                                              },
                                                               labelText:
                                                                   'Event Type',
                                                               screen: !Responsive
@@ -501,6 +508,7 @@ class _ProposalState extends State<Proposal> {
                                                 if (status == 'Planning')
                                                   CustomButton(
                                                     onPressed: () async {
+                                                      if(member.text != '0' && nonMember.text != '0' && guest.text != '0'){                                                     
                                                       if (_formKey.currentState!
                                                           .validate()) {
                                                         FirebaseFirestore
@@ -565,6 +573,24 @@ class _ProposalState extends State<Proposal> {
                                                             ),
                                                           );
                                                         }
+                                                          }
+                                                      }else{
+                                                        ScaffoldMessenger.of(
+                                                                  context)
+                                                              .showSnackBar(
+                                                            const SnackBar(
+                                                              content: Text(
+                                                                  'The number of expected participants cannot be 0'),
+                                                              width: 225.0,
+                                                              behavior:
+                                                                  SnackBarBehavior
+                                                                      .floating,
+                                                              duration:
+                                                                  Duration(
+                                                                      seconds:
+                                                                          3),
+                                                            ),
+                                                          );
                                                       }
                                                     },
                                                     text: 'Save',

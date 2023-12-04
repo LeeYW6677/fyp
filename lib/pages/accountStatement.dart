@@ -5,31 +5,37 @@ import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
 import 'package:fyp/pages/studentOrganisedEvent.dart';
 
-class Budget extends StatefulWidget {
+class Account extends StatefulWidget {
   final String selectedEvent;
-  const Budget({super.key, required this.selectedEvent});
+  const Account({super.key, required this.selectedEvent});
 
   @override
-  State<Budget> createState() => _BudgetState();
+  State<Account> createState() => _AccountState();
 }
 
-class _BudgetState extends State<Budget> {
+class _AccountState extends State<Account> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  bool _isLoading = false;
+  bool _isLoading = true;
   bool enable = true;
   String status = '';
   final item = TextEditingController();
   final price = TextEditingController();
-  final quantity = TextEditingController();
   final type = TextEditingController();
-  List<BudgetItem> income = [];
-  List<BudgetItem> expense = [];
   String selectedType = 'Income';
+  List<AccountStatement> income = [];
+  List<AccountStatement> expense = [];
 
-  double calculateTotal(List<BudgetItem> items) {
+  void resetTable() {
+    setState(() {
+      income = income;
+      expense = expense;
+    });
+  }
+
+  double calculateTotal(List<AccountStatement> items) {
     double total = 0;
     for (var item in items) {
-      total += item.qty * item.price;
+      total += item.price;
     }
     return total;
   }
@@ -39,7 +45,6 @@ class _BudgetState extends State<Budget> {
       setState(() {
         _isLoading = true;
       });
-
       final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
       // Fetch event data
@@ -57,17 +62,16 @@ class _BudgetState extends State<Budget> {
         // Fetch event data
         final QuerySnapshot<Map<String, dynamic>> budgetSnapshot =
             await firestore
-                .collection('budgetItem')
+                .collection('accountStatement')
                 .where('eventID', isEqualTo: widget.selectedEvent)
                 .get();
 
         for (var doc in budgetSnapshot.docs) {
-          String itemType = doc.data()['itemType'];
+          String itemType = doc.data()['recordType'];
 
-          BudgetItem budgetItem = BudgetItem(
-            name: doc.data()['itemName'],
-            qty: doc.data()['quantity'],
-            price: doc.data()['unitPrice'],
+          AccountStatement budgetItem = AccountStatement(
+            name: doc.data()['description'],
+            price: doc.data()['amount'],
             type: itemType,
           );
 
@@ -97,13 +101,6 @@ class _BudgetState extends State<Budget> {
         ),
       );
     }
-  }
-
-  void resetTable() {
-    setState(() {
-      income = income;
-      expense = expense;
-    });
   }
 
   @override
@@ -140,10 +137,10 @@ class _BudgetState extends State<Budget> {
                     child: SingleChildScrollView(
                       child: Column(children: [
                         NavigationMenu(
-                          buttonTexts: const ['Event', 'Budget'],
+                          buttonTexts: const ['Event', 'Account'],
                           destination: [
                             const StudentOrganisedEvent(),
-                            Budget(selectedEvent: widget.selectedEvent)
+                            Account(selectedEvent: widget.selectedEvent)
                           ],
                         ),
                         Padding(
@@ -166,9 +163,9 @@ class _BudgetState extends State<Budget> {
                                       key: _formKey,
                                       child: TabContainer(
                                           selectedEvent: widget.selectedEvent,
-                                          tab: 'Pre',
-                                          form: 'Budget',
-                                          children: <Widget>[
+                                          tab: 'Post',
+                                          form: 'Account',
+                                          children: [
                                             Row(
                                               children: [
                                                 Expanded(
@@ -189,7 +186,7 @@ class _BudgetState extends State<Budget> {
                                                           const Expanded(
                                                             flex: 1,
                                                             child: Text(
-                                                              'Item Name',
+                                                              'Description',
                                                               style: TextStyle(
                                                                   fontSize: 16),
                                                             ),
@@ -201,18 +198,18 @@ class _BudgetState extends State<Budget> {
                                                             validator: (value) {
                                                               if (value!
                                                                   .isEmpty) {
-                                                                return 'Please enter item name';
+                                                                return 'Please enter description';
                                                               }
                                                               return null;
                                                             },
                                                             hintText:
-                                                                'Enter Item Name',
+                                                                'Enter Description',
                                                             controller: item,
                                                             screen: !Responsive
                                                                 .isDesktop(
                                                                     context),
                                                             labelText:
-                                                                'Item Name',
+                                                                'Description',
                                                           ),
                                                         ),
                                                       ],
@@ -237,7 +234,7 @@ class _BudgetState extends State<Budget> {
                                                           const Expanded(
                                                             flex: 1,
                                                             child: Text(
-                                                              'Unit Price',
+                                                              'Amount',
                                                               style: TextStyle(
                                                                   fontSize: 16),
                                                             ),
@@ -249,12 +246,11 @@ class _BudgetState extends State<Budget> {
                                                             screen: !Responsive
                                                                 .isDesktop(
                                                                     context),
-                                                            labelText:
-                                                                'Unit Price',
+                                                            labelText: 'Amount',
                                                             prefixText: 'RM',
                                                             controller: price,
                                                             hintText:
-                                                                'Enter unit price',
+                                                                'Enter amount',
                                                             inputFormatters: [
                                                               FilteringTextInputFormatter
                                                                   .allow(RegExp(
@@ -263,15 +259,15 @@ class _BudgetState extends State<Budget> {
                                                             validator: (value) {
                                                               if (value ==
                                                                   null) {
-                                                                return 'Please enter unit price';
+                                                                return 'Please enter amount';
                                                               } else if (!RegExp(
                                                                       r'^\d+(\.\d{1,2})?$')
                                                                   .hasMatch(
                                                                       value)) {
-                                                                return 'Invalid Price Format';
+                                                                return 'Invalid Amount Format';
                                                               } else if (value ==
                                                                   '0.00') {
-                                                                return 'Price must be more than RM0.00';
+                                                                return 'Amount must be more than RM 0.00';
                                                               }
                                                               return null;
                                                             },
@@ -303,62 +299,7 @@ class _BudgetState extends State<Budget> {
                                                           const Expanded(
                                                             flex: 1,
                                                             child: Text(
-                                                              'Quantity',
-                                                              style: TextStyle(
-                                                                  fontSize: 16),
-                                                            ),
-                                                          ),
-                                                        Expanded(
-                                                          flex: 4,
-                                                          child:
-                                                              CustomTextField(
-                                                            validator: (value) {
-                                                              if (value!
-                                                                  .isEmpty) {
-                                                                return 'Please enter quantity';
-                                                              } else if (value ==
-                                                                  '0') {
-                                                                return 'Quantity must be more than 0';
-                                                              }
-                                                              return null;
-                                                            },
-                                                            labelText:
-                                                                'Quantity',
-                                                            screen: !Responsive
-                                                                .isDesktop(
-                                                                    context),
-                                                            hintText: '0',
-                                                            controller:
-                                                                quantity,
-                                                            inputFormatters: [
-                                                              FilteringTextInputFormatter
-                                                                  .digitsOnly,
-                                                            ],
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                                Expanded(
-                                                  child: Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            8.0),
-                                                    child: Row(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .center,
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        if (Responsive
-                                                            .isDesktop(context))
-                                                          const Expanded(
-                                                            flex: 1,
-                                                            child: Text(
-                                                              'Item Type',
+                                                              'Record Type',
                                                               style: TextStyle(
                                                                   fontSize: 16),
                                                             ),
@@ -375,13 +316,13 @@ class _BudgetState extends State<Budget> {
                                                                 });
                                                               },
                                                               labelText:
-                                                                  'Item Type',
+                                                                  'Record Type',
                                                               screen: !Responsive
                                                                   .isDesktop(
                                                                       context),
                                                               controller: type,
                                                               hintText:
-                                                                  'Select item type',
+                                                                  'Select record type',
                                                               value:
                                                                   selectedType,
                                                               dropdownItems: [
@@ -399,6 +340,15 @@ class _BudgetState extends State<Budget> {
                                                                 );
                                                               }).toList(),
                                                             )),
+                                                        if (Responsive
+                                                            .isDesktop(context))
+                                                          const Expanded(
+                                                              flex: 1,
+                                                              child:
+                                                                  SizedBox()),
+                                                        const Expanded(
+                                                            flex: 4,
+                                                            child: SizedBox()),
                                                       ],
                                                     ),
                                                   ),
@@ -409,11 +359,9 @@ class _BudgetState extends State<Budget> {
                                               onPressed: () async {
                                                 if (_formKey.currentState!
                                                     .validate()) {
-                                                  BudgetItem budgetItem =
-                                                      BudgetItem(
+                                                  AccountStatement statement =
+                                                      AccountStatement(
                                                     name: item.text,
-                                                    qty: int.parse(
-                                                        quantity.text),
                                                     price: double.parse(
                                                         double.parse(price.text)
                                                             .toStringAsFixed(
@@ -423,19 +371,18 @@ class _BudgetState extends State<Budget> {
 
                                                   if (selectedType ==
                                                       'Income') {
-                                                    income.add(budgetItem);
+                                                    income.add(statement);
                                                     setState(() {
                                                       income = income;
                                                     });
                                                   } else {
-                                                    expense.add(budgetItem);
+                                                    expense.add(statement);
                                                     setState(() {
                                                       expense = expense;
                                                     });
                                                   }
 
                                                   item.clear();
-                                                  quantity.clear();
                                                   type.clear();
                                                   price.clear();
                                                 }
@@ -471,13 +418,10 @@ class _BudgetState extends State<Budget> {
                                                             ),
                                                             DataColumn(
                                                                 label: Text(
-                                                                    'Unit Price')),
+                                                                    'Reference')),
                                                             DataColumn(
                                                                 label: Text(
-                                                                    'Qty')),
-                                                            DataColumn(
-                                                                label: Text(
-                                                                    'Total')),
+                                                                    'Amount')),
                                                             DataColumn(
                                                                 label: Text(
                                                                     'Action')),
@@ -489,24 +433,22 @@ class _BudgetState extends State<Budget> {
                                                                 .map((entry) {
                                                               final int index =
                                                                   entry.key;
-                                                              final BudgetItem
-                                                                  item =
+                                                              final AccountStatement
+                                                                  statement =
                                                                   entry.value;
 
                                                               return DataRow(
                                                                 cells: [
                                                                   DataCell(Text(
-                                                                      item.name)),
-                                                                  DataCell(Text(
-                                                                      'RM ${item.price.toStringAsFixed(2)}')),
-                                                                  DataCell(Text(item
-                                                                      .qty
-                                                                      .toString())),
-                                                                  DataCell(
+                                                                      statement
+                                                                          .name)),
+                                                                  const DataCell(
                                                                     Text(
-                                                                      'RM ${(item.qty * item.price).toStringAsFixed(2)}',
+                                                                      '',
                                                                     ),
                                                                   ),
+                                                                  DataCell(Text(
+                                                                      'RM ${statement.price.toStringAsFixed(2)}')),
                                                                   DataCell(
                                                                     Row(
                                                                       children: [
@@ -519,7 +461,7 @@ class _BudgetState extends State<Budget> {
                                                                               context: context,
                                                                               builder: (_) {
                                                                                 return EditDialog(
-                                                                                  item: item,
+                                                                                  item: statement,
                                                                                   index: index,
                                                                                   income: income,
                                                                                   expense: expense,
@@ -557,8 +499,6 @@ class _BudgetState extends State<Budget> {
                                                                             FontWeight.bold))),
                                                                 const DataCell(
                                                                     Text('')),
-                                                                const DataCell(
-                                                                    Text('')),
                                                                 DataCell(
                                                                   Text(
                                                                     'RM ${calculateTotal(income).toStringAsFixed(2)}',
@@ -586,13 +526,10 @@ class _BudgetState extends State<Budget> {
                                                                     'Item Name')),
                                                             DataColumn(
                                                                 label: Text(
-                                                                    'Unit Price')),
+                                                                    'Reference')),
                                                             DataColumn(
                                                                 label: Text(
-                                                                    'Qty')),
-                                                            DataColumn(
-                                                                label: Text(
-                                                                    'Total')),
+                                                                    'Amount')),
                                                             DataColumn(
                                                                 label: Text(
                                                                     'Action')),
@@ -604,24 +541,22 @@ class _BudgetState extends State<Budget> {
                                                                 .map((entry) {
                                                               final int index =
                                                                   entry.key;
-                                                              final BudgetItem
-                                                                  item =
+                                                              final AccountStatement
+                                                                  statement =
                                                                   entry.value;
 
                                                               return DataRow(
                                                                 cells: [
                                                                   DataCell(Text(
-                                                                      item.name)),
-                                                                  DataCell(Text(
-                                                                      'RM${item.price.toStringAsFixed(2)}')),
-                                                                  DataCell(Text(item
-                                                                      .qty
-                                                                      .toString())),
-                                                                  DataCell(
+                                                                      statement
+                                                                          .name)),
+                                                                  const DataCell(
                                                                     Text(
-                                                                      'RM ${(item.qty * item.price).toStringAsFixed(2)}',
+                                                                      '',
                                                                     ),
                                                                   ),
+                                                                  DataCell(Text(
+                                                                      'RM${statement.price.toStringAsFixed(2)}')),
                                                                   DataCell(
                                                                     Row(
                                                                       children: [
@@ -634,7 +569,7 @@ class _BudgetState extends State<Budget> {
                                                                               context: context,
                                                                               builder: (_) {
                                                                                 return EditDialog(
-                                                                                  item: item,
+                                                                                  item: statement,
                                                                                   index: index,
                                                                                   income: income,
                                                                                   expense: expense,
@@ -672,8 +607,6 @@ class _BudgetState extends State<Budget> {
                                                                             FontWeight.bold))),
                                                                 const DataCell(
                                                                     Text('')),
-                                                                const DataCell(
-                                                                    Text('')),
                                                                 DataCell(
                                                                   Text(
                                                                     'RM ${calculateTotal(expense).toStringAsFixed(2)}',
@@ -698,7 +631,7 @@ class _BudgetState extends State<Budget> {
                                               height: 15,
                                             ),
                                             Text(
-                                              'Profit/Loss : ${((calculateTotal(income) - calculateTotal(expense)) < 0 ? '-' : '')}RM${(calculateTotal(income) - calculateTotal(expense)).abs().toStringAsFixed(2)}',
+                                              'Balance : ${((calculateTotal(income) - calculateTotal(expense)) < 0 ? '-' : '')}RM${(calculateTotal(income) - calculateTotal(expense)).abs().toStringAsFixed(2)}',
                                               style: const TextStyle(
                                                 fontWeight: FontWeight.bold,
                                               ),
@@ -711,12 +644,12 @@ class _BudgetState extends State<Budget> {
                                                 FirebaseFirestore firestore =
                                                     FirebaseFirestore.instance;
 
-                                                CollectionReference budget =
+                                                CollectionReference account =
                                                     firestore.collection(
-                                                        'budgetItem');
+                                                        'accountStatement');
 
                                                 QuerySnapshot querySnapshot =
-                                                    await budget
+                                                    await account
                                                         .where('eventID',
                                                             isEqualTo: widget
                                                                 .selectedEvent)
@@ -732,41 +665,43 @@ class _BudgetState extends State<Budget> {
                                                 for (int index = 0;
                                                     index < income.length;
                                                     index++) {
-                                                  BudgetItem budgetItem =
+                                                  AccountStatement statement =
                                                       income[index];
 
-                                                  await budget.add({
+                                                  await account.add({
                                                     'eventID':
                                                         widget.selectedEvent,
-                                                    'itemName': budgetItem.name,
-                                                    'quantity': budgetItem.qty,
-                                                    'unitPrice':
-                                                        budgetItem.price,
-                                                    'itemType': budgetItem.type,
+                                                    'description':
+                                                        statement.name,
+                                                    'amount': statement.price,
+                                                    'reference': null,
+                                                    'recordType':
+                                                        statement.type,
                                                   });
                                                 }
 
                                                 for (int index = 0;
                                                     index < expense.length;
                                                     index++) {
-                                                  BudgetItem budgetItem =
+                                                  AccountStatement statement =
                                                       expense[index];
 
-                                                  await budget.add({
+                                                  await account.add({
                                                     'eventID':
                                                         widget.selectedEvent,
-                                                    'itemName': budgetItem.name,
-                                                    'quantity': budgetItem.qty,
-                                                    'unitPrice':
-                                                        budgetItem.price,
-                                                    'itemType': budgetItem.type,
+                                                    'description':
+                                                        statement.name,
+                                                    'amount': statement.price,
+                                                    'reference': null,
+                                                    'recordType':
+                                                        statement.type,
                                                   });
                                                 }
                                                 ScaffoldMessenger.of(context)
                                                     .showSnackBar(
                                                   const SnackBar(
-                                                    content:
-                                                        Text('Budget saved.'),
+                                                    content: Text(
+                                                        'Account Statement saved.'),
                                                     width: 150.0,
                                                     behavior: SnackBarBehavior
                                                         .floating,
@@ -798,25 +733,21 @@ class _BudgetState extends State<Budget> {
   }
 }
 
-class BudgetItem {
+class AccountStatement {
   String name;
   double price;
-  int qty;
   String type;
 
-  BudgetItem(
-      {required this.name,
-      required this.price,
-      required this.qty,
-      required this.type});
+  AccountStatement(
+      {required this.name, required this.price, required this.type});
 }
 
 class EditDialog extends StatefulWidget {
-  final BudgetItem item;
+  final AccountStatement item;
   final int index;
   final VoidCallback function;
-  final List<BudgetItem> income;
-  final List<BudgetItem> expense;
+  final List<AccountStatement> income;
+  final List<AccountStatement> expense;
 
   const EditDialog({
     required this.index,
@@ -833,13 +764,11 @@ class _EditDialogState extends State<EditDialog> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   TextEditingController name = TextEditingController();
   TextEditingController price = TextEditingController();
-  TextEditingController qty = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     name.text = widget.item.name;
-    qty.text = widget.item.qty.toString();
     price.text = widget.item.price.toStringAsFixed(2);
   }
 
@@ -854,58 +783,41 @@ class _EditDialogState extends State<EditDialog> {
           children: [
             CustomTextField(
               screen: true,
-              labelText: 'Item Name',
+              labelText: 'Description',
               validator: (value) {
                 if (value!.isEmpty) {
-                  return 'Please enter item name';
+                  return 'Please enter description';
                 }
                 return null;
               },
               controller: name,
-              hintText: 'Enter item name',
+              hintText: 'Enter description',
             ),
             const SizedBox(
               height: 15,
             ),
             CustomTextField(
               screen: true,
-              labelText: 'Unit Price',
+              labelText: 'Amount',
               prefixText: 'RM',
               controller: price,
-              hintText: 'Enter unit price',
+              hintText: 'Enter amount',
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}$')),
               ],
               validator: (value) {
                 if (value == null) {
-                  return 'Please enter unit price';
+                  return 'Please enter amount';
                 } else if (!RegExp(r'^\d+(\.\d{1,2})?$').hasMatch(value)) {
-                  return 'Invalid Price Format';
+                  return 'Invalid Amount Format';
                 } else if (value == '0.00') {
-                  return 'Price must be more than RM0.00';
+                  return 'Amount must be more than RM 0.00';
                 }
                 return null;
               },
             ),
             const SizedBox(
               height: 15,
-            ),
-            CustomTextField(
-              validator: (value) {
-                if (value!.isEmpty) {
-                  return 'Please enter quantity';
-                } else if (value == '0') {
-                  return 'Quantity must be more than 0';
-                }
-                return null;
-              },
-              labelText: 'Quantity',
-              screen: true,
-              hintText: '0',
-              controller: qty,
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-              ],
             ),
           ],
         ),
@@ -920,19 +832,18 @@ class _EditDialogState extends State<EditDialog> {
         TextButton(
           onPressed: () async {
             if (_formKey.currentState!.validate()) {
-              BudgetItem budgetItem = BudgetItem(
+              AccountStatement statement = AccountStatement(
                 name: name.text,
-                qty: int.parse(qty.text),
                 price:
                     double.parse(double.parse(price.text).toStringAsFixed(2)),
                 type: widget.item.type,
               );
 
               if (widget.item.type == 'Income') {
-                widget.income[widget.index] = budgetItem;
+                widget.income[widget.index] = statement;
                 widget.function();
               } else {
-                widget.expense[widget.index] = budgetItem;
+                widget.expense[widget.index] = statement;
                 widget.function();
               }
               Navigator.of(context).pop();

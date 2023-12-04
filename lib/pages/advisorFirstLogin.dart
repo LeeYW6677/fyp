@@ -396,25 +396,26 @@ class _AdvisorFirstLoginState extends State<AdvisorFirstLogin> {
                                             controller: dob,
                                             hintText:
                                                 'Enter your date of birth',
-                                            suffixIcon: const Icon(
-                                                Icons.calendar_today_rounded),
-                                            onTap: () async {
-                                              DateTime? pickedDate =
-                                                  await showDatePicker(
-                                                context: context,
-                                                initialDate: DateTime(2000),
-                                                firstDate: DateTime(1900),
-                                                lastDate: DateTime(2010),
-                                              );
+                                            suffixIcon: IconButton(
+                                                icon: const Icon(Icons
+                                                    .calendar_today_rounded),
+                                                onPressed: () async {
+                                                  DateTime? pickedDate =
+                                                      await showDatePicker(
+                                                    context: context,
+                                                    initialDate: DateTime(2000),
+                                                    firstDate: DateTime(1900),
+                                                    lastDate: DateTime(2010),
+                                                  );
 
-                                              if (pickedDate != null) {
-                                                setState(() {
-                                                  dob.text =
-                                                      DateFormat('dd-MM-yyyy')
+                                                  if (pickedDate != null) {
+                                                    setState(() {
+                                                      dob.text = DateFormat(
+                                                              'dd-MM-yyyy')
                                                           .format(pickedDate);
-                                                });
-                                              }
-                                            },
+                                                    });
+                                                  }
+                                                }),
                                             validator: (value) {
                                               if (value!.isEmpty) {
                                                 return 'Please enter your date of birth.';
@@ -508,6 +509,12 @@ class _AdvisorFirstLoginState extends State<AdvisorFirstLogin> {
                                         Expanded(
                                             flex: 4,
                                             child: CustomDDL<String>(
+                                              onChanged: (String? newValue) {
+                                                setState(() {
+                                                  selectedDepartment =
+                                                      newValue!;
+                                                });
+                                              },
                                               controller: department,
                                               hintText:
                                                   'Select your department',

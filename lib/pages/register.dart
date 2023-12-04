@@ -420,24 +420,26 @@ class _RegisterState extends State<Register> {
                                     child: CustomTextField(
                                       controller: dob,
                                       hintText: 'Enter your date of birth',
-                                      suffixIcon: const Icon(
-                                          Icons.calendar_today_rounded),
-                                      onTap: () async {
-                                        DateTime? pickedDate =
-                                            await showDatePicker(
-                                          context: context,
-                                          initialDate: DateTime(2000),
-                                          firstDate: DateTime(1900),
-                                          lastDate: DateTime(2010),
-                                        );
+                                      suffixIcon: IconButton(
+                                          icon: const Icon(
+                                              Icons.calendar_today_rounded),
+                                          onPressed: () async {
+                                            DateTime? pickedDate =
+                                                await showDatePicker(
+                                              context: context,
+                                              initialDate: DateTime(2000),
+                                              firstDate: DateTime(1900),
+                                              lastDate: DateTime(2010),
+                                            );
 
-                                        if (pickedDate != null) {
-                                          setState(() {
-                                            dob.text = DateFormat('dd-MM-yyyy')
-                                                .format(pickedDate);
-                                          });
-                                        }
-                                      },
+                                            if (pickedDate != null) {
+                                              setState(() {
+                                                dob.text =
+                                                    DateFormat('dd-MM-yyyy')
+                                                        .format(pickedDate);
+                                              });
+                                            }
+                                          }),
                                       validator: (value) {
                                         if (value!.isEmpty) {
                                           return 'Please enter your date of birth.';
@@ -534,6 +536,11 @@ class _RegisterState extends State<Register> {
                                   Expanded(
                                       flex: 4,
                                       child: CustomDDL<String>(
+                                        onChanged: (String? newValue) {
+                                          setState(() {
+                                            selectedProgramme = newValue!;
+                                          });
+                                        },
                                         controller: programme,
                                         hintText: 'Select your programme',
                                         value: selectedProgramme,
@@ -542,7 +549,9 @@ class _RegisterState extends State<Register> {
                                                 (programme) {
                                           return DropdownMenuItem<String>(
                                             value: programme,
-                                            child: Text(programme, overflow: TextOverflow.ellipsis),
+                                            child: Text(programme,
+                                                overflow:
+                                                    TextOverflow.ellipsis),
                                           );
                                         }).toList(),
                                       )),
@@ -578,16 +587,27 @@ class _RegisterState extends State<Register> {
                                         },
                                         dropdownItems: const [
                                           DropdownMenuItem<String>(
-                                            value: 'Faculty of Computing and Information Technology',
-                                            child: Text('Faculty of Computing and Information Technology', overflow: TextOverflow.ellipsis),
+                                            value:
+                                                'Faculty of Computing and Information Technology',
+                                            child: Text(
+                                                'Faculty of Computing and Information Technology',
+                                                overflow:
+                                                    TextOverflow.ellipsis),
                                           ),
                                           DropdownMenuItem<String>(
                                             value: 'Faculty of Applied Science',
-                                            child: Text('Faculty of Applied Science', overflow: TextOverflow.ellipsis),
+                                            child: Text(
+                                                'Faculty of Applied Science',
+                                                overflow:
+                                                    TextOverflow.ellipsis),
                                           ),
                                           DropdownMenuItem<String>(
-                                            value: 'Faculty of Accountancy, Finance and Business',
-                                            child: Text('Faculty of Accountancy, Finance and Business', overflow: TextOverflow.ellipsis),
+                                            value:
+                                                'Faculty of Accountancy, Finance and Business',
+                                            child: Text(
+                                                'Faculty of Accountancy, Finance and Business',
+                                                overflow:
+                                                    TextOverflow.ellipsis),
                                           ),
                                         ],
                                       )),

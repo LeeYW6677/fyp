@@ -17,21 +17,19 @@ class EditEvent extends StatefulWidget {
 
 class _EditEventState extends State<EditEvent> {
   final name = TextEditingController();
-
   final presidentName = TextEditingController();
   final presidentID = TextEditingController();
   final secretaryName = TextEditingController();
   final secretaryID = TextEditingController();
   final treasurerName = TextEditingController();
   final treasurerID = TextEditingController();
-
   final vpresidentName = TextEditingController();
   final vpresidentID = TextEditingController();
   final vsecretaryName = TextEditingController();
   final vsecretaryID = TextEditingController();
   final vtreasurerName = TextEditingController();
   final vtreasurerID = TextEditingController();
-
+   bool _isLoading = true;
   List<String> restrictedPositions = [
     'President',
     'Vice President',
@@ -41,7 +39,7 @@ class _EditEventState extends State<EditEvent> {
     'Vice Treasurer',
   ];
   final GlobalKey<FormState> _formKey1 = GlobalKey<FormState>();
-  bool _isLoading = true;
+  
 
   Future<void> getData() async {
     try {
@@ -58,7 +56,7 @@ class _EditEventState extends State<EditEvent> {
           .get() as QuerySnapshot<Map<String, dynamic>>;
 
       if (querySnapshot.docs.isNotEmpty) {
-        name.text = querySnapshot.docs[0].data()!['eventName'];
+        name.text = querySnapshot.docs[0].data()['eventName'];
       }
       final QuerySnapshot<Map<String, dynamic>> committeeSnapshot =
           await firestore
@@ -70,7 +68,7 @@ class _EditEventState extends State<EditEvent> {
       if (committeeSnapshot.docs.isNotEmpty) {
         for (QueryDocumentSnapshot<Map<String, dynamic>> documentSnapshot
             in committeeSnapshot.docs) {
-          String position = documentSnapshot.data()!['position'].toLowerCase();
+          String position = documentSnapshot.data()['position'].toLowerCase();
 
           switch (position) {
             case 'president':

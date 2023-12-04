@@ -2,12 +2,10 @@ import 'dart:ui';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:fyp/pages/committee.dart';
-import 'package:fyp/pages/editEvent.dart';
+import 'package:fyp/pages/accountStatement.dart';
+import 'package:fyp/pages/evaluation.dart';
 import 'package:fyp/pages/login.dart';
 import 'package:fyp/functions/firebase_options.dart';
-import 'package:fyp/pages/ongoingEvent.dart';
-import 'package:fyp/pages/schedule.dart';
 import 'package:fyp/pages/test2.dart';
 
 void main() async {
@@ -22,7 +20,8 @@ class SocietyManagementSystem extends StatefulWidget {
   const SocietyManagementSystem({Key? key}) : super(key: key);
 
   @override
-  _SocietyManagementSystemState createState() => _SocietyManagementSystemState();
+  _SocietyManagementSystemState createState() =>
+      _SocietyManagementSystemState();
 }
 
 class _SocietyManagementSystemState extends State<SocietyManagementSystem> {
@@ -45,7 +44,7 @@ class _SocietyManagementSystemState extends State<SocietyManagementSystem> {
           thumbVisibility: MaterialStateProperty.all<bool>(true),
         ),
       ),
-      home: user != null ? OrgCommittee(selectedEvent: 'E001') : const Login(),
+      home: user != null ? Account(selectedEvent: 'E001',) : const Login(),
     );
   }
 }
