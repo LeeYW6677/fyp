@@ -142,10 +142,6 @@ class _ProfileState extends State<Profile> {
                     child: SingleChildScrollView(
                       child: Column(
                         children: [
-                          const NavigationMenu(
-                            buttonTexts: ['Profile'],
-                            destination: [Profile()],
-                          ),
                           Padding(
                             padding: const EdgeInsets.all(16.0),
                             child: Column(

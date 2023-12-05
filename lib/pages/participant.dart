@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
-import 'package:fyp/pages/studentOrganisedEvent.dart';
 
 class Participant extends StatefulWidget {
   final String selectedEvent;
@@ -38,16 +37,6 @@ class _ParticipantState extends State<Participant> {
       });
       final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
-      final QuerySnapshot<Map<String, dynamic>> eventSnapshot = await firestore
-          .collection('event')
-          .where('eventID', isEqualTo: widget.selectedEvent)
-          .get();
-
-      if (eventSnapshot.docs.isNotEmpty) {
-        Map<String, dynamic> eventData = eventSnapshot.docs.first.data();
-        status = eventData['status'];
-        progress = eventData['progress'];
-      }
       final QuerySnapshot<Map<String, dynamic>> participantSnapshot =
           await firestore
               .collection('participant')
@@ -153,13 +142,6 @@ class _ParticipantState extends State<Participant> {
                     flex: 5,
                     child: SingleChildScrollView(
                       child: Column(children: [
-                        NavigationMenu(
-                          buttonTexts: const ['Event', 'Participant'],
-                          destination: [
-                            const StudentOrganisedEvent(),
-                            Participant(selectedEvent: widget.selectedEvent)
-                          ],
-                        ),
                         Padding(
                             padding: const EdgeInsets.all(16.0),
                             child: Column(
@@ -549,14 +531,6 @@ class _ParticipantState extends State<Participant> {
                                                 text: 'Save'),
                                             const SizedBox(
                                               height: 15,
-                                            ),
-                                            const Divider(
-                                                thickness: 0.1,
-                                                color: Colors.black),
-                                            CustomTimeline(
-                                              status: status,
-                                              progress: progress,
-                                              eventID: widget.selectedEvent,
                                             ),
                                           ])),
                                 ]))

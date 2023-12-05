@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
+import 'package:fyp/pages/editEvent.dart';
 import 'package:fyp/pages/proposal.dart';
 import 'package:fyp/pages/studentOrganisedEvent.dart';
 import 'package:intl/intl.dart';
@@ -134,12 +135,6 @@ class _StudentOngoingEventState extends State<StudentOngoingEvent> {
               flex: 5,
               child: SingleChildScrollView(
                 child: Column(children: [
-                  const NavigationMenu(
-                    buttonTexts: ['Event'],
-                    destination: [
-                      StudentOngoingEvent(),
-                    ],
-                  ),
                   Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
@@ -423,7 +418,16 @@ class _EventDataSource extends DataTableSource {
             ),
             if(event['presidentID'] == storage.getItem('id'))
             CustomButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EditEvent(
+                        selectedSociety: 'S001',
+                        selectedEvent: event['eventID']),
+                  ),
+                );
+              },
               text: 'Edit',
               width: 100,
               buttonColor: Colors.green,

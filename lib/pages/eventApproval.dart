@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
-import 'package:fyp/pages/society.dart';
-
 
 class Approval extends StatefulWidget {
   const Approval({super.key});
@@ -35,10 +33,6 @@ class _ApprovalState extends State<Approval> {
               flex: 5,
               child: SingleChildScrollView(
                 child: Column(children: [
-                  NavigationMenu(
-                    buttonTexts: ['Society', 'Approval'],
-                    destination: [Society(), Approval()],
-                  ),
                   Padding(
                       padding: EdgeInsets.all(16.0),
                       child: Column(

@@ -183,10 +183,6 @@ class _AddSocietyState extends State<AddSociety> {
               flex: 5,
               child: SingleChildScrollView(
                 child: Column(children: [
-                  const NavigationMenu(
-                    buttonTexts: ['Society', 'Add Society'],
-                    destination: [Society(), AddSociety()],
-                  ),
                   Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(

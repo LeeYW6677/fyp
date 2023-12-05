@@ -4,7 +4,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
-import 'package:fyp/pages/studentOrganisedEvent.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
@@ -50,37 +49,25 @@ class _EvaluationState extends State<Evaluation> {
       });
       final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
-      // Fetch event data
-      final QuerySnapshot<Map<String, dynamic>> eventSnapshot = await firestore
-          .collection('event')
-          .where('eventID', isEqualTo: widget.selectedEvent)
-          .get();
-
-      if (eventSnapshot.docs.isNotEmpty) {
-        Map<String, dynamic> eventData = eventSnapshot.docs.first.data();
-        status = eventData['status'];
-        progress = eventData['progress'];
-
-        final QuerySnapshot<Map<String, dynamic>> evaluationSnapshot =
-            await firestore
-                .collection('evaluation')
-                .where('eventID', isEqualTo: widget.selectedEvent)
-                .get();
-        if (evaluationSnapshot.docs.isNotEmpty) {
-          Map<String, dynamic> evaluationData =
-              evaluationSnapshot.docs.first.data();
-          description.text = evaluationData['description'] ?? '';
-          problem.text = evaluationData['problem'] ?? '';
-          improvement.text = evaluationData['improvement'] ?? '';
-          conclusion.text = evaluationData['conclusion'] ?? '';
-          savedUrl = List.from(evaluationData['imageUrls']);
-        }
-        setState(() {
-          savedUrl = savedUrl;
-          status = status;
-          _isLoading = false;
-        });
+      final QuerySnapshot<Map<String, dynamic>> evaluationSnapshot =
+          await firestore
+              .collection('evaluation')
+              .where('eventID', isEqualTo: widget.selectedEvent)
+              .get();
+      if (evaluationSnapshot.docs.isNotEmpty) {
+        Map<String, dynamic> evaluationData =
+            evaluationSnapshot.docs.first.data();
+        description.text = evaluationData['description'] ?? '';
+        problem.text = evaluationData['problem'] ?? '';
+        improvement.text = evaluationData['improvement'] ?? '';
+        conclusion.text = evaluationData['conclusion'] ?? '';
+        savedUrl = List.from(evaluationData['imageUrls']);
       }
+      setState(() {
+        savedUrl = savedUrl;
+        status = status;
+        _isLoading = false;
+      });
     } catch (error) {
       setState(() {
         _isLoading = false;
@@ -129,13 +116,6 @@ class _EvaluationState extends State<Evaluation> {
                     flex: 5,
                     child: SingleChildScrollView(
                       child: Column(children: [
-                        NavigationMenu(
-                          buttonTexts: const ['Event', 'Evaluation'],
-                          destination: [
-                            const StudentOrganisedEvent(),
-                            Evaluation(selectedEvent: widget.selectedEvent)
-                          ],
-                        ),
                         Padding(
                             padding: const EdgeInsets.all(16.0),
                             child: Column(
@@ -847,13 +827,8 @@ class _EvaluationState extends State<Evaluation> {
                                                   }
                                                 },
                                                 text: 'Save'),
-                                            const Divider(
-                                                thickness: 0.1,
-                                                color: Colors.black),
-                                            CustomTimeline(
-                                              status: status,
-                                              progress: progress,
-                                              eventID: widget.selectedEvent,
+                                            const SizedBox(
+                                              height: 15,
                                             ),
                                           ])),
                                 ]))

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
 import 'package:fyp/pages/ongoingEvent.dart';
-import 'package:fyp/pages/society.dart';
 
 class EditEvent extends StatefulWidget {
   final String selectedEvent;
@@ -234,17 +233,6 @@ class _EditEventState extends State<EditEvent> {
               flex: 5,
               child: SingleChildScrollView(
                 child: Column(children: [
-                  NavigationMenu(
-                    buttonTexts: const ['Society', 'Event', 'Change Committee'],
-                    destination: [
-                      const Society(),
-                      OngoingEvent(selectedSociety: widget.selectedSociety),
-                      EditEvent(
-                        selectedSociety: widget.selectedSociety,
-                        selectedEvent: widget.selectedEvent,
-                      )
-                    ],
-                  ),
                   Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(

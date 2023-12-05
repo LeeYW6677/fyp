@@ -15,7 +15,6 @@ import 'package:fyp/pages/society.dart';
 import 'package:fyp/pages/student.dart';
 import 'package:fyp/pages/studentOngoingEvent.dart';
 import 'package:fyp/pages/studentSociety.dart';
-import 'package:intl/intl.dart';
 import 'package:localstorage/localstorage.dart';
 import 'package:timelines/timelines.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -648,55 +647,6 @@ class Header extends StatelessWidget implements PreferredSizeWidget {
   }
 }
 
-class NavigationMenu extends StatelessWidget {
-  final List<String> buttonTexts;
-  final List<Widget> destination;
-
-  const NavigationMenu({
-    super.key,
-    required this.buttonTexts,
-    required this.destination,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    DateTime now = DateTime.now();
-    String date =
-        '${DateFormat('EEEE').format(now)} ${DateFormat('dd-MM-yyyy').format(now)} ${DateFormat('HH:mm').format(now)}';
-    return Container(
-      padding: const EdgeInsets.all(8.0),
-      color: const Color.fromARGB(255, 238, 238, 238),
-      child: Row(
-        children: [
-          const Icon(Icons.home),
-          for (int i = 0; i < buttonTexts.length; i++)
-            Row(
-              children: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => destination[i],
-                      ),
-                    );
-                  },
-                  child: Text(
-                    buttonTexts[i],
-                    style: const TextStyle(color: Colors.black),
-                  ),
-                ),
-                if (i < buttonTexts.length - 1) const Icon(Icons.chevron_right),
-              ],
-            ),
-          const Spacer(),
-          if (!Responsive.isMobile(context)) Text(date),
-        ],
-      ),
-    );
-  }
-}
-
 class PasswordStrengthIndicator extends StatelessWidget {
   final String password;
 
@@ -1063,12 +1013,16 @@ class CustomTimeline extends StatefulWidget {
   final String eventID;
   final String status;
   final int progress;
+  final List<String> checkName;
+  final List<String> checkStatus;
 
   CustomTimeline({
     super.key,
     required this.eventID,
     required this.status,
     required this.progress,
+    required this.checkName,
+    required this.checkStatus,
   });
   @override
   _CustomTimelineState createState() => _CustomTimelineState();
@@ -1077,37 +1031,10 @@ class CustomTimeline extends StatefulWidget {
 class _CustomTimelineState extends State<CustomTimeline> {
   List<String> preProgress = ['Planning', 'Checked', 'Recommended', 'Approved'];
   List<String> postProgress = ['Closing', 'Checked', 'Verified', 'Accepted'];
-  late DateTime dateTime;
-  List<String> checkName = [];
-  List<String> checkStatus = [];
-  Future<void> getData() async {
-    final FirebaseFirestore firestore = FirebaseFirestore.instance;
-
-    final QuerySnapshot<Map<String, dynamic>> approvalSnapshot = await firestore
-        .collection('approval')
-        .where('eventID', isEqualTo: widget.eventID)
-        .get();
-    if (approvalSnapshot.docs.isNotEmpty) {
-      Map<String, dynamic> approvalData = approvalSnapshot.docs.first.data();
-      checkName.add('');
-      checkName.add(approvalData['presidentName']);
-      checkName.add(approvalData['advisorName']);
-      checkName.add(approvalData['branchHeadName']);
-      checkStatus.add('Approved');
-      checkStatus.add(approvalData['presidentStatus']);
-      checkStatus.add(approvalData['advisorStatus']);
-      checkStatus.add(approvalData['branchHeadStatus']);
-    }
-    setState(() {
-      checkName = checkName;
-      checkStatus = checkStatus;
-    });
-  }
 
   @override
   void initState() {
     super.initState();
-    getData();
   }
 
   @override
@@ -1141,7 +1068,7 @@ class _CustomTimelineState extends State<CustomTimeline> {
                         : postProgress[index]),
                     const SizedBox(height: 10),
                     Text(
-                      checkName[index],
+                       widget.checkName[index],
                       style:
                           const TextStyle(fontSize: 12.0, color: Colors.black),
                     ),
@@ -1151,15 +1078,15 @@ class _CustomTimelineState extends State<CustomTimeline> {
               indicatorBuilder: (_, index) {
                 Color color;
                 if (index <= widget.progress) {
-                  color = checkStatus[index] == 'Approved'
+                  color = widget.checkStatus[index] == 'Approved'
                       ? Colors.green
                       : Colors.red;
                 } else {
                   color = Colors.grey;
                 }
 
-                return checkStatus[index] == 'Approved' ||
-                        checkStatus[index] == 'Rejected'
+                return widget.checkStatus[index] == 'Approved' ||
+                         widget.checkStatus[index] == 'Rejected'
                     ? DotIndicator(
                         size: 20.0,
                         color: color,
@@ -1171,9 +1098,9 @@ class _CustomTimelineState extends State<CustomTimeline> {
               },
               connectorBuilder: (_, index, type) {
                 if (index > 0) {
-                  Color color = checkStatus[index] == 'Approved'
+                  Color color =  widget.checkStatus[index] == 'Approved'
                       ? Colors.green
-                      : checkStatus[index] == 'Rejected'
+                      :  widget.checkStatus[index] == 'Rejected'
                           ? Colors.red
                           : Colors.grey;
                   return SolidLineConnector(
@@ -1189,413 +1116,7 @@ class _CustomTimelineState extends State<CustomTimeline> {
         const SizedBox(
           height: 15,
         ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            if (checkStatus.any((element) => element == 'Rejected'))
-              CustomButton(
-                  onPressed: () async {
-                    String comment = '';
-                    final FirebaseFirestore firestore =
-                        FirebaseFirestore.instance;
 
-                    final QuerySnapshot<Map<String, dynamic>> approvalSnapshot =
-                        await firestore
-                            .collection('approval')
-                            .where('eventID', isEqualTo: widget.eventID)
-                            .get();
-
-                    if (approvalSnapshot.docs.isNotEmpty) {
-                      Map<String, dynamic> approvalData =
-                          approvalSnapshot.docs.first.data();
-                      comment = approvalData['comment'];
-                    }
-                    showDialog(
-                        context: context,
-                        builder: (_) {
-                          return CommentDialog(text: comment);
-                        });
-                  },
-                  text: 'View Comment'),
-            SizedBox(
-              width: 15,
-            ),
-            if (widget.status == 'Planning' && widget.progress != 3)
-              CustomButton(
-                  width: 150,
-                  onPressed: widget.status == 'Planning' && widget.progress == 0
-                      ? () async {
-                          final FirebaseFirestore firestore =
-                              FirebaseFirestore.instance;
-
-                          bool description = false;
-
-                          final QuerySnapshot<Map<String, dynamic>>
-                              eventSnapshot = await firestore
-                                  .collection('event')
-                                  .where('eventID', isEqualTo: widget.eventID)
-                                  .get();
-
-                          if (eventSnapshot.docs.isNotEmpty) {
-                            Map<String, dynamic> eventData =
-                                eventSnapshot.docs.first.data();
-                            description = eventData['description'] == null;
-                          }
-
-                          final QuerySnapshot<Map<String, dynamic>>
-                              scheduleSnapshot = await firestore
-                                  .collection('schedule')
-                                  .where('eventID', isEqualTo: widget.eventID)
-                                  .get();
-                          bool schedule = scheduleSnapshot.docs.isEmpty;
-
-                          if (schedule || description) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                    'Please save the required document before submitting.'),
-                                width: 200.0,
-                                behavior: SnackBarBehavior.floating,
-                                duration: Duration(seconds: 3),
-                              ),
-                            );
-                          } else {
-                            CollectionReference<Map<String, dynamic>>
-                                collectionRef =
-                                firestore.collection('schedule');
-
-                            Query<Map<String, dynamic>> query =
-                                collectionRef.orderBy('date');
-
-                            QuerySnapshot<Map<String, dynamic>> snapshot =
-                                await query.limit(1).get();
-
-                            if (snapshot.docs.isNotEmpty) {
-                              DocumentSnapshot<Map<String, dynamic>>
-                                  earliestDoc = snapshot.docs.first;
-
-                              Timestamp date = earliestDoc['date'];
-                              dateTime = date.toDate();
-                            }
-                            if (dateTime.isBefore(
-                                DateTime.now().add(const Duration(days: -3)))) {
-                              await firestore
-                                  .collection('event')
-                                  .doc(widget.eventID)
-                                  .update({
-                                'status': 'Planning',
-                                'progress': 1,
-                              });
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                      'Event document submitted for approval.'),
-                                  width: 200.0,
-                                  behavior: SnackBarBehavior.floating,
-                                  duration: Duration(seconds: 3),
-                                ),
-                              );
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                      'You can only apply the event one week before the event date.'),
-                                  width: 200.0,
-                                  behavior: SnackBarBehavior.floating,
-                                  duration: Duration(seconds: 3),
-                                ),
-                              );
-                            }
-                          }
-                        }
-                      : () {
-                          showDialog(
-                              context: context,
-                              builder: (_) {
-                                return ConfirmDialog(eventID: widget.eventID);
-                              });
-                        },
-                  text: widget.progress == 0 ? 'Submit' : 'Unsubmit'),
-            if (widget.status == 'Closing' && widget.progress != 3)
-              CustomButton(
-                  width: 150,
-                  onPressed: widget.status == 'Closing' && widget.progress == 0
-                      ? () async {
-                          final FirebaseFirestore firestore =
-                              FirebaseFirestore.instance;
-
-                          CollectionReference<Map<String, dynamic>>
-                              collectionRef = firestore.collection('schedule');
-
-                          Query<Map<String, dynamic>> query =
-                              collectionRef.orderBy('date', descending: true);
-
-                          QuerySnapshot<Map<String, dynamic>> snapshot =
-                              await query.limit(1).get();
-
-                          if (snapshot.docs.isNotEmpty) {
-                            DocumentSnapshot<Map<String, dynamic>> earliestDoc =
-                                snapshot.docs.first;
-
-                            Timestamp date = earliestDoc['date'];
-                            dateTime = date.toDate();
-                          }
-
-                          if (dateTime.isAfter(DateTime.now())) {
-                            final QuerySnapshot<Map<String, dynamic>>
-                                participantSnapshot = await firestore
-                                    .collection('participant')
-                                    .where('eventID', isEqualTo: widget.eventID)
-                                    .get();
-                            bool participant = participantSnapshot.docs.isEmpty;
-
-                            final QuerySnapshot<Map<String, dynamic>>
-                                evaluationSnapshot = await firestore
-                                    .collection('evaluation')
-                                    .where('eventID', isEqualTo: widget.eventID)
-                                    .get();
-                            bool evaluation = evaluationSnapshot.docs.isEmpty;
-
-                            final QuerySnapshot<Map<String, dynamic>>
-                                claimSnapshot = await firestore
-                                    .collection('claim')
-                                    .where('eventID', isEqualTo: widget.eventID)
-                                    .where('status', isEqualTo: 'Pending')
-                                    .get();
-                            bool claim = claimSnapshot.docs.isNotEmpty;
-
-                            if (participant || evaluation) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                      'Please save the required document before submitting.'),
-                                  width: 200.0,
-                                  behavior: SnackBarBehavior.floating,
-                                  duration: Duration(seconds: 3),
-                                ),
-                              );
-                            } else if (claim) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                      'Please process all the claim request before submitting'),
-                                  width: 200.0,
-                                  behavior: SnackBarBehavior.floating,
-                                  duration: Duration(seconds: 3),
-                                ),
-                              );
-                            } else {
-                              await firestore
-                                  .collection('event')
-                                  .doc(widget.eventID)
-                                  .update({
-                                'status': 'Closing',
-                                'progress': 1,
-                              });
-
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                      'Event document submitted for approval.'),
-                                  width: 200.0,
-                                  behavior: SnackBarBehavior.floating,
-                                  duration: Duration(seconds: 3),
-                                ),
-                              );
-                            }
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                    'Event closing document can only be submittted after the event date.'),
-                                width: 200.0,
-                                behavior: SnackBarBehavior.floating,
-                                duration: Duration(seconds: 3),
-                              ),
-                            );
-                          }
-                        }
-                      : () {
-                          showDialog(
-                              context: context,
-                              builder: (_) {
-                                return ConfirmDialog2(eventID: widget.eventID);
-                              });
-                              getData();
-                        },
-                  text: widget.progress == 0 ? 'Submit' : 'Unsubmit'),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class ConfirmDialog extends StatefulWidget {
-  final String eventID;
-
-  const ConfirmDialog({
-    super.key,
-    required this.eventID,
-  });
-  @override
-  _ConfirmDialogState createState() => _ConfirmDialogState();
-}
-
-class _ConfirmDialogState extends State<ConfirmDialog> {
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Unsubmit Documents'),
-      content: const Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [Text('Are you sure you want to unsubmit the doucment?')],
-      ),
-      actions: <Widget>[
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          child: const Text('Cancel'),
-        ),
-        TextButton(
-          onPressed: () async {
-            final FirebaseFirestore firestore = FirebaseFirestore.instance;
-            final QuerySnapshot<Map<String, dynamic>> approvalSnapshot =
-                await firestore
-                    .collection('approval')
-                    .where('eventID', isEqualTo: widget.eventID)
-                    .get();
-
-            for (QueryDocumentSnapshot<Map<String, dynamic>> docSnapshot
-                in approvalSnapshot.docs) {
-              await docSnapshot.reference.update({
-                'presidentName': '',
-                'presidentStatus': '',
-                'advisorName': '',
-                'advisorStatus': '',
-                'branchHeadName': '',
-                'branchHeadStatus': '',
-                'comment': '',
-              });
-            }
-
-            await firestore.collection('event').doc(widget.eventID).update({
-              'status': 'Planning',
-              'progress': 0,
-            });
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Event documents unsubmitted'),
-                width: 200.0,
-                behavior: SnackBarBehavior.floating,
-                duration: Duration(seconds: 3),
-              ),
-            );
-          },
-          child: const Text('OK'),
-        ),
-      ],
-    );
-  }
-}
-
-class ConfirmDialog2 extends StatefulWidget {
-  final String eventID;
-
-  const ConfirmDialog2({
-    super.key,
-    required this.eventID,
-  });
-  @override
-  _ConfirmDialog2State createState() => _ConfirmDialog2State();
-}
-
-class _ConfirmDialog2State extends State<ConfirmDialog2> {
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Unsubmit Documents'),
-      content: const Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [Text('Are you sure you want to unsubmit the doucment?')],
-      ),
-      actions: <Widget>[
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          child: const Text('Cancel'),
-        ),
-        TextButton(
-          onPressed: () async {
-            final FirebaseFirestore firestore = FirebaseFirestore.instance;
-            final QuerySnapshot<Map<String, dynamic>> approvalSnapshot =
-                await firestore
-                    .collection('completion')
-                    .where('eventID', isEqualTo: widget.eventID)
-                    .get();
-
-            for (QueryDocumentSnapshot<Map<String, dynamic>> docSnapshot
-                in approvalSnapshot.docs) {
-              await docSnapshot.reference.update({
-                'presidentName': '',
-                'presidentStatus': '',
-                'advisorName': '',
-                'advisorStatus': '',
-                'branchHeadName': '',
-                'branchHeadStatus': '',
-                'comment': '',
-              });
-            }
-
-            await firestore.collection('event').doc(widget.eventID).update({
-              'status': 'Closing',
-              'progress': 0,
-            });
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Event documents unsubmitted'),
-                width: 200.0,
-                behavior: SnackBarBehavior.floating,
-                duration: Duration(seconds: 3),
-              ),
-            );
-          },
-          child: const Text('OK'),
-        ),
-      ],
-    );
-  }
-}
-
-class CommentDialog extends StatefulWidget {
-  final String text;
-
-  const CommentDialog({
-    super.key,
-    required this.text,
-  });
-  @override
-  _CommentDialogState createState() => _CommentDialogState();
-}
-
-class _CommentDialogState extends State<CommentDialog> {
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Comment'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [Text(widget.text)],
-      ),
-      actions: <Widget>[
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          child: const Text('Ok'),
-        ),
       ],
     );
   }

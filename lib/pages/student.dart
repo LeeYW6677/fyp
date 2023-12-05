@@ -86,10 +86,6 @@ class _StudentState extends State<Student> {
                     flex: 5,
                     child: SingleChildScrollView(
                       child: Column(children: [
-                        const NavigationMenu(
-                          buttonTexts: ['Student'],
-                          destination: [Student()],
-                        ),
                         Padding(
                             padding: const EdgeInsets.all(16.0),
                             child: Column(

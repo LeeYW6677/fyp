@@ -4,7 +4,6 @@ import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
 import 'package:fyp/pages/ongoingEvent.dart';
 import 'package:fyp/pages/proposal.dart';
-import 'package:fyp/pages/society.dart';
 import 'package:intl/intl.dart';
 
 class OrganisedEvent extends StatefulWidget {
@@ -111,13 +110,6 @@ class _OrganisedEventState extends State<OrganisedEvent> {
               flex: 5,
               child: SingleChildScrollView(
                 child: Column(children: [
-                  NavigationMenu(
-                    buttonTexts: const ['Society', 'Event'],
-                    destination: [
-                      const Society(),
-                      OngoingEvent(selectedSociety: widget.selectedSociety)
-                    ],
-                  ),
                   Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(

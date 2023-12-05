@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
-import 'package:fyp/pages/studentOrganisedEvent.dart';
 import 'package:flutter/services.dart';
 
 class Proposal extends StatefulWidget {
@@ -102,13 +101,6 @@ class _ProposalState extends State<Proposal> {
                     flex: 5,
                     child: SingleChildScrollView(
                       child: Column(children: [
-                        NavigationMenu(
-                          buttonTexts: const ['Event', 'Proposal'],
-                          destination: [
-                            const StudentOrganisedEvent(),
-                            Proposal(selectedEvent: widget.selectedEvent)
-                          ],
-                        ),
                         Padding(
                             padding: const EdgeInsets.all(16.0),
                             child: Column(
@@ -607,14 +599,7 @@ class _ProposalState extends State<Proposal> {
                                                 ),
                                               ],
                                             ),
-                                            const Divider(
-                                                thickness: 0.1,
-                                                color: Colors.black),
-                                            CustomTimeline(
-                                              status: status,
-                                              progress: progress,
-                                              eventID: widget.selectedEvent,
-                                            ),
+
                                           ])),
                                 ]))
                       ]),

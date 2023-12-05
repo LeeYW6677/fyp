@@ -34,10 +34,6 @@ class _HomeState extends State<Home> {
               flex: 5,
               child: SingleChildScrollView(
                 child: Column(children: [
-                  NavigationMenu(
-                    buttonTexts: ['Dashboard'],
-                    destination: [Home()],
-                  ),
                   Padding(
                       padding: EdgeInsets.all(16.0),
                       child: Column(

@@ -106,10 +106,6 @@ class _AdvisorState extends State<Advisor> {
                     flex: 5,
                     child: SingleChildScrollView(
                       child: Column(children: [
-                        const NavigationMenu(
-                          buttonTexts: ['Advisor'],
-                          destination: [Advisor()],
-                        ),
                         Padding(
                             padding: const EdgeInsets.all(16.0),
                             child: Column(

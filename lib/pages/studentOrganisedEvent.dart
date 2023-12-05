@@ -134,12 +134,6 @@ class _StudentOrganisedEventState extends State<StudentOrganisedEvent> {
                     flex: 5,
                     child: SingleChildScrollView(
                       child: Column(children: [
-                        const NavigationMenu(
-                          buttonTexts: ['Event'],
-                          destination: [
-                            StudentOrganisedEvent(),
-                          ],
-                        ),
                         Padding(
                             padding: const EdgeInsets.all(16.0),
                             child: Column(

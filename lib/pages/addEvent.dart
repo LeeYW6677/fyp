@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
-import 'package:fyp/pages/society.dart';
 import 'package:fyp/pages/ongoingEvent.dart';
 
 class AddEvent extends StatefulWidget {
@@ -162,14 +161,6 @@ class _AddEventState extends State<AddEvent> {
               flex: 5,
               child: SingleChildScrollView(
                 child: Column(children: [
-                  NavigationMenu(
-                    buttonTexts: const ['Society', 'Event', 'Add Event'],
-                    destination: [
-                      const Society(),
-                      OngoingEvent(selectedSociety: widget.selectedSociety),
-                      AddEvent(selectedSociety: widget.selectedSociety)
-                    ],
-                  ),
                   Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(

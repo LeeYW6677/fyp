@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
-import 'package:fyp/pages/studentOrganisedEvent.dart';
 import 'package:intl/intl.dart';
 
 class Schedule extends StatefulWidget {
@@ -18,7 +17,7 @@ class _ScheduleState extends State<Schedule> {
   List<Programme> programList = [];
   bool _isLoading = true;
   String status = '';
-    int progress = -1;
+  int progress = -1;
 
   Future<void> getData() async {
     try {
@@ -28,48 +27,37 @@ class _ScheduleState extends State<Schedule> {
 
       final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
-      // Fetch event data
-      final QuerySnapshot<Map<String, dynamic>> eventSnapshot = await firestore
-          .collection('event')
-          .where('eventID', isEqualTo: widget.selectedEvent)
-          .get();
+      final QuerySnapshot<Map<String, dynamic>> scheduleSnapshot =
+          await firestore
+              .collection('schedule')
+              .where('eventID', isEqualTo: widget.selectedEvent)
+              .get();
+      programList.clear();
 
-      if (eventSnapshot.docs.isNotEmpty) {
-        Map<String, dynamic> eventData = eventSnapshot.docs.first.data();
-        status = eventData['status'];
-        progress = eventData['progress'];
+      for (QueryDocumentSnapshot<Map<String, dynamic>> doc
+          in scheduleSnapshot.docs) {
+        DateTime date = (doc['date'] as Timestamp).toDate();
+        DateTime startTime = (doc['startTime'] as Timestamp).toDate();
+        DateTime endTime = (doc['endTime'] as Timestamp).toDate();
 
-        final QuerySnapshot<Map<String, dynamic>> scheduleSnapshot =
-            await firestore
-                .collection('schedule')
-                .where('eventID', isEqualTo: widget.selectedEvent)
-                .get();
-        programList.clear();
+        Programme program = Programme(
+          date: date,
+          startTime: startTime,
+          endTime: endTime,
+          venue: doc['venue'] ?? '',
+          details: doc['details'] ?? '',
+        );
 
-        for (QueryDocumentSnapshot<Map<String, dynamic>> doc
-            in scheduleSnapshot.docs) {
-          DateTime date = (doc['date'] as Timestamp).toDate();
-          DateTime startTime = (doc['startTime'] as Timestamp).toDate();
-          DateTime endTime = (doc['endTime'] as Timestamp).toDate();
-
-          Programme program = Programme(
-            date: date,
-            startTime: startTime,
-            endTime: endTime,
-            venue: doc['venue'] ?? '',
-            details: doc['details'] ?? '',
-          );
-
-          programList.add(program);
-        }
-        programList.sort((a, b) {
-          int dateComparison = a.date.compareTo(b.date);
-          if (dateComparison == 0) {
-            return a.startTime.compareTo(b.startTime);
-          }
-          return dateComparison;
-        });
+        programList.add(program);
       }
+      programList.sort((a, b) {
+        int dateComparison = a.date.compareTo(b.date);
+        if (dateComparison == 0) {
+          return a.startTime.compareTo(b.startTime);
+        }
+        return dateComparison;
+      });
+
       setState(() {
         _isLoading = false;
       });
@@ -136,13 +124,6 @@ class _ScheduleState extends State<Schedule> {
                     flex: 5,
                     child: SingleChildScrollView(
                       child: Column(children: [
-                        NavigationMenu(
-                          buttonTexts: const ['Event', 'Schedule'],
-                          destination: [
-                            const StudentOrganisedEvent(),
-                            Schedule(selectedEvent: widget.selectedEvent)
-                          ],
-                        ),
                         Padding(
                             padding: const EdgeInsets.all(16.0),
                             child: Column(
@@ -890,14 +871,6 @@ class _ScheduleState extends State<Schedule> {
                                                 text: 'Save'),
                                             const SizedBox(
                                               height: 15,
-                                            ),
-                                            const Divider(
-                                                thickness: 0.1,
-                                                color: Colors.black),
-                                            CustomTimeline(
-                                              status: status,
-                                              progress: progress,
-                                              eventID: widget.selectedEvent,
                                             ),
                                           ]))
                                 ]))

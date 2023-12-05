@@ -6,7 +6,6 @@ import 'package:fyp/pages/addEvent.dart';
 import 'package:fyp/pages/editEvent.dart';
 import 'package:fyp/pages/organisedEvent.dart';
 import 'package:fyp/pages/proposal.dart';
-import 'package:fyp/pages/society.dart';
 import 'package:intl/intl.dart';
 import 'package:localstorage/localstorage.dart';
 
@@ -85,6 +84,7 @@ class _OngoingEventState extends State<OngoingEvent> {
   @override
   void initState() {
     super.initState();
+    
     getData();
   }
 
@@ -117,14 +117,6 @@ class _OngoingEventState extends State<OngoingEvent> {
                     flex: 5,
                     child: SingleChildScrollView(
                       child: Column(children: [
-                        NavigationMenu(
-                          buttonTexts: const ['Society', 'Event'],
-                          destination: [
-                            const Society(),
-                            OngoingEvent(
-                                selectedSociety: widget.selectedSociety)
-                          ],
-                        ),
                         Padding(
                             padding: const EdgeInsets.all(16.0),
                             child: Column(

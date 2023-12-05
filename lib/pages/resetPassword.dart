@@ -2,7 +2,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
-import 'package:fyp/pages/profile.dart';
 
 class ResetPassword extends StatefulWidget {
   const ResetPassword({super.key});
@@ -65,10 +64,6 @@ class _ResetPasswordState extends State<ResetPassword> {
               flex: 5,
               child: SingleChildScrollView(
                 child: Column(children: [
-                  const NavigationMenu(
-                    buttonTexts: ['Profile', 'Reset Password'],
-                    destination: [Profile(), ResetPassword()],
-                  ),
                   Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(

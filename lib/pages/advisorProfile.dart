@@ -140,10 +140,6 @@ class _AdvisorProfileState extends State<AdvisorProfile> {
               child: SingleChildScrollView(
                 child: Column(
                   children: [
-                    const NavigationMenu(
-                      buttonTexts: ['Profile'],
-                      destination: [AdvisorProfile()],
-                    ),
                     Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(

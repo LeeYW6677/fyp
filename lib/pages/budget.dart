@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
-import 'package:fyp/pages/studentOrganisedEvent.dart';
 
 class Budget extends StatefulWidget {
   final String selectedEvent;
@@ -42,16 +41,6 @@ class _BudgetState extends State<Budget> {
 
       final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
-      // Fetch event data
-      final QuerySnapshot<Map<String, dynamic>> eventSnapshot = await firestore
-          .collection('event')
-          .where('eventID', isEqualTo: widget.selectedEvent)
-          .get();
-
-      if (eventSnapshot.docs.isNotEmpty) {
-        Map<String, dynamic> eventData = eventSnapshot.docs.first.data();
-        status = eventData['status'];
-        progress = eventData['progress'];
 
         // Fetch event data
         final QuerySnapshot<Map<String, dynamic>> budgetSnapshot =
@@ -82,7 +71,7 @@ class _BudgetState extends State<Budget> {
           expense = expense;
           _isLoading = false;
         });
-      }
+      
     } catch (error) {
       setState(() {
         _isLoading = false;
@@ -138,13 +127,6 @@ class _BudgetState extends State<Budget> {
                     flex: 5,
                     child: SingleChildScrollView(
                       child: Column(children: [
-                        NavigationMenu(
-                          buttonTexts: const ['Event', 'Budget'],
-                          destination: [
-                            const StudentOrganisedEvent(),
-                            Budget(selectedEvent: widget.selectedEvent)
-                          ],
-                        ),
                         Padding(
                             padding: const EdgeInsets.all(16.0),
                             child: Column(
@@ -781,14 +763,6 @@ class _BudgetState extends State<Budget> {
                                             ),
                                             const SizedBox(
                                               height: 15,
-                                            ),
-                                            const Divider(
-                                                thickness: 0.1,
-                                                color: Colors.black),
-                                            CustomTimeline(
-                                              status: status,
-                                              progress: progress,
-                                              eventID: widget.selectedEvent,
                                             ),
                                           ])),
                                 ]))
