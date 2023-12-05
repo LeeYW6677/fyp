@@ -19,7 +19,6 @@ class Evaluation extends StatefulWidget {
 class _EvaluationState extends State<Evaluation> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _isLoading = true;
-  bool enable = true;
   String status = '';
   final description = TextEditingController();
   final problem = TextEditingController();
@@ -30,6 +29,7 @@ class _EvaluationState extends State<Evaluation> {
   List<bool> valid = [false, false, false];
   final double containerSize = 200.0;
   final double imageSize = 200.0;
+  int progress = -1;
 
   Future<void> _pickImage(int index) async {
     valid[index] = true;
@@ -59,9 +59,8 @@ class _EvaluationState extends State<Evaluation> {
       if (eventSnapshot.docs.isNotEmpty) {
         Map<String, dynamic> eventData = eventSnapshot.docs.first.data();
         status = eventData['status'];
-        if (status != 'Planning') {
-          enable = false;
-        }
+        progress = eventData['progress'];
+
         final QuerySnapshot<Map<String, dynamic>> evaluationSnapshot =
             await firestore
                 .collection('evaluation')
@@ -159,6 +158,7 @@ class _EvaluationState extends State<Evaluation> {
                                           selectedEvent: widget.selectedEvent,
                                           tab: 'Post',
                                           form: 'Evaluation',
+                                          status: status,
                                           children: [
                                             Row(
                                               children: [
@@ -411,7 +411,7 @@ class _EvaluationState extends State<Evaluation> {
                                                                 MainAxisAlignment
                                                                     .center,
                                                             children: <Widget>[
-                                                               _imageFiles[0] !=
+                                                              _imageFiles[0] !=
                                                                           null ||
                                                                       savedUrl !=
                                                                           []
@@ -850,7 +850,11 @@ class _EvaluationState extends State<Evaluation> {
                                             const Divider(
                                                 thickness: 0.1,
                                                 color: Colors.black),
-                                            CustomTimeline(status: status),
+                                            CustomTimeline(
+                                              status: status,
+                                              progress: progress,
+                                              eventID: widget.selectedEvent,
+                                            ),
                                           ])),
                                 ]))
                       ]),

@@ -16,7 +16,6 @@ class Budget extends StatefulWidget {
 class _BudgetState extends State<Budget> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
-  bool enable = true;
   String status = '';
   final item = TextEditingController();
   final price = TextEditingController();
@@ -25,6 +24,7 @@ class _BudgetState extends State<Budget> {
   List<BudgetItem> income = [];
   List<BudgetItem> expense = [];
   String selectedType = 'Income';
+  int progress = -1;
 
   double calculateTotal(List<BudgetItem> items) {
     double total = 0;
@@ -51,9 +51,8 @@ class _BudgetState extends State<Budget> {
       if (eventSnapshot.docs.isNotEmpty) {
         Map<String, dynamic> eventData = eventSnapshot.docs.first.data();
         status = eventData['status'];
-        if (status != 'Planning') {
-          enable = false;
-        }
+        progress = eventData['progress'];
+
         // Fetch event data
         final QuerySnapshot<Map<String, dynamic>> budgetSnapshot =
             await firestore
@@ -168,6 +167,7 @@ class _BudgetState extends State<Budget> {
                                           selectedEvent: widget.selectedEvent,
                                           tab: 'Pre',
                                           form: 'Budget',
+                                          status: status,
                                           children: <Widget>[
                                             Row(
                                               children: [
@@ -573,6 +573,7 @@ class _BudgetState extends State<Budget> {
                                                             ),
                                                           ],
                                                         ),
+                                                        const SizedBox(width: 15,),
                                                         DataTable(
                                                           border:
                                                               TableBorder.all(
@@ -784,7 +785,11 @@ class _BudgetState extends State<Budget> {
                                             const Divider(
                                                 thickness: 0.1,
                                                 color: Colors.black),
-                                            CustomTimeline(status: status),
+                                            CustomTimeline(
+                                              status: status,
+                                              progress: progress,
+                                              eventID: widget.selectedEvent,
+                                            ),
                                           ])),
                                 ]))
                       ]),

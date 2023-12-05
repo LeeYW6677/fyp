@@ -16,9 +16,8 @@ class Proposal extends StatefulWidget {
 class _ProposalState extends State<Proposal> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _isLoading = true;
-  bool enable = true;
   String status = '';
-  List<String> progress = ['Planning', 'Checked', 'Recommended', 'Approved'];
+  int progress = -1;
   Future<void> getData() async {
     try {
       setState(() {
@@ -39,14 +38,12 @@ class _ProposalState extends State<Proposal> {
         description.text = eventData['description'] ?? '';
         aim.text = eventData['aim'] ?? '';
         status = eventData['status'];
-        if (status != 'Planning') {
-          enable = false;
-        }
-        setState(() {
-          status = status;
-          _isLoading = false;
-        });
+        progress = eventData['progress'];
       }
+
+      setState(() {
+        _isLoading = false;
+      });
     } catch (error) {
       setState(() {
         _isLoading = false;
@@ -88,7 +85,7 @@ class _ProposalState extends State<Proposal> {
             )
           : null,
       body: _isLoading
-          ? Center(
+          ? const Center(
               child: CircularProgressIndicator(),
             )
           : SafeArea(
@@ -134,6 +131,7 @@ class _ProposalState extends State<Proposal> {
                                           selectedEvent: widget.selectedEvent,
                                           tab: 'Pre',
                                           form: 'Proposal',
+                                          status:  status,
                                           children: [
                                             Row(
                                               children: [
@@ -508,89 +506,97 @@ class _ProposalState extends State<Proposal> {
                                                 if (status == 'Planning')
                                                   CustomButton(
                                                     onPressed: () async {
-                                                      if(member.text != '0' && nonMember.text != '0' && guest.text != '0'){                                                     
-                                                      if (_formKey.currentState!
-                                                          .validate()) {
-                                                        FirebaseFirestore
-                                                            firestore =
-                                                            FirebaseFirestore
-                                                                .instance;
-                                                        Map<String, dynamic>
-                                                            updatedData = {
-                                                          'eventName':
-                                                              name.text,
-                                                          'type': selectedType,
-                                                          'description':
-                                                              description.text,
-                                                          'aim': aim.text,
-                                                          'memberCount':
-                                                              member.text,
-                                                          'nonMemberCount':
-                                                              nonMember.text,
-                                                          'guestCOunt':
-                                                              guest.text,
-                                                        };
+                                                      if (member.text != '0' &&
+                                                          nonMember.text !=
+                                                              '0' &&
+                                                          guest.text != '0') {
+                                                        if (_formKey
+                                                            .currentState!
+                                                            .validate()) {
+                                                          FirebaseFirestore
+                                                              firestore =
+                                                              FirebaseFirestore
+                                                                  .instance;
+                                                          Map<String, dynamic>
+                                                              updatedData = {
+                                                            'eventName':
+                                                                name.text,
+                                                            'type':
+                                                                selectedType,
+                                                            'description':
+                                                                description
+                                                                    .text,
+                                                            'aim': aim.text,
+                                                            'memberCount':
+                                                                int.parse(member
+                                                                    .text),
+                                                            'nonMemberCount':
+                                                                int.parse(
+                                                                    nonMember
+                                                                        .text),
+                                                            'guestCount':
+                                                                int.parse(
+                                                                    guest.text),
+                                                          };
 
-                                                        try {
-                                                          await firestore
-                                                              .collection(
-                                                                  'event')
-                                                              .doc(widget
-                                                                  .selectedEvent)
-                                                              .update(
-                                                                  updatedData);
-                                                          ScaffoldMessenger.of(
-                                                                  context)
-                                                              .showSnackBar(
-                                                            const SnackBar(
-                                                              content: Text(
-                                                                  'Proposal saved.'),
-                                                              width: 150.0,
-                                                              behavior:
-                                                                  SnackBarBehavior
-                                                                      .floating,
-                                                              duration:
-                                                                  Duration(
-                                                                      seconds:
-                                                                          3),
-                                                            ),
-                                                          );
-                                                        } catch (error) {
-                                                          ScaffoldMessenger.of(
-                                                                  context)
-                                                              .showSnackBar(
-                                                            const SnackBar(
-                                                              content: Text(
-                                                                  'Failed to update proposal. Please try again.'),
-                                                              width: 225.0,
-                                                              behavior:
-                                                                  SnackBarBehavior
-                                                                      .floating,
-                                                              duration:
-                                                                  Duration(
-                                                                      seconds:
-                                                                          3),
-                                                            ),
-                                                          );
-                                                        }
+                                                          try {
+                                                            await firestore
+                                                                .collection(
+                                                                    'event')
+                                                                .doc(widget
+                                                                    .selectedEvent)
+                                                                .update(
+                                                                    updatedData);
+                                                            ScaffoldMessenger
+                                                                    .of(context)
+                                                                .showSnackBar(
+                                                              const SnackBar(
+                                                                content: Text(
+                                                                    'Proposal saved.'),
+                                                                width: 150.0,
+                                                                behavior:
+                                                                    SnackBarBehavior
+                                                                        .floating,
+                                                                duration:
+                                                                    Duration(
+                                                                        seconds:
+                                                                            3),
+                                                              ),
+                                                            );
+                                                          } catch (error) {
+                                                            ScaffoldMessenger
+                                                                    .of(context)
+                                                                .showSnackBar(
+                                                              const SnackBar(
+                                                                content: Text(
+                                                                    'Failed to update proposal. Please try again.'),
+                                                                width: 225.0,
+                                                                behavior:
+                                                                    SnackBarBehavior
+                                                                        .floating,
+                                                                duration:
+                                                                    Duration(
+                                                                        seconds:
+                                                                            3),
+                                                              ),
+                                                            );
                                                           }
-                                                      }else{
+                                                        }
+                                                      } else {
                                                         ScaffoldMessenger.of(
-                                                                  context)
-                                                              .showSnackBar(
-                                                            const SnackBar(
-                                                              content: Text(
-                                                                  'The number of expected participants cannot be 0'),
-                                                              width: 225.0,
-                                                              behavior:
-                                                                  SnackBarBehavior
-                                                                      .floating,
-                                                              duration:
-                                                                  Duration(
-                                                                      seconds:
-                                                                          3),
-                                                            ),
-                                                          );
+                                                                context)
+                                                            .showSnackBar(
+                                                          const SnackBar(
+                                                            content: Text(
+                                                                'The number of expected participants cannot be 0'),
+                                                            width: 225.0,
+                                                            behavior:
+                                                                SnackBarBehavior
+                                                                    .floating,
+                                                            duration: Duration(
+                                                                seconds: 3),
+                                                          ),
+                                                        );
                                                       }
                                                     },
                                                     text: 'Save',
@@ -604,7 +610,11 @@ class _ProposalState extends State<Proposal> {
                                             const Divider(
                                                 thickness: 0.1,
                                                 color: Colors.black),
-                                            CustomTimeline(status: status),
+                                            CustomTimeline(
+                                              status: status,
+                                              progress: progress,
+                                              eventID: widget.selectedEvent,
+                                            ),
                                           ])),
                                 ]))
                       ]),

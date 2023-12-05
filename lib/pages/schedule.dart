@@ -17,8 +17,9 @@ class _ScheduleState extends State<Schedule> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   List<Programme> programList = [];
   bool _isLoading = true;
-  bool enable = true;
   String status = '';
+    int progress = -1;
+
   Future<void> getData() async {
     try {
       setState(() {
@@ -36,6 +37,8 @@ class _ScheduleState extends State<Schedule> {
       if (eventSnapshot.docs.isNotEmpty) {
         Map<String, dynamic> eventData = eventSnapshot.docs.first.data();
         status = eventData['status'];
+        progress = eventData['progress'];
+
         final QuerySnapshot<Map<String, dynamic>> scheduleSnapshot =
             await firestore
                 .collection('schedule')
@@ -66,9 +69,6 @@ class _ScheduleState extends State<Schedule> {
           }
           return dateComparison;
         });
-        if (status != 'Planning') {
-          enable = false;
-        }
       }
       setState(() {
         _isLoading = false;
@@ -165,6 +165,7 @@ class _ScheduleState extends State<Schedule> {
                                           selectedEvent: widget.selectedEvent,
                                           tab: 'Pre',
                                           form: 'Schedule',
+                                          status: status,
                                           children: [
                                             Row(
                                               children: [
@@ -893,7 +894,11 @@ class _ScheduleState extends State<Schedule> {
                                             const Divider(
                                                 thickness: 0.1,
                                                 color: Colors.black),
-                                            CustomTimeline(status: status),
+                                            CustomTimeline(
+                                              status: status,
+                                              progress: progress,
+                                              eventID: widget.selectedEvent,
+                                            ),
                                           ]))
                                 ]))
                       ]),

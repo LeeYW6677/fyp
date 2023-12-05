@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
+import 'package:fyp/pages/society.dart';
 
 
-class Home extends StatefulWidget {
-  const Home({super.key});
+class Approval extends StatefulWidget {
+  const Approval({super.key});
 
   @override
-  State<Home> createState() => _HomeState();
+  State<Approval> createState() => _ApprovalState();
 }
 
-class _HomeState extends State<Home> {
+class _ApprovalState extends State<Approval> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -35,8 +36,8 @@ class _HomeState extends State<Home> {
               child: SingleChildScrollView(
                 child: Column(children: [
                   NavigationMenu(
-                    buttonTexts: ['Dashboard'],
-                    destination: [Home()],
+                    buttonTexts: ['Society', 'Approval'],
+                    destination: [Society(), Approval()],
                   ),
                   Padding(
                       padding: EdgeInsets.all(16.0),
@@ -44,7 +45,7 @@ class _HomeState extends State<Home> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Dashboard',
+                              'Approval',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 20,

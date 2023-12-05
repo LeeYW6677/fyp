@@ -767,13 +767,16 @@ class TabContainer extends StatelessWidget {
   final String selectedEvent;
   final String tab;
   final String form;
+  final String status;
 
-  const TabContainer(
-      {super.key,
-      required this.children,
-      required this.selectedEvent,
-      required this.tab,
-      required this.form});
+  const TabContainer({
+    super.key,
+    required this.children,
+    required this.selectedEvent,
+    required this.tab,
+    required this.form,
+    required this.status,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -803,28 +806,29 @@ class TabContainer extends StatelessWidget {
               ),
               child: const Text('Pre Event'),
             ),
-            TextButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        Evaluation(selectedEvent: selectedEvent),
+            if (status == 'Closing')
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          Evaluation(selectedEvent: selectedEvent),
+                    ),
+                  );
+                },
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.all(16.0),
+                  backgroundColor:
+                      tab == 'Post' ? Colors.white : Colors.grey[200],
+                  foregroundColor: Colors.black,
+                  side: const BorderSide(color: Colors.grey, width: 1.0),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(0.0),
                   ),
-                );
-              },
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.all(16.0),
-                backgroundColor:
-                    tab == 'Post' ? Colors.white : Colors.grey[200],
-                foregroundColor: Colors.black,
-                side: const BorderSide(color: Colors.grey, width: 1.0),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(0.0),
                 ),
+                child: const Text('Post Event'),
               ),
-              child: const Text('Post Event'),
-            ),
           ],
         ),
         Row(
@@ -1055,30 +1059,59 @@ class TabContainer extends StatelessWidget {
   }
 }
 
-class CustomTimeline extends StatelessWidget {
-  final String status;
+class CustomTimeline extends StatefulWidget {
   final String eventID;
-  final List<String> checkStatus;
-  final List<String> name;
+  final String status;
   final int progress;
-  const CustomTimeline(
-      {super.key,
-      required this.status,
-      required this.eventID,
-      required this.progress,
-      required this.checkStatus,
-      required this.name});
+
+  CustomTimeline({
+    super.key,
+    required this.eventID,
+    required this.status,
+    required this.progress,
+  });
+  @override
+  _CustomTimelineState createState() => _CustomTimelineState();
+}
+
+class _CustomTimelineState extends State<CustomTimeline> {
+  List<String> preProgress = ['Planning', 'Checked', 'Recommended', 'Approved'];
+  List<String> postProgress = ['Closing', 'Checked', 'Verified', 'Accepted'];
+  late DateTime dateTime;
+  List<String> checkName = [];
+  List<String> checkStatus = [];
+  Future<void> getData() async {
+    final FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+    final QuerySnapshot<Map<String, dynamic>> approvalSnapshot = await firestore
+        .collection('approval')
+        .where('eventID', isEqualTo: widget.eventID)
+        .get();
+    if (approvalSnapshot.docs.isNotEmpty) {
+      Map<String, dynamic> approvalData = approvalSnapshot.docs.first.data();
+      checkName.add('');
+      checkName.add(approvalData['presidentName']);
+      checkName.add(approvalData['advisorName']);
+      checkName.add(approvalData['branchHeadName']);
+      checkStatus.add('Approved');
+      checkStatus.add(approvalData['presidentStatus']);
+      checkStatus.add(approvalData['advisorStatus']);
+      checkStatus.add(approvalData['branchHeadStatus']);
+    }
+    setState(() {
+      checkName = checkName;
+      checkStatus = checkStatus;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getData();
+  }
 
   @override
   Widget build(BuildContext context) {
-    List<String> preProgress = [
-      'Planning',
-      'Checked',
-      'Recommended',
-      'Approved'
-    ];
-    List<String> postProgress = ['Closing', 'Checked', 'Verified', 'Accepted'];
-
     return Column(
       children: [
         SizedBox(
@@ -1103,41 +1136,48 @@ class CustomTimeline extends StatelessWidget {
               contentsBuilder: (context, index) {
                 return Column(
                   children: [
-                    Text(status == 'Planning'
+                    Text(widget.status == 'Planning'
                         ? preProgress[index]
                         : postProgress[index]),
                     const SizedBox(height: 10),
+                    Text(
+                      checkName[index],
+                      style:
+                          const TextStyle(fontSize: 12.0, color: Colors.black),
+                    ),
                   ],
                 );
               },
               indicatorBuilder: (_, index) {
-                if (index < progress) {
-                  return Column(
-                    children: [
-                      DotIndicator(
-                        size: 20.0,
-                        color: checkStatus[index] == 'Approved'
-                            ? Colors.green
-                            : Colors.red,
-                      ),
-                      Text(
-                        name[index],
-                        style: const TextStyle(
-                            fontSize: 12.0, color: Colors.black),
-                      ),
-                    ],
-                  );
+                Color color;
+                if (index <= widget.progress) {
+                  color = checkStatus[index] == 'Approved'
+                      ? Colors.green
+                      : Colors.red;
                 } else {
-                  return const OutlinedDotIndicator(
-                    borderWidth: 4.0,
-                    color: Colors.green,
-                  );
+                  color = Colors.grey;
                 }
+
+                return checkStatus[index] == 'Approved' ||
+                        checkStatus[index] == 'Rejected'
+                    ? DotIndicator(
+                        size: 20.0,
+                        color: color,
+                      )
+                    : OutlinedDotIndicator(
+                        borderWidth: 4.0,
+                        color: color,
+                      );
               },
               connectorBuilder: (_, index, type) {
                 if (index > 0) {
-                  return const SolidLineConnector(
-                    color: Colors.green,
+                  Color color = checkStatus[index] == 'Approved'
+                      ? Colors.green
+                      : checkStatus[index] == 'Rejected'
+                          ? Colors.red
+                          : Colors.grey;
+                  return SolidLineConnector(
+                    color: color,
                   );
                 } else {
                   return null;
@@ -1146,22 +1186,54 @@ class CustomTimeline extends StatelessWidget {
             ),
           ),
         ),
+        const SizedBox(
+          height: 15,
+        ),
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            if (status == 'Planning')
+            if (checkStatus.any((element) => element == 'Rejected'))
+              CustomButton(
+                  onPressed: () async {
+                    String comment = '';
+                    final FirebaseFirestore firestore =
+                        FirebaseFirestore.instance;
+
+                    final QuerySnapshot<Map<String, dynamic>> approvalSnapshot =
+                        await firestore
+                            .collection('approval')
+                            .where('eventID', isEqualTo: widget.eventID)
+                            .get();
+
+                    if (approvalSnapshot.docs.isNotEmpty) {
+                      Map<String, dynamic> approvalData =
+                          approvalSnapshot.docs.first.data();
+                      comment = approvalData['comment'];
+                    }
+                    showDialog(
+                        context: context,
+                        builder: (_) {
+                          return CommentDialog(text: comment);
+                        });
+                  },
+                  text: 'View Comment'),
+            SizedBox(
+              width: 15,
+            ),
+            if (widget.status == 'Planning' && widget.progress != 3)
               CustomButton(
                   width: 150,
-                  onPressed: status == 'Planning' && progress == 0
+                  onPressed: widget.status == 'Planning' && widget.progress == 0
                       ? () async {
-                          bool description = false;
                           final FirebaseFirestore firestore =
                               FirebaseFirestore.instance;
+
+                          bool description = false;
 
                           final QuerySnapshot<Map<String, dynamic>>
                               eventSnapshot = await firestore
                                   .collection('event')
-                                  .where('eventID', isEqualTo: eventID)
+                                  .where('eventID', isEqualTo: widget.eventID)
                                   .get();
 
                           if (eventSnapshot.docs.isNotEmpty) {
@@ -1173,7 +1245,7 @@ class CustomTimeline extends StatelessWidget {
                           final QuerySnapshot<Map<String, dynamic>>
                               scheduleSnapshot = await firestore
                                   .collection('schedule')
-                                  .where('eventID', isEqualTo: eventID)
+                                  .where('eventID', isEqualTo: widget.eventID)
                                   .get();
                           bool schedule = scheduleSnapshot.docs.isEmpty;
 
@@ -1188,90 +1260,154 @@ class CustomTimeline extends StatelessWidget {
                               ),
                             );
                           } else {
-                            await firestore
-                                .collection('event')
-                                .doc(eventID)
-                                .update({
-                              'status': 'Planning',
-                              'progress': '1',
-                            });
+                            CollectionReference<Map<String, dynamic>>
+                                collectionRef =
+                                firestore.collection('schedule');
 
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                    'Event document submitted for approval.'),
-                                width: 200.0,
-                                behavior: SnackBarBehavior.floating,
-                                duration: Duration(seconds: 3),
-                              ),
-                            );
+                            Query<Map<String, dynamic>> query =
+                                collectionRef.orderBy('date');
+
+                            QuerySnapshot<Map<String, dynamic>> snapshot =
+                                await query.limit(1).get();
+
+                            if (snapshot.docs.isNotEmpty) {
+                              DocumentSnapshot<Map<String, dynamic>>
+                                  earliestDoc = snapshot.docs.first;
+
+                              Timestamp date = earliestDoc['date'];
+                              dateTime = date.toDate();
+                            }
+                            if (dateTime.isBefore(
+                                DateTime.now().add(const Duration(days: -3)))) {
+                              await firestore
+                                  .collection('event')
+                                  .doc(widget.eventID)
+                                  .update({
+                                'status': 'Planning',
+                                'progress': 1,
+                              });
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                      'Event document submitted for approval.'),
+                                  width: 200.0,
+                                  behavior: SnackBarBehavior.floating,
+                                  duration: Duration(seconds: 3),
+                                ),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                      'You can only apply the event one week before the event date.'),
+                                  width: 200.0,
+                                  behavior: SnackBarBehavior.floating,
+                                  duration: Duration(seconds: 3),
+                                ),
+                              );
+                            }
                           }
                         }
-                      : () {},
-                  text: progress == 0 ? 'Submit' : 'Unsubmit'),
-            if (status == 'Closing')
+                      : () {
+                          showDialog(
+                              context: context,
+                              builder: (_) {
+                                return ConfirmDialog(eventID: widget.eventID);
+                              });
+                        },
+                  text: widget.progress == 0 ? 'Submit' : 'Unsubmit'),
+            if (widget.status == 'Closing' && widget.progress != 3)
               CustomButton(
                   width: 150,
-                  onPressed: status == 'Closing' && progress == 0
+                  onPressed: widget.status == 'Closing' && widget.progress == 0
                       ? () async {
                           final FirebaseFirestore firestore =
                               FirebaseFirestore.instance;
 
-                          final QuerySnapshot<Map<String, dynamic>>
-                              participantSnapshot = await firestore
-                                  .collection('participant')
-                                  .where('eventID', isEqualTo: eventID)
-                                  .get();
-                          bool participant = participantSnapshot.docs.isEmpty;
+                          CollectionReference<Map<String, dynamic>>
+                              collectionRef = firestore.collection('schedule');
 
-                          final QuerySnapshot<Map<String, dynamic>>
-                              evaluationSnapshot = await firestore
-                                  .collection('evaluation')
-                                  .where('eventID', isEqualTo: eventID)
-                                  .get();
-                          bool evaluation = evaluationSnapshot.docs.isEmpty;
+                          Query<Map<String, dynamic>> query =
+                              collectionRef.orderBy('date', descending: true);
 
-                          final QuerySnapshot<Map<String, dynamic>>
-                              claimSnapshot = await firestore
-                                  .collection('claim')
-                                  .where('eventID', isEqualTo: eventID)
-                                  .where('status', isEqualTo: 'Pending')
-                                  .get();
-                          bool claim = claimSnapshot.docs.isNotEmpty;
+                          QuerySnapshot<Map<String, dynamic>> snapshot =
+                              await query.limit(1).get();
 
-                          if (participant || evaluation) {
+                          if (snapshot.docs.isNotEmpty) {
+                            DocumentSnapshot<Map<String, dynamic>> earliestDoc =
+                                snapshot.docs.first;
+
+                            Timestamp date = earliestDoc['date'];
+                            dateTime = date.toDate();
+                          }
+
+                          if (dateTime.isAfter(DateTime.now())) {
+                            final QuerySnapshot<Map<String, dynamic>>
+                                participantSnapshot = await firestore
+                                    .collection('participant')
+                                    .where('eventID', isEqualTo: widget.eventID)
+                                    .get();
+                            bool participant = participantSnapshot.docs.isEmpty;
+
+                            final QuerySnapshot<Map<String, dynamic>>
+                                evaluationSnapshot = await firestore
+                                    .collection('evaluation')
+                                    .where('eventID', isEqualTo: widget.eventID)
+                                    .get();
+                            bool evaluation = evaluationSnapshot.docs.isEmpty;
+
+                            final QuerySnapshot<Map<String, dynamic>>
+                                claimSnapshot = await firestore
+                                    .collection('claim')
+                                    .where('eventID', isEqualTo: widget.eventID)
+                                    .where('status', isEqualTo: 'Pending')
+                                    .get();
+                            bool claim = claimSnapshot.docs.isNotEmpty;
+
+                            if (participant || evaluation) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                      'Please save the required document before submitting.'),
+                                  width: 200.0,
+                                  behavior: SnackBarBehavior.floating,
+                                  duration: Duration(seconds: 3),
+                                ),
+                              );
+                            } else if (claim) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                      'Please process all the claim request before submitting'),
+                                  width: 200.0,
+                                  behavior: SnackBarBehavior.floating,
+                                  duration: Duration(seconds: 3),
+                                ),
+                              );
+                            } else {
+                              await firestore
+                                  .collection('event')
+                                  .doc(widget.eventID)
+                                  .update({
+                                'status': 'Closing',
+                                'progress': 1,
+                              });
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                      'Event document submitted for approval.'),
+                                  width: 200.0,
+                                  behavior: SnackBarBehavior.floating,
+                                  duration: Duration(seconds: 3),
+                                ),
+                              );
+                            }
+                          } else {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text(
-                                    'Please save the required document before submitting.'),
-                                width: 200.0,
-                                behavior: SnackBarBehavior.floating,
-                                duration: Duration(seconds: 3),
-                              ),
-                            );
-                          } else if (claim) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                    'Please process all the claim request before submitting'),
-                                width: 200.0,
-                                behavior: SnackBarBehavior.floating,
-                                duration: Duration(seconds: 3),
-                              ),
-                            );
-                          }else{
-                            await firestore
-                                .collection('event')
-                                .doc(eventID)
-                                .update({
-                              'status': 'Closing',
-                              'progress': '1',
-                            });
-
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                    'Event document submitted for approval.'),
+                                    'Event closing document can only be submittted after the event date.'),
                                 width: 200.0,
                                 behavior: SnackBarBehavior.floating,
                                 duration: Duration(seconds: 3),
@@ -1279,9 +1415,186 @@ class CustomTimeline extends StatelessWidget {
                             );
                           }
                         }
-                      : () {},
-                  text: progress == 0 ? 'Submit' : 'Unsubmit'),
+                      : () {
+                          showDialog(
+                              context: context,
+                              builder: (_) {
+                                return ConfirmDialog2(eventID: widget.eventID);
+                              });
+                              getData();
+                        },
+                  text: widget.progress == 0 ? 'Submit' : 'Unsubmit'),
           ],
+        ),
+      ],
+    );
+  }
+}
+
+class ConfirmDialog extends StatefulWidget {
+  final String eventID;
+
+  const ConfirmDialog({
+    super.key,
+    required this.eventID,
+  });
+  @override
+  _ConfirmDialogState createState() => _ConfirmDialogState();
+}
+
+class _ConfirmDialogState extends State<ConfirmDialog> {
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Unsubmit Documents'),
+      content: const Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [Text('Are you sure you want to unsubmit the doucment?')],
+      ),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () async {
+            final FirebaseFirestore firestore = FirebaseFirestore.instance;
+            final QuerySnapshot<Map<String, dynamic>> approvalSnapshot =
+                await firestore
+                    .collection('approval')
+                    .where('eventID', isEqualTo: widget.eventID)
+                    .get();
+
+            for (QueryDocumentSnapshot<Map<String, dynamic>> docSnapshot
+                in approvalSnapshot.docs) {
+              await docSnapshot.reference.update({
+                'presidentName': '',
+                'presidentStatus': '',
+                'advisorName': '',
+                'advisorStatus': '',
+                'branchHeadName': '',
+                'branchHeadStatus': '',
+                'comment': '',
+              });
+            }
+
+            await firestore.collection('event').doc(widget.eventID).update({
+              'status': 'Planning',
+              'progress': 0,
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Event documents unsubmitted'),
+                width: 200.0,
+                behavior: SnackBarBehavior.floating,
+                duration: Duration(seconds: 3),
+              ),
+            );
+          },
+          child: const Text('OK'),
+        ),
+      ],
+    );
+  }
+}
+
+class ConfirmDialog2 extends StatefulWidget {
+  final String eventID;
+
+  const ConfirmDialog2({
+    super.key,
+    required this.eventID,
+  });
+  @override
+  _ConfirmDialog2State createState() => _ConfirmDialog2State();
+}
+
+class _ConfirmDialog2State extends State<ConfirmDialog2> {
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Unsubmit Documents'),
+      content: const Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [Text('Are you sure you want to unsubmit the doucment?')],
+      ),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () async {
+            final FirebaseFirestore firestore = FirebaseFirestore.instance;
+            final QuerySnapshot<Map<String, dynamic>> approvalSnapshot =
+                await firestore
+                    .collection('completion')
+                    .where('eventID', isEqualTo: widget.eventID)
+                    .get();
+
+            for (QueryDocumentSnapshot<Map<String, dynamic>> docSnapshot
+                in approvalSnapshot.docs) {
+              await docSnapshot.reference.update({
+                'presidentName': '',
+                'presidentStatus': '',
+                'advisorName': '',
+                'advisorStatus': '',
+                'branchHeadName': '',
+                'branchHeadStatus': '',
+                'comment': '',
+              });
+            }
+
+            await firestore.collection('event').doc(widget.eventID).update({
+              'status': 'Closing',
+              'progress': 0,
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Event documents unsubmitted'),
+                width: 200.0,
+                behavior: SnackBarBehavior.floating,
+                duration: Duration(seconds: 3),
+              ),
+            );
+          },
+          child: const Text('OK'),
+        ),
+      ],
+    );
+  }
+}
+
+class CommentDialog extends StatefulWidget {
+  final String text;
+
+  const CommentDialog({
+    super.key,
+    required this.text,
+  });
+  @override
+  _CommentDialogState createState() => _CommentDialogState();
+}
+
+class _CommentDialogState extends State<CommentDialog> {
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Comment'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [Text(widget.text)],
+      ),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: const Text('Ok'),
         ),
       ],
     );

@@ -15,13 +15,15 @@ class Participant extends StatefulWidget {
 class _ParticipantState extends State<Participant> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _isLoading = true;
-  bool enable = true;
   String status = '';
   final id = TextEditingController();
   final name = TextEditingController();
   final contact = TextEditingController();
   List<Participants> participantList = [];
   String? idError;
+  int progress = -1;
+  List<String> checkName = [];
+  List<String> checkStatus = [];
 
   void resetTable() {
     setState(() {
@@ -36,7 +38,6 @@ class _ParticipantState extends State<Participant> {
       });
       final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
-      // Fetch event data
       final QuerySnapshot<Map<String, dynamic>> eventSnapshot = await firestore
           .collection('event')
           .where('eventID', isEqualTo: widget.selectedEvent)
@@ -45,28 +46,28 @@ class _ParticipantState extends State<Participant> {
       if (eventSnapshot.docs.isNotEmpty) {
         Map<String, dynamic> eventData = eventSnapshot.docs.first.data();
         status = eventData['status'];
-
-        final QuerySnapshot<Map<String, dynamic>> participantSnapshot =
-            await firestore
-                .collection('participant')
-                .where('eventID', isEqualTo: widget.selectedEvent)
-                .get();
-
-        if (participantSnapshot.docs.isNotEmpty) {
-          participantList = participantSnapshot.docs
-              .map((DocumentSnapshot<Map<String, dynamic>> doc) {
-            return Participants(
-              studentID: doc.data()!['studentID'],
-              name: doc.data()!['name'],
-              contact: doc.data()!['contact'],
-            );
-          }).toList();
-        }
-        setState(() {
-          status = status;
-          _isLoading = false;
-        });
+        progress = eventData['progress'];
       }
+      final QuerySnapshot<Map<String, dynamic>> participantSnapshot =
+          await firestore
+              .collection('participant')
+              .where('eventID', isEqualTo: widget.selectedEvent)
+              .get();
+
+      if (participantSnapshot.docs.isNotEmpty) {
+        participantList = participantSnapshot.docs
+            .map((DocumentSnapshot<Map<String, dynamic>> doc) {
+          return Participants(
+            studentID: doc.data()!['studentID'],
+            name: doc.data()!['name'],
+            contact: doc.data()!['contact'],
+          );
+        }).toList();
+      }
+      setState(() {
+        status = status;
+        _isLoading = false;
+      });
     } catch (error) {
       setState(() {
         _isLoading = false;
@@ -181,6 +182,7 @@ class _ParticipantState extends State<Participant> {
                                           selectedEvent: widget.selectedEvent,
                                           tab: 'Post',
                                           form: 'Participant',
+                                          status: status,
                                           children: [
                                             Row(
                                               children: [
@@ -551,7 +553,11 @@ class _ParticipantState extends State<Participant> {
                                             const Divider(
                                                 thickness: 0.1,
                                                 color: Colors.black),
-                                            CustomTimeline(status: status),
+                                            CustomTimeline(
+                                              status: status,
+                                              progress: progress,
+                                              eventID: widget.selectedEvent,
+                                            ),
                                           ])),
                                 ]))
                       ]),

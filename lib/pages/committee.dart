@@ -13,6 +13,7 @@ class OrgCommittee extends StatefulWidget {
 }
 
 class _OrgCommitteeState extends State<OrgCommittee> {
+    int progress = -1;
   List<String> restrictedPositions = [
     'president',
     'vice president',
@@ -24,7 +25,6 @@ class _OrgCommitteeState extends State<OrgCommittee> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
   List<Committee> committeeList = [];
-  bool enable = true;
   String status = '';
 
   void resetTable() {
@@ -49,6 +49,7 @@ class _OrgCommitteeState extends State<OrgCommittee> {
       if (eventSnapshot.docs.isNotEmpty) {
         Map<String, dynamic> eventData = eventSnapshot.docs.first.data();
         status = eventData['status'];
+        progress = eventData['progress'];
 
         final QuerySnapshot<Map<String, dynamic>> committeeSnapshot =
             await firestore
@@ -192,6 +193,7 @@ class _OrgCommitteeState extends State<OrgCommittee> {
                                           selectedEvent: widget.selectedEvent,
                                           tab: 'Pre',
                                           form: 'Committee',
+                                          status: status,
                                           children: [
                                             Row(
                                               children: [
@@ -622,7 +624,11 @@ class _OrgCommitteeState extends State<OrgCommittee> {
                                             const Divider(
                                                 thickness: 0.1,
                                                 color: Colors.black),
-                                            CustomTimeline(status: status),
+                                            CustomTimeline(
+                                              status: status,
+                                              progress: progress,
+                                              eventID: widget.selectedEvent,
+                                            ),
                                           ])),
                                 ]))
                       ]),

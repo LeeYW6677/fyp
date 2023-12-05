@@ -16,7 +16,6 @@ class Account extends StatefulWidget {
 class _AccountState extends State<Account> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _isLoading = true;
-  bool enable = true;
   String status = '';
   final item = TextEditingController();
   final price = TextEditingController();
@@ -24,6 +23,7 @@ class _AccountState extends State<Account> {
   String selectedType = 'Income';
   List<AccountStatement> income = [];
   List<AccountStatement> expense = [];
+  int progress = -1;
 
   void resetTable() {
     setState(() {
@@ -56,38 +56,35 @@ class _AccountState extends State<Account> {
       if (eventSnapshot.docs.isNotEmpty) {
         Map<String, dynamic> eventData = eventSnapshot.docs.first.data();
         status = eventData['status'];
-        if (status != 'Planning') {
-          enable = false;
-        }
-        // Fetch event data
-        final QuerySnapshot<Map<String, dynamic>> budgetSnapshot =
-            await firestore
-                .collection('accountStatement')
-                .where('eventID', isEqualTo: widget.selectedEvent)
-                .get();
-
-        for (var doc in budgetSnapshot.docs) {
-          String itemType = doc.data()['recordType'];
-
-          AccountStatement budgetItem = AccountStatement(
-            name: doc.data()['description'],
-            price: doc.data()['amount'],
-            type: itemType,
-          );
-
-          if (itemType == 'Income') {
-            income.add(budgetItem);
-          } else if (itemType == 'Expense') {
-            expense.add(budgetItem);
-          }
-        }
-
-        setState(() {
-          income = income;
-          expense = expense;
-          _isLoading = false;
-        });
+        progress = eventData['progress'];
       }
+
+      final QuerySnapshot<Map<String, dynamic>> budgetSnapshot = await firestore
+          .collection('accountStatement')
+          .where('eventID', isEqualTo: widget.selectedEvent)
+          .get();
+
+      for (var doc in budgetSnapshot.docs) {
+        String itemType = doc.data()['recordType'];
+
+        AccountStatement budgetItem = AccountStatement(
+          name: doc.data()['description'],
+          price: doc.data()['amount'],
+          type: itemType,
+        );
+
+        if (itemType == 'Income') {
+          income.add(budgetItem);
+        } else if (itemType == 'Expense') {
+          expense.add(budgetItem);
+        }
+      }
+
+      setState(() {
+        income = income;
+        expense = expense;
+        _isLoading = false;
+      });
     } catch (error) {
       setState(() {
         _isLoading = false;
@@ -165,6 +162,7 @@ class _AccountState extends State<Account> {
                                           selectedEvent: widget.selectedEvent,
                                           tab: 'Post',
                                           form: 'Account',
+                                          status: status,
                                           children: [
                                             Row(
                                               children: [
@@ -513,7 +511,9 @@ class _AccountState extends State<Account> {
                                                             ),
                                                           ],
                                                         ),
+                                                        const SizedBox(width: 15,),
                                                         DataTable(
+                                                          
                                                           border:
                                                               TableBorder.all(
                                                             width: 1,
@@ -719,7 +719,11 @@ class _AccountState extends State<Account> {
                                             const Divider(
                                                 thickness: 0.1,
                                                 color: Colors.black),
-                                            CustomTimeline(status: status),
+                                            CustomTimeline(
+                                              status: status,
+                                              progress: progress,
+                                              eventID: widget.selectedEvent,
+                                            ),
                                           ])),
                                 ]))
                       ]),
