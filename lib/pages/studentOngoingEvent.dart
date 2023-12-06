@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
-import 'package:fyp/pages/editEvent.dart';
 import 'package:fyp/pages/proposal.dart';
 import 'package:fyp/pages/studentOrganisedEvent.dart';
 import 'package:intl/intl.dart';
@@ -18,6 +17,8 @@ class StudentOngoingEvent extends StatefulWidget {
 class _StudentOngoingEventState extends State<StudentOngoingEvent> {
   final LocalStorage storage = LocalStorage('user');
   bool _isLoading = true;
+  DateTime? startDate;
+  DateTime? endDate;
   List<Map<String, dynamic>> ongoingEvents = [];
   List<String> position = [
     'President',
@@ -28,6 +29,8 @@ class _StudentOngoingEventState extends State<StudentOngoingEvent> {
     'Vice Treasurer',
     'Member',
   ];
+  List<String> checkName = ['', '', '', ''];
+  List<String> checkStatus = ['', '', '', ''];
 
   Future<void> getData() async {
     try {
@@ -68,18 +71,82 @@ class _StudentOngoingEventState extends State<StudentOngoingEvent> {
                   .where('eventID', isEqualTo: eventId)
                   .where('position', isEqualTo: 'President')
                   .get();
-
+          int eventIndex =
+              ongoingEvents.indexWhere((event) => event['eventID'] == eventId);
           for (var committeeDocSnapshot in committeeSnapshot.docs) {
             Map<String, dynamic> committeeData = committeeDocSnapshot.data();
-            int eventIndex = ongoingEvents
-                .indexWhere((event) => event['eventID'] == eventId);
 
             if (eventIndex != -1) {
               ongoingEvents[eventIndex]['president'] =
                   committeeData['name'] ?? 'Unassigned';
-              ongoingEvents[eventIndex]['presidentID'] =
-                  committeeData['studentID'] ?? 'Unassigned';
             }
+          }
+
+          final QuerySnapshot<Map<String, dynamic>> approvalSnapshot =
+              await firestore
+                  .collection('approval')
+                  .where('eventID', isEqualTo: eventId)
+                  .get();
+          checkName.clear();
+          checkStatus.clear();
+
+          if (approvalSnapshot.docs.isNotEmpty) {
+            Map<String, dynamic> approvalData =
+                approvalSnapshot.docs.first.data();
+            checkName.add('');
+            checkName.add(approvalData['presidentName']);
+            checkName.add(approvalData['advisorName']);
+            checkName.add(approvalData['branchHeadName']);
+            checkStatus.add('Approved');
+            checkStatus.add(approvalData['presidentStatus']);
+            checkStatus.add(approvalData['advisorStatus']);
+            checkStatus.add(approvalData['branchHeadStatus']);
+          }
+
+          if (checkStatus.any((element) => element == 'Rejected')) {
+            ongoingEvents[eventIndex]['eventStatus'] = 'Rejected';
+          } else {
+            ongoingEvents[eventIndex]['eventStatus'] = 'Pending';
+          }
+
+          Query<Map<String, dynamic>> query = firestore
+              .collection('schedule')
+              .where('eventID', isEqualTo: eventId)
+              .orderBy('date');
+
+          QuerySnapshot<Map<String, dynamic>> snapshot =
+              await query.limit(1).get();
+
+          Query<Map<String, dynamic>> query2 = firestore
+              .collection('schedule')
+              .where('eventID', isEqualTo: eventId)
+              .orderBy('date', descending: true);
+
+          QuerySnapshot<Map<String, dynamic>> snapshot2 =
+              await query2.limit(1).get();
+
+          if (snapshot.docs.isNotEmpty) {
+            DocumentSnapshot<Map<String, dynamic>> earliestDoc =
+                snapshot.docs.first;
+
+            Timestamp date = earliestDoc['date'];
+            startDate = date.toDate();
+          }
+
+          if (snapshot2.docs.isNotEmpty) {
+            DocumentSnapshot<Map<String, dynamic>> latestDoc =
+                snapshot2.docs.first;
+
+            Timestamp date = latestDoc['date'];
+            endDate = date.toDate();
+          }
+          if (startDate != null && endDate != null) {
+            ongoingEvents[eventIndex]['eventDate'] =
+                DateFormat('dd/MM/yyyy').format(startDate!) +
+                    ' - ' +
+                    DateFormat('dd/MM/yyyy').format(endDate!);
+          } else {
+            ongoingEvents[eventIndex]['eventDate'] = 'Undecided';
           }
         }
         setState(() {
@@ -118,133 +185,146 @@ class _StudentOngoingEventState extends State<StudentOngoingEvent> {
             )
           : null,
       body: _isLoading
-        ? const Center(
-            child: CircularProgressIndicator(),
-          )
-        : SafeArea(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (Responsive.isDesktop(context))
-              const Expanded(
-                child: CustomDrawer(
-                  index: 3,
-                ),
-              ),
-            Expanded(
-              flex: 5,
-              child: SingleChildScrollView(
-                child: Column(children: [
-                  Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Event',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 20,
-                              ),
-                            ),
-                            const Divider(
-                              thickness: 0.1,
-                              color: Colors.black,
-                            ),
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) =>
-                                              const StudentOngoingEvent()),
-                                    );
-                                  },
-                                  style: TextButton.styleFrom(
-                                    padding: const EdgeInsets.all(24.0),
-                                    backgroundColor: Colors.white,
-                                    foregroundColor: Colors.black,
-                                    side: const BorderSide(
-                                        color: Colors.grey, width: 1.0),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(0.0),
+          ? const Center(
+              child: CircularProgressIndicator(),
+            )
+          : SafeArea(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (Responsive.isDesktop(context))
+                    const Expanded(
+                      child: CustomDrawer(
+                        index: 3,
+                      ),
+                    ),
+                  Expanded(
+                    flex: 5,
+                    child: SingleChildScrollView(
+                      child: Column(children: [
+                        Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Event',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20,
                                     ),
                                   ),
-                                  child: const Text('Ongoing'),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) =>
-                                              const StudentOrganisedEvent()),
-                                    );
-                                  },
-                                  style: TextButton.styleFrom(
-                                    padding: const EdgeInsets.all(24.0),
-                                    backgroundColor: Colors.grey[200],
-                                    foregroundColor: Colors.black,
-                                    side: const BorderSide(
-                                        color: Colors.grey, width: 1.0),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(0.0),
-                                    ),
+                                  const Divider(
+                                    thickness: 0.1,
+                                    color: Colors.black,
                                   ),
-                                  child: const Text('Organised'),
-                                ),
-                              ],
-                            ),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      border: Border.all(
-                                          width: 1.0, color: Colors.grey),
-                                    ),
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(16.0),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.end,
-                                        children: [
-                                          CustomDataTable(
-                                              columns: const [
-                                                DataColumn(
-                                                  label: Text('Name'),
-                                                ),
-                                                DataColumn(
-                                                    label: Text('President')),
-                                                DataColumn(label: Text('Date')),
-                                                DataColumn(
-                                                    label: Text('Action')),
-                                              ],
-                                              source: _EventDataSource(
-                                                  ongoingEvents, context),
-                                              refresh: getData,
-                                              context: context),
-                                          const SizedBox(
-                                            height: 15,
+                                  Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    const StudentOngoingEvent()),
+                                          );
+                                        },
+                                        style: TextButton.styleFrom(
+                                          padding: const EdgeInsets.all(24.0),
+                                          backgroundColor: Colors.white,
+                                          foregroundColor: Colors.black,
+                                          side: const BorderSide(
+                                              color: Colors.grey, width: 1.0),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(0.0),
                                           ),
-                                        ],
+                                        ),
+                                        child: const Text('Ongoing'),
                                       ),
-                                    ),
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    const StudentOrganisedEvent()),
+                                          );
+                                        },
+                                        style: TextButton.styleFrom(
+                                          padding: const EdgeInsets.all(24.0),
+                                          backgroundColor: Colors.grey[200],
+                                          foregroundColor: Colors.black,
+                                          side: const BorderSide(
+                                              color: Colors.grey, width: 1.0),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(0.0),
+                                          ),
+                                        ),
+                                        child: const Text('Organised'),
+                                      ),
+                                    ],
                                   ),
-                                ),
-                              ],
-                            )
-                          ]))
-                ]),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            border: Border.all(
+                                                width: 1.0, color: Colors.grey),
+                                          ),
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(16.0),
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.end,
+                                              children: [
+                                                CustomDataTable(
+                                                    columns: const [
+                                                      DataColumn(
+                                                        label: Text('Name'),
+                                                      ),
+                                                      DataColumn(
+                                                          label: Text(
+                                                              'President')),
+                                                      DataColumn(
+                                                          label: Text('Date')),
+                                                      DataColumn(
+                                                          label: Text('Phase')),
+                                                      DataColumn(
+                                                          label:
+                                                              Text('Progress')),
+                                                      DataColumn(
+                                                          label:
+                                                              Text('Status')),
+                                                      DataColumn(
+                                                          label: Text('')),
+                                                    ],
+                                                    source: _EventDataSource(
+                                                        ongoingEvents, context),
+                                                    refresh: getData,
+                                                    context: context),
+                                                const SizedBox(
+                                                  height: 15,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                ]))
+                      ]),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
       bottomNavigationBar: const Footer(),
     );
   }
@@ -338,9 +418,13 @@ class _CustomDataTableState extends State<CustomDataTable> {
                         case 1:
                           return member['president'];
                         case 2:
-                          return member['date'];
+                          return member['eventDate'];
                         case 3:
                           return member['status'];
+                        case 4:
+                          return member['progress'];
+                        case 5:
+                          return member['eventStatus'];
                         default:
                           return '';
                       }
@@ -392,11 +476,10 @@ class _EventDataSource extends DataTableSource {
         DataCell(Text(event['president'] != null
             ? event['president'].toString()
             : 'Not decided')),
-        DataCell(Text(
-          event['date'] != null
-              ? DateFormat('dd-MM-yyyy').format(event['date'].toDate())
-              : 'Not decided',
-        )),
+        DataCell(Text(event['eventDate'].toString())),
+        DataCell(Text(event['status'].toString())),
+        DataCell(Text('${event['progress']}/3')),
+        DataCell(Text(event['eventStatus'].toString())),
         DataCell(Row(
           children: [
             CustomButton(
@@ -411,35 +494,6 @@ class _EventDataSource extends DataTableSource {
               },
               text: 'View',
               width: 100,
-            ),
-            if(event['presidentID'] == storage.getItem('id'))
-            const SizedBox(
-              width: 15,
-            ),
-            if(event['presidentID'] == storage.getItem('id'))
-            CustomButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => EditEvent(
-                        selectedSociety: 'S001',
-                        selectedEvent: event['eventID']),
-                  ),
-                );
-              },
-              text: 'Edit',
-              width: 100,
-              buttonColor: Colors.green,
-            ),
-            const SizedBox(
-              width: 15,
-            ),
-            CustomButton(
-              onPressed: () {},
-              text: 'Delete',
-              width: 100,
-              buttonColor: Colors.red,
             ),
           ],
         )),

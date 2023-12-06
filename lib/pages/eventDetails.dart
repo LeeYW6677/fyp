@@ -102,18 +102,20 @@ class _EventDetailsState extends State<EventDetails> {
         eventStatus = 'Approved';
       }
 
-      CollectionReference<Map<String, dynamic>> collectionRef =
-          firestore.collection('schedule');
-
-      Query<Map<String, dynamic>> query = collectionRef.orderBy('date');
+      Query<Map<String, dynamic>> query = firestore
+          .collection('schedule')
+          .where('eventID', isEqualTo: widget.selectedEvent)
+          .orderBy('date');
 
       QuerySnapshot<Map<String, dynamic>> snapshot = await query.limit(1).get();
 
-      Query<Map<String, dynamic>> query2 =
-          collectionRef.orderBy('date', descending: true);
+      Query<Map<String, dynamic>> query2 = firestore
+          .collection('schedule')
+          .where('eventID', isEqualTo: widget.selectedEvent)
+          .orderBy('date', descending: true);
 
       QuerySnapshot<Map<String, dynamic>> snapshot2 =
-          await query.limit(1).get();
+          await query2.limit(1).get();
 
       if (snapshot.docs.isNotEmpty) {
         DocumentSnapshot<Map<String, dynamic>> earliestDoc =

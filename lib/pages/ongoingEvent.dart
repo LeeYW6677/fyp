@@ -12,7 +12,8 @@ import 'package:localstorage/localstorage.dart';
 class OngoingEvent extends StatefulWidget {
   final String selectedSociety;
   final String position;
-  const OngoingEvent({super.key, required this.selectedSociety, this.position = ''});
+  const OngoingEvent(
+      {super.key, required this.selectedSociety, this.position = ''});
 
   @override
   State<OngoingEvent> createState() => _OngoingEventState();
@@ -21,9 +22,14 @@ class OngoingEvent extends StatefulWidget {
 class _OngoingEventState extends State<OngoingEvent> {
   List<Map<String, dynamic>> ongoingEvents = [];
   bool _isLoading = true;
+  DateTime? startDate;
+  DateTime? endDate;
+  List<String> checkName = ['', '', '', ''];
+  List<String> checkStatus = ['', '', '', ''];
+  String eventDate = '';
+  String eventStatus = '';
 
   Future<void> getData() async {
-
     try {
       setState(() {
         _isLoading = true;
@@ -56,9 +62,77 @@ class _OngoingEventState extends State<OngoingEvent> {
           presidentName = committeeData['name'] ?? 'Unassigned';
         }
 
+        final QuerySnapshot<Map<String, dynamic>> approvalSnapshot =
+            await firestore
+                .collection('approval')
+                .where('eventID', isEqualTo: eventId)
+                .get();
+        checkName.clear();
+        checkStatus.clear();
+
+        if (approvalSnapshot.docs.isNotEmpty) {
+          Map<String, dynamic> approvalData =
+              approvalSnapshot.docs.first.data();
+          checkName.add('');
+          checkName.add(approvalData['presidentName']);
+          checkName.add(approvalData['advisorName']);
+          checkName.add(approvalData['branchHeadName']);
+          checkStatus.add('Approved');
+          checkStatus.add(approvalData['presidentStatus']);
+          checkStatus.add(approvalData['advisorStatus']);
+          checkStatus.add(approvalData['branchHeadStatus']);
+        }
+
+        if (checkStatus.any((element) => element == 'Rejected')) {
+          eventStatus = 'Rejected';
+        } else {
+          eventStatus = 'Pending';
+        }
+
+        Query<Map<String, dynamic>> query = firestore
+            .collection('schedule')
+            .where('eventID', isEqualTo: eventId)
+            .orderBy('date');
+
+        QuerySnapshot<Map<String, dynamic>> snapshot =
+            await query.limit(1).get();
+
+        Query<Map<String, dynamic>> query2 = firestore
+            .collection('schedule')
+            .where('eventID', isEqualTo: eventId)
+            .orderBy('date', descending: true);
+
+        QuerySnapshot<Map<String, dynamic>> snapshot2 =
+            await query2.limit(1).get();
+
+        if (snapshot.docs.isNotEmpty) {
+          DocumentSnapshot<Map<String, dynamic>> earliestDoc =
+              snapshot.docs.first;
+
+          Timestamp date = earliestDoc['date'];
+          startDate = date.toDate();
+        }
+
+        if (snapshot2.docs.isNotEmpty) {
+          DocumentSnapshot<Map<String, dynamic>> latestDoc =
+              snapshot2.docs.first;
+
+          Timestamp date = latestDoc['date'];
+          endDate = date.toDate();
+        }
+        if (startDate != null && endDate != null) {
+          eventDate = DateFormat('dd/MM/yyyy').format(startDate!) +
+              ' - ' +
+              DateFormat('dd/MM/yyyy').format(endDate!);
+        } else {
+          eventDate = 'Undecided';
+        }
+
         ongoingEvents.add({
           ...eventData,
           'president': presidentName,
+          'eventDate': eventDate,
+          'eventStatus': eventStatus,
         });
       }
 
@@ -84,7 +158,7 @@ class _OngoingEventState extends State<OngoingEvent> {
   @override
   void initState() {
     super.initState();
-    
+
     getData();
   }
 
@@ -212,7 +286,12 @@ class _OngoingEventState extends State<OngoingEvent> {
                                                             Text('President')),
                                                     DataColumn(
                                                         label: Text('Date')),
-                                                        DataColumn(
+                                                    DataColumn(
+                                                        label: Text('Phase')),
+                                                    DataColumn(
+                                                        label:
+                                                            Text('Progress')),
+                                                    DataColumn(
                                                         label: Text('Status')),
                                                     DataColumn(
                                                         label: Text('Action')),
@@ -220,7 +299,8 @@ class _OngoingEventState extends State<OngoingEvent> {
                                                   source: _EventDataSource(
                                                       ongoingEvents,
                                                       context,
-                                                      widget.selectedSociety, widget.position),
+                                                      widget.selectedSociety,
+                                                      widget.position),
                                                   refresh: getData,
                                                   context: context,
                                                 ),
@@ -354,9 +434,13 @@ class _CustomDataTableState extends State<CustomDataTable> {
                         case 1:
                           return member['president'];
                         case 2:
-                          return member['date'];
-                          case 3:
+                          return member['eventDate'];
+                        case 3:
                           return member['status'];
+                        case 4:
+                          return member['progress'];
+                        case 5:
+                          return member['eventStatus'];
                         default:
                           return '';
                       }
@@ -390,7 +474,8 @@ class _EventDataSource extends DataTableSource {
   final String position;
   int rowsPerPage = 10;
 
-  _EventDataSource(this.originalEvent, this.context, this.selectedSociety, this.position) {
+  _EventDataSource(
+      this.originalEvent, this.context, this.selectedSociety, this.position) {
     _initializeDisplayedEvent();
   }
 
@@ -410,14 +495,10 @@ class _EventDataSource extends DataTableSource {
         DataCell(Text(event['president'] != null
             ? event['president'].toString()
             : 'Not decided')),
-        DataCell(Text(
-          event['date'] != null
-              ? DateFormat('dd-MM-yyyy').format(event['date'].toDate())
-              : 'Not decided',
-        )),
-        DataCell(Text(
-          event['status'].toString(),
-        )),
+        DataCell(Text(event['eventDate'].toString())),
+        DataCell(Text(event['status'].toString())),
+        DataCell(Text('${event['progress']}/3')),
+        DataCell(Text(event['eventStatus'].toString())),
         DataCell(Row(
           children: [
             CustomButton(
@@ -432,35 +513,6 @@ class _EventDataSource extends DataTableSource {
               },
               text: 'View',
               width: 100,
-            ),
-            if(storage.getItem('role') != 'student' || position == 'President' || position =='Vice President')
-            const SizedBox(
-              width: 15,
-            ),
-            if(storage.getItem('role') != 'student' || position == 'President' || position =='Vice President')
-            CustomButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => EditEvent(
-                        selectedSociety: selectedSociety,
-                        selectedEvent: event['eventID']),
-                  ),
-                );
-              },
-              text: 'Edit',
-              width: 100,
-              buttonColor: Colors.green,
-            ),
-            const SizedBox(
-              width: 15,
-            ),
-            CustomButton(
-              onPressed: () {},
-              text: 'Delete',
-              width: 100,
-              buttonColor: Colors.red,
             ),
           ],
         )),

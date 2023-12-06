@@ -226,8 +226,7 @@ class _StudentOrganisedEventState extends State<StudentOrganisedEvent> {
                                                       DataColumn(
                                                           label: Text('Date')),
                                                       DataColumn(
-                                                          label:
-                                                              Text('Action')),
+                                                          label: Text('')),
                                                     ],
                                                     source: _EventDataSource2(
                                                         completedEvents,
@@ -412,12 +411,6 @@ class _EventDataSource2 extends DataTableSource {
             ),
             const SizedBox(
               width: 15,
-            ),
-            CustomButton(
-              onPressed: () {},
-              text: 'Delete',
-              width: 100,
-              buttonColor: Colors.red,
             ),
           ],
         )),

@@ -680,6 +680,7 @@ class _ScheduleState extends State<Schedule> {
                                             const SizedBox(
                                               height: 15,
                                             ),
+                                            if(programList.isNotEmpty)
                                             Column(
                                               children: [
                                                 Center(
@@ -687,11 +688,6 @@ class _ScheduleState extends State<Schedule> {
                                                     scrollDirection:
                                                         Axis.horizontal,
                                                     child: DataTable(
-                                                      border: TableBorder.all(
-                                                        width: 1,
-                                                        style:
-                                                            BorderStyle.solid,
-                                                      ),
                                                       columns: const [
                                                         DataColumn(
                                                             label:
@@ -707,7 +703,7 @@ class _ScheduleState extends State<Schedule> {
                                                                 'Details')),
                                                         DataColumn(
                                                             label: Text(
-                                                                'Actions')),
+                                                                '')),
                                                       ],
                                                       rows: programList
                                                           .asMap()
@@ -782,6 +778,7 @@ class _ScheduleState extends State<Schedule> {
                                                 ),
                                               ],
                                             ),
+                                            if(programList.isNotEmpty)
                                             CustomButton(
                                                 width: 150,
                                                 onPressed: () async {

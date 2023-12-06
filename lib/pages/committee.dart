@@ -12,7 +12,7 @@ class OrgCommittee extends StatefulWidget {
 }
 
 class _OrgCommitteeState extends State<OrgCommittee> {
-    int progress = -1;
+  int progress = -1;
   List<String> restrictedPositions = [
     'president',
     'vice president',
@@ -40,26 +40,23 @@ class _OrgCommitteeState extends State<OrgCommittee> {
 
       final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
-     
+      final QuerySnapshot<Map<String, dynamic>> committeeSnapshot =
+          await firestore
+              .collection('committee')
+              .where('eventID', isEqualTo: widget.selectedEvent)
+              .get();
 
-        final QuerySnapshot<Map<String, dynamic>> committeeSnapshot =
-            await firestore
-                .collection('committee')
-                .where('eventID', isEqualTo: widget.selectedEvent)
-                .get();
-
-        if (committeeSnapshot.docs.isNotEmpty) {
-          committeeList = committeeSnapshot.docs
-              .map((DocumentSnapshot<Map<String, dynamic>> doc) {
-            return Committee(
-              studentID: doc.data()!['studentID'],
-              name: doc.data()!['name'],
-              position: doc.data()!['position'],
-              contact: doc.data()!['contact'],
-            );
-          }).toList();
-        }
-      
+      if (committeeSnapshot.docs.isNotEmpty) {
+        committeeList = committeeSnapshot.docs
+            .map((DocumentSnapshot<Map<String, dynamic>> doc) {
+          return Committee(
+            studentID: doc.data()!['studentID'],
+            name: doc.data()!['name'],
+            position: doc.data()!['position'],
+            contact: doc.data()!['contact'],
+          );
+        }).toList();
+      }
 
       setState(() {
         _isLoading = false;
@@ -431,110 +428,69 @@ class _OrgCommitteeState extends State<OrgCommittee> {
                                               height: 15,
                                             ),
                                             Column(
-                                              children: [
-                                                Center(
-                                                  child: SingleChildScrollView(
-                                                    scrollDirection:
-                                                        Axis.horizontal,
-                                                    child: DataTable(
-                                                      border: TableBorder.all(
-                                                        width: 1,
-                                                        style:
-                                                            BorderStyle.solid,
-                                                      ),
-                                                      columns: const [
-                                                        DataColumn(
-                                                            label:
-                                                                Text('Name')),
-                                                        DataColumn(
-                                                            label: Text(
-                                                                'Student ID')),
-                                                        DataColumn(
-                                                            label: Text(
-                                                                'Position')),
-                                                        DataColumn(
-                                                            label: Text(
-                                                                'Contact No.')),
-                                                        DataColumn(
-                                                            label:
-                                                                Text('Action')),
-                                                      ],
-                                                      rows: committeeList
-                                                          .asMap()
-                                                          .entries
-                                                          .map((entry) {
-                                                        final int index =
-                                                            entry.key;
-                                                        final Committee
-                                                            committee =
-                                                            entry.value;
-
-                                                        return DataRow(
-                                                          cells: [
-                                                            DataCell(Text(
-                                                                committee
-                                                                    .name)),
-                                                            DataCell(Text(
-                                                                committee
-                                                                    .studentID)),
-                                                            DataCell(Text(
-                                                                committee
-                                                                    .position)),
-                                                            DataCell(Text(
-                                                                '+60${committee.contact}')),
-                                                            DataCell(Row(
-                                                              children: [
-                                                                if (!restrictedPositions
-                                                                    .contains(committee
-                                                                        .position
-                                                                        .toLowerCase()))
-                                                                  IconButton(
-                                                                    icon: const Icon(
-                                                                        Icons
-                                                                            .edit),
-                                                                    onPressed:
-                                                                        () {
-                                                                      showDialog(
-                                                                          context:
-                                                                              context,
-                                                                          builder:
-                                                                              (_) {
-                                                                            return EditDialog(
-                                                                              committee: committee,
-                                                                              index: index,
-                                                                              list: committeeList,
-                                                                              function: resetTable,
-                                                                            );
-                                                                          });
-                                                                    },
-                                                                  ),
-                                                                if (!restrictedPositions
-                                                                    .contains(committee
-                                                                        .position
-                                                                        .toLowerCase()))
-                                                                  IconButton(
-                                                                    icon: const Icon(
-                                                                        Icons
-                                                                            .delete),
-                                                                    onPressed:
-                                                                        () {
-                                                                      setState(
-                                                                          () {
-                                                                        committeeList
-                                                                            .removeAt(index);
-                                                                      });
-                                                                    },
-                                                                  ),
-                                                              ],
-                                                            )),
-                                                          ],
-                                                        );
-                                                      }).toList(),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
+  children: [
+    Center(
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: DataTable(
+          columns: const [
+            DataColumn(label: Text('Name')),
+            DataColumn(label: Text('Student ID')),
+            DataColumn(label: Text('Position')),
+            DataColumn(label: Text('Contact No.')),
+            DataColumn(label: Text('')),
+          ],
+          rows: committeeList
+              .asMap()
+              .entries
+              .map(
+                (entry) => DataRow(
+                  cells: [
+                    DataCell(Text(entry.value.name)),
+                    DataCell(Text(entry.value.studentID)),
+                    DataCell(Text(entry.value.position)),
+                    DataCell(Text('+60${entry.value.contact}')),
+                    DataCell(
+                      Row(
+                        children: [
+                          if (!restrictedPositions.contains(entry.value.position.toLowerCase()))
+                            IconButton(
+                              icon: const Icon(Icons.edit),
+                              onPressed: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (_) {
+                                    return EditDialog(
+                                      committee: entry.value,
+                                      index: entry.key,
+                                      list: committeeList,
+                                      function: resetTable,
+                                    );
+                                  },
+                                );
+                              },
+                            ),
+                          if (!restrictedPositions.contains(entry.value.position.toLowerCase()))
+                            IconButton(
+                              icon: const Icon(Icons.delete),
+                              onPressed: () {
+                                setState(() {
+                                  committeeList.removeAt(entry.key);
+                                });
+                              },
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              )
+              .toList(),
+        ),
+      ),
+    ),
+  ],
+),
                                             CustomButton(
                                                 width: 150,
                                                 onPressed: () async {

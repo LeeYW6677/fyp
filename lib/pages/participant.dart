@@ -367,6 +367,7 @@ class _ParticipantState extends State<Participant> {
                                             const SizedBox(
                                               height: 15,
                                             ),
+                                            if(participantList.isNotEmpty)
                                             Column(
                                               children: [
                                                 Center(
@@ -374,11 +375,6 @@ class _ParticipantState extends State<Participant> {
                                                     scrollDirection:
                                                         Axis.horizontal,
                                                     child: DataTable(
-                                                      border: TableBorder.all(
-                                                        width: 1,
-                                                        style:
-                                                            BorderStyle.solid,
-                                                      ),
                                                       columns: const [
                                                         DataColumn(
                                                             label:
@@ -391,7 +387,7 @@ class _ParticipantState extends State<Participant> {
                                                                 'Contact No.')),
                                                         DataColumn(
                                                             label:
-                                                                Text('Action')),
+                                                                Text('')),
                                                       ],
                                                       rows: participantList
                                                           .asMap()

@@ -383,12 +383,7 @@ class _AccountState extends State<Account> {
                                                               .start,
                                                       children: [
                                                         DataTable(
-                                                          border:
-                                                              TableBorder.all(
-                                                            width: 1,
-                                                            style: BorderStyle
-                                                                .solid,
-                                                          ),
+                                                          
                                                           columns: const [
                                                             DataColumn(
                                                               label: Text(
@@ -402,7 +397,7 @@ class _AccountState extends State<Account> {
                                                                     'Amount')),
                                                             DataColumn(
                                                                 label: Text(
-                                                                    'Action')),
+                                                                    '')),
                                                           ],
                                                           rows: [
                                                             ...income
@@ -494,12 +489,6 @@ class _AccountState extends State<Account> {
                                                         const SizedBox(width: 15,),
                                                         DataTable(
                                                           
-                                                          border:
-                                                              TableBorder.all(
-                                                            width: 1,
-                                                            style: BorderStyle
-                                                                .solid,
-                                                          ),
                                                           columns: const [
                                                             DataColumn(
                                                                 label: Text(
@@ -512,7 +501,7 @@ class _AccountState extends State<Account> {
                                                                     'Amount')),
                                                             DataColumn(
                                                                 label: Text(
-                                                                    'Action')),
+                                                                    '')),
                                                           ],
                                                           rows: [
                                                             ...expense

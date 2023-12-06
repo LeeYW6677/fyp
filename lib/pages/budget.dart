@@ -41,37 +41,34 @@ class _BudgetState extends State<Budget> {
 
       final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
+      // Fetch event data
+      final QuerySnapshot<Map<String, dynamic>> budgetSnapshot = await firestore
+          .collection('budgetItem')
+          .where('eventID', isEqualTo: widget.selectedEvent)
+          .get();
 
-        // Fetch event data
-        final QuerySnapshot<Map<String, dynamic>> budgetSnapshot =
-            await firestore
-                .collection('budgetItem')
-                .where('eventID', isEqualTo: widget.selectedEvent)
-                .get();
+      for (var doc in budgetSnapshot.docs) {
+        String itemType = doc.data()['itemType'];
 
-        for (var doc in budgetSnapshot.docs) {
-          String itemType = doc.data()['itemType'];
+        BudgetItem budgetItem = BudgetItem(
+          name: doc.data()['itemName'],
+          qty: doc.data()['quantity'],
+          price: doc.data()['unitPrice'],
+          type: itemType,
+        );
 
-          BudgetItem budgetItem = BudgetItem(
-            name: doc.data()['itemName'],
-            qty: doc.data()['quantity'],
-            price: doc.data()['unitPrice'],
-            type: itemType,
-          );
-
-          if (itemType == 'Income') {
-            income.add(budgetItem);
-          } else if (itemType == 'Expense') {
-            expense.add(budgetItem);
-          }
+        if (itemType == 'Income') {
+          income.add(budgetItem);
+        } else if (itemType == 'Expense') {
+          expense.add(budgetItem);
         }
+      }
 
-        setState(() {
-          income = income;
-          expense = expense;
-          _isLoading = false;
-        });
-      
+      setState(() {
+        income = income;
+        expense = expense;
+        _isLoading = false;
+      });
     } catch (error) {
       setState(() {
         _isLoading = false;
@@ -439,13 +436,7 @@ class _BudgetState extends State<Budget> {
                                                           CrossAxisAlignment
                                                               .start,
                                                       children: [
-                                                        DataTable(
-                                                          border:
-                                                              TableBorder.all(
-                                                            width: 1,
-                                                            style: BorderStyle
-                                                                .solid,
-                                                          ),
+                                                        DataTable(                                                          
                                                           columns: const [
                                                             DataColumn(
                                                               label: Text(
@@ -461,8 +452,8 @@ class _BudgetState extends State<Budget> {
                                                                 label: Text(
                                                                     'Total')),
                                                             DataColumn(
-                                                                label: Text(
-                                                                    'Action')),
+                                                                label:
+                                                                    Text('')),
                                                           ],
                                                           rows: [
                                                             ...income
@@ -528,9 +519,6 @@ class _BudgetState extends State<Budget> {
                                                               );
                                                             }).toList(),
                                                             DataRow(
-                                                              color: MaterialStateProperty
-                                                                  .all<Color>(Colors
-                                                                      .black12),
                                                               cells: [
                                                                 const DataCell(Text(
                                                                     'Total Income',
@@ -555,14 +543,10 @@ class _BudgetState extends State<Budget> {
                                                             ),
                                                           ],
                                                         ),
-                                                        const SizedBox(width: 15,),
+                                                        const SizedBox(
+                                                          width: 15,
+                                                        ),
                                                         DataTable(
-                                                          border:
-                                                              TableBorder.all(
-                                                            width: 1,
-                                                            style: BorderStyle
-                                                                .solid,
-                                                          ),
                                                           columns: const [
                                                             DataColumn(
                                                                 label: Text(
@@ -577,8 +561,8 @@ class _BudgetState extends State<Budget> {
                                                                 label: Text(
                                                                     'Total')),
                                                             DataColumn(
-                                                                label: Text(
-                                                                    'Action')),
+                                                                label:
+                                                                    Text('')),
                                                           ],
                                                           rows: [
                                                             ...expense
@@ -644,9 +628,6 @@ class _BudgetState extends State<Budget> {
                                                               );
                                                             }).toList(),
                                                             DataRow(
-                                                              color: MaterialStateProperty
-                                                                  .all<Color>(Colors
-                                                                      .black12),
                                                               cells: [
                                                                 const DataCell(Text(
                                                                     'Total Expense',
