@@ -9,7 +9,13 @@ import 'package:firebase_storage/firebase_storage.dart';
 
 class Evaluation extends StatefulWidget {
   final String selectedEvent;
-  const Evaluation({super.key, required this.selectedEvent});
+    final String status;
+  final int progress;
+  final String position;
+  const Evaluation({super.key, required this.selectedEvent,
+      required this.status,
+      required this.progress,
+      required this.position});
 
   @override
   State<Evaluation> createState() => _EvaluationState();
@@ -18,7 +24,6 @@ class Evaluation extends StatefulWidget {
 class _EvaluationState extends State<Evaluation> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _isLoading = true;
-  String status = '';
   final description = TextEditingController();
   final problem = TextEditingController();
   final improvement = TextEditingController();
@@ -28,7 +33,7 @@ class _EvaluationState extends State<Evaluation> {
   List<bool> valid = [false, false, false];
   final double containerSize = 200.0;
   final double imageSize = 200.0;
-  int progress = -1;
+  bool enabled = true;
 
   Future<void> _pickImage(int index) async {
     valid[index] = true;
@@ -47,6 +52,13 @@ class _EvaluationState extends State<Evaluation> {
       setState(() {
         _isLoading = true;
       });
+
+      if (!widget.position.startsWith('org') ||
+          widget.position.contains('Treasurer') ||
+          widget.status != 'Closing' ||
+          widget.progress != 0) {
+        enabled = false;
+      }
       final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
       final QuerySnapshot<Map<String, dynamic>> evaluationSnapshot =
@@ -65,7 +77,6 @@ class _EvaluationState extends State<Evaluation> {
       }
       setState(() {
         savedUrl = savedUrl;
-        status = status;
         _isLoading = false;
       });
     } catch (error) {
@@ -138,7 +149,9 @@ class _EvaluationState extends State<Evaluation> {
                                           selectedEvent: widget.selectedEvent,
                                           tab: 'Post',
                                           form: 'Evaluation',
-                                          status: status,
+                                          status: widget.status,
+                                          position: widget.position,
+                                          progress: widget.progress,
                                           children: [
                                             Row(
                                               children: [
@@ -171,6 +184,7 @@ class _EvaluationState extends State<Evaluation> {
                                                               flex: 9,
                                                               child:
                                                                   CustomTextField(
+                                                                    enabled: enabled,
                                                                 screen: !Responsive
                                                                     .isDesktop(
                                                                         context),
@@ -227,6 +241,7 @@ class _EvaluationState extends State<Evaluation> {
                                                               flex: 9,
                                                               child:
                                                                   CustomTextField(
+                                                                    enabled: enabled,
                                                                 screen: !Responsive
                                                                     .isDesktop(
                                                                         context),
@@ -283,6 +298,7 @@ class _EvaluationState extends State<Evaluation> {
                                                               flex: 9,
                                                               child:
                                                                   CustomTextField(
+                                                                    enabled: enabled,
                                                                 screen: !Responsive
                                                                     .isDesktop(
                                                                         context),
@@ -339,6 +355,7 @@ class _EvaluationState extends State<Evaluation> {
                                                               flex: 9,
                                                               child:
                                                                   CustomTextField(
+                                                                    enabled: enabled,
                                                                 screen: !Responsive
                                                                     .isDesktop(
                                                                         context),
@@ -384,8 +401,8 @@ class _EvaluationState extends State<Evaluation> {
                                                     child: Row(
                                                       children: [
                                                         InkWell(
-                                                          onTap: () =>
-                                                              _pickImage(0),
+                                                          onTap: enabled ? () =>
+                                                              _pickImage(0) : null,
                                                           child: Column(
                                                             mainAxisAlignment:
                                                                 MainAxisAlignment
@@ -488,8 +505,8 @@ class _EvaluationState extends State<Evaluation> {
                                                           width: 20,
                                                         ),
                                                         InkWell(
-                                                          onTap: () =>
-                                                              _pickImage(1),
+                                                          onTap: enabled ? () =>
+                                                              _pickImage(1) : null,
                                                           child: Column(
                                                             mainAxisAlignment:
                                                                 MainAxisAlignment
@@ -593,8 +610,8 @@ class _EvaluationState extends State<Evaluation> {
                                                         const SizedBox(
                                                             width: 20.0),
                                                         InkWell(
-                                                          onTap: () =>
-                                                              _pickImage(2),
+                                                          onTap: enabled ? () =>
+                                                              _pickImage(2) : null,
                                                           child: Column(
                                                             mainAxisAlignment:
                                                                 MainAxisAlignment
@@ -702,6 +719,7 @@ class _EvaluationState extends State<Evaluation> {
                                             const SizedBox(
                                               height: 15,
                                             ),
+                                            if(enabled)
                                             CustomButton(
                                                 width: 150,
                                                 onPressed: () async {

@@ -2,7 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
-import 'package:fyp/pages/proposal.dart';
+import 'package:fyp/pages/eventDetails.dart';
+
 import 'package:fyp/pages/studentOngoingEvent.dart';
 import 'package:intl/intl.dart';
 import 'package:localstorage/localstorage.dart';
@@ -38,8 +39,8 @@ class _StudentOrganisedEventState extends State<StudentOrganisedEvent> {
       final QuerySnapshot<Map<String, dynamic>> relatedEvent = await firestore
           .collection('committee')
           .where('studentID', isEqualTo: storage.getItem('id'))
-          .where('position', whereIn: position)
           .get();
+
       if (relatedEvent.docs.isNotEmpty) {
         List<String> eventIds =
             relatedEvent.docs.map((doc) => doc['eventID'] as String).toList();
@@ -48,15 +49,14 @@ class _StudentOrganisedEventState extends State<StudentOrganisedEvent> {
             await firestore
                 .collection('event')
                 .where('eventID', whereIn: eventIds)
+                .where('status', isEqualTo: 'Closing')
+                .where('progress', isEqualTo: 3)
                 .get();
 
         for (var docSnapshot in eventSnapshot.docs) {
           Map<String, dynamic> eventData = docSnapshot.data();
-          String status = eventData['status'];
 
-          if (status == 'Completed') {
-            completedEvents.add(eventData);
-          }
+          completedEvents.add(eventData);
         }
 
         for (var eventData in completedEvents) {
@@ -209,36 +209,53 @@ class _StudentOrganisedEventState extends State<StudentOrganisedEvent> {
                                             border: Border.all(
                                                 width: 1.0, color: Colors.grey),
                                           ),
-                                          child: Padding(
-                                            padding: const EdgeInsets.all(16.0),
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.end,
-                                              children: [
-                                                CustomDataTable2(
-                                                    columns: const [
-                                                      DataColumn(
-                                                        label: Text('Name'),
+                                          child: completedEvents.isNotEmpty
+                                              ? Padding(
+                                                  padding: const EdgeInsets.all(
+                                                      16.0),
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment.end,
+                                                    children: [
+                                                      CustomDataTable2(
+                                                          columns: const [
+                                                            DataColumn(
+                                                              label:
+                                                                  Text('Name'),
+                                                            ),
+                                                            DataColumn(
+                                                                label: Text(
+                                                                    'President')),
+                                                            DataColumn(
+                                                                label: Text(
+                                                                    'Start Date')),
+                                                            DataColumn(
+                                                                label: Text(
+                                                                    'End Date')),
+                                                            DataColumn(
+                                                                label: Text(
+                                                                    'Participant')),
+                                                            DataColumn(
+                                                                label:
+                                                                    Text('')),
+                                                          ],
+                                                          source:
+                                                              _EventDataSource2(
+                                                                  completedEvents,
+                                                                  context),
+                                                          refresh: getData,
+                                                          context: context),
+                                                      const SizedBox(
+                                                        height: 15,
                                                       ),
-                                                      DataColumn(
-                                                          label: Text(
-                                                              'President')),
-                                                      DataColumn(
-                                                          label: Text('Date')),
-                                                      DataColumn(
-                                                          label: Text('')),
                                                     ],
-                                                    source: _EventDataSource2(
-                                                        completedEvents,
-                                                        context),
-                                                    refresh: getData,
-                                                    context: context),
-                                                const SizedBox(
-                                                  height: 15,
-                                                ),
-                                              ],
-                                            ),
-                                          ),
+                                                  ),
+                                                )
+                                              : const SizedBox(
+                                                  height: 500,
+                                                  child: Center(
+                                                      child: Text(
+                                                          'You have not organised any event.'))),
                                         ),
                                       ),
                                     ],
@@ -343,7 +360,11 @@ class _CustomDataTable2State extends State<CustomDataTable2> {
                         case 1:
                           return member['president'];
                         case 2:
-                          return member['date'];
+                          return member['startDate'];
+                        case 3:
+                          return member['endDate'];
+                        case 4:
+                          return member['participant'];
                         default:
                           return '';
                       }
@@ -392,7 +413,9 @@ class _EventDataSource2 extends DataTableSource {
       cells: [
         DataCell(Text(event['eventName'].toString())),
         DataCell(Text(event['president'].toString())),
-        DataCell(Text(DateFormat('dd-MM-yyyy').format(event['date'].toDate()))),
+        DataCell(Text(event['startDate'].toString())),
+        DataCell(Text(event['endDate'].toString())),
+        DataCell(Text(event['participant'].toString())),
         DataCell(Row(
           children: [
             CustomButton(
@@ -400,7 +423,7 @@ class _EventDataSource2 extends DataTableSource {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => Proposal(
+                    builder: (context) => EventDetails(
                       selectedEvent: event['eventID'],
                     ),
                   ),
@@ -446,10 +469,16 @@ class _EventDataSource2 extends DataTableSource {
       final aValue = getField(a);
       final bValue = getField(b);
 
-      if (columnIndex == 2) {
-        final aDate = DateTime.parse(aValue.toString());
-        final bDate = DateTime.parse(bValue.toString());
-        return ascending ? aDate.compareTo(bDate) : bDate.compareTo(aDate);
+      if (columnIndex == 2 || columnIndex == 3) {
+        if (aValue.toString().toLowerCase() == 'undecided') {
+          return bValue.toString().toLowerCase() == 'undecided' ? 0 : 1;
+        } else if (bValue.toString().toLowerCase() == 'undecided') {
+          return -1;
+        } else {
+          final aDate = DateFormat('dd/MM/yyyy').parse(aValue.toString());
+          final bDate = DateFormat('dd/MM/yyyy').parse(bValue.toString());
+          return ascending ? aDate.compareTo(bDate) : bDate.compareTo(aDate);
+        }
       } else {
         return ascending
             ? Comparable.compare(aValue, bValue)

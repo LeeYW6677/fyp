@@ -69,6 +69,7 @@ class CustomDDL<T> extends StatefulWidget {
   final List<DropdownMenuItem<T>> dropdownItems;
   final String? labelText;
   final bool? screen;
+  final bool enabled;
 
   const CustomDDL({
     Key? key,
@@ -76,6 +77,7 @@ class CustomDDL<T> extends StatefulWidget {
     required this.hintText,
     required this.dropdownItems,
     required this.value,
+    this.enabled = true,
     this.onChanged,
     this.labelText,
     this.screen,
@@ -92,16 +94,20 @@ class _CustomDDLState<T> extends State<CustomDDL<T>> {
       isExpanded: true,
       value: widget.value,
       focusColor: Colors.white,
-      onChanged: (T? newValue) {
-        setState(() {
-          widget.controller.text = newValue?.toString() ?? '';
-        });
-        if (widget.onChanged != null) {
-          widget.onChanged!(newValue);
-        }
-      },
+      onChanged: widget.enabled
+          ? (T? newValue) {
+              setState(() {
+                widget.controller.text = newValue?.toString() ?? '';
+              });
+              if (widget.onChanged != null) {
+                widget.onChanged!(newValue);
+              }
+            }
+          : null,
       items: widget.dropdownItems,
       decoration: InputDecoration(
+        filled: true,
+        fillColor: widget.enabled ? Colors.white : Colors.grey[300],
         labelText: widget.screen == true ? widget.labelText : null,
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 10.0, vertical: 0),
@@ -590,7 +596,6 @@ class Header extends StatelessWidget implements PreferredSizeWidget {
                   },
                 )
               : null,
-          automaticallyImplyLeading: false,
           backgroundColor: Colors.grey[900],
           title: Row(
             children: [
@@ -630,11 +635,10 @@ class Header extends StatelessWidget implements PreferredSizeWidget {
             IconButton(
               onPressed: () async {
                 await FirebaseAuth.instance.signOut();
-                Navigator.pushReplacement(
+                Navigator.pushAndRemoveUntil(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => const Login(),
-                  ),
+                  MaterialPageRoute(builder: (context) => const Login()),
+                  (route) => false,
                 );
               },
               icon: const Icon(Icons.logout),
@@ -718,6 +722,8 @@ class TabContainer extends StatelessWidget {
   final String tab;
   final String form;
   final String status;
+  final int progress;
+  final String position;
 
   const TabContainer({
     super.key,
@@ -726,6 +732,8 @@ class TabContainer extends StatelessWidget {
     required this.tab,
     required this.form,
     required this.status,
+    required this.progress,
+    required this.position,
   });
 
   @override
@@ -737,11 +745,15 @@ class TabContainer extends StatelessWidget {
           children: [
             TextButton(
               onPressed: () {
-                Navigator.push(
+                Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
-                    builder: (context) =>
-                        Proposal(selectedEvent: selectedEvent),
+                    builder: (context) => Proposal(
+                      selectedEvent: selectedEvent,
+                      position: position,
+                      status: status,
+                      progress: progress,
+                    ),
                   ),
                 );
               },
@@ -759,11 +771,15 @@ class TabContainer extends StatelessWidget {
             if (status == 'Closing')
               TextButton(
                 onPressed: () {
-                  Navigator.push(
+                  Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
-                      builder: (context) =>
-                          Evaluation(selectedEvent: selectedEvent),
+                      builder: (context) => Evaluation(
+                        selectedEvent: selectedEvent,
+                        position: position,
+                        status: status,
+                        progress: progress,
+                      ),
                     ),
                   );
                 },
@@ -800,11 +816,15 @@ class TabContainer extends StatelessWidget {
                           if (tab == 'Pre')
                             TextButton(
                               onPressed: () {
-                                Navigator.push(
+                                Navigator.pushReplacement(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) =>
-                                        Proposal(selectedEvent: selectedEvent),
+                                    builder: (context) => Proposal(
+                                      selectedEvent: selectedEvent,
+                                      position: position,
+                                      status: status,
+                                      progress: progress,
+                                    ),
                                   ),
                                 );
                               },
@@ -825,11 +845,15 @@ class TabContainer extends StatelessWidget {
                           if (tab == 'Pre')
                             TextButton(
                               onPressed: () {
-                                Navigator.push(
+                                Navigator.pushReplacement(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) =>
-                                        Schedule(selectedEvent: selectedEvent),
+                                    builder: (context) => Schedule(
+                                      selectedEvent: selectedEvent,
+                                      position: position,
+                                      status: status,
+                                      progress: progress,
+                                    ),
                                   ),
                                 );
                               },
@@ -850,11 +874,14 @@ class TabContainer extends StatelessWidget {
                           if (tab == 'Pre')
                             TextButton(
                               onPressed: () {
-                                Navigator.push(
+                                Navigator.pushReplacement(
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => OrgCommittee(
                                       selectedEvent: selectedEvent,
+                                      position: position,
+                                      status: status,
+                                      progress: progress,
                                     ),
                                   ),
                                 );
@@ -876,11 +903,14 @@ class TabContainer extends StatelessWidget {
                           if (tab == 'Pre')
                             TextButton(
                               onPressed: () {
-                                Navigator.push(
+                                Navigator.pushReplacement(
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => Budget(
                                       selectedEvent: selectedEvent,
+                                      position: position,
+                                      status: status,
+                                      progress: progress,
                                     ),
                                   ),
                                 );
@@ -902,11 +932,15 @@ class TabContainer extends StatelessWidget {
                           if (tab == 'Post')
                             TextButton(
                               onPressed: () {
-                                Navigator.push(
+                                Navigator.pushReplacement(
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => Evaluation(
-                                        selectedEvent: selectedEvent),
+                                      selectedEvent: selectedEvent,
+                                      position: position,
+                                      status: status,
+                                      progress: progress,
+                                    ),
                                   ),
                                 );
                               },
@@ -927,11 +961,15 @@ class TabContainer extends StatelessWidget {
                           if (tab == 'Post')
                             TextButton(
                               onPressed: () {
-                                Navigator.push(
+                                Navigator.pushReplacement(
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => Participant(
-                                        selectedEvent: selectedEvent),
+                                      selectedEvent: selectedEvent,
+                                      position: position,
+                                      status: status,
+                                      progress: progress,
+                                    ),
                                   ),
                                 );
                               },
@@ -952,11 +990,14 @@ class TabContainer extends StatelessWidget {
                           if (tab == 'Post')
                             TextButton(
                               onPressed: () {
-                                Navigator.push(
+                                Navigator.pushReplacement(
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => Account(
                                       selectedEvent: selectedEvent,
+                                      position: position,
+                                      status: status,
+                                      progress: progress,
                                     ),
                                   ),
                                 );
@@ -1068,7 +1109,7 @@ class _CustomTimelineState extends State<CustomTimeline> {
                         : postProgress[index]),
                     const SizedBox(height: 10),
                     Text(
-                       widget.checkName[index],
+                      widget.checkName[index],
                       style:
                           const TextStyle(fontSize: 12.0, color: Colors.black),
                     ),
@@ -1080,27 +1121,35 @@ class _CustomTimelineState extends State<CustomTimeline> {
                 if (index <= widget.progress) {
                   color = widget.checkStatus[index] == 'Approved'
                       ? Colors.green
-                      : Colors.red;
-                } else {
-                  color = Colors.grey;
+                      : widget.checkStatus[index] == 'Rejected'
+                          ? Colors.red
+                          : Colors.grey;
                 }
 
                 return widget.checkStatus[index] == 'Approved' ||
-                         widget.checkStatus[index] == 'Rejected'
+                        widget.checkStatus[index] == 'Rejected'
                     ? DotIndicator(
                         size: 20.0,
-                        color: color,
+                        color: widget.checkStatus[index] == 'Approved'
+                            ? Colors.green
+                            : widget.checkStatus[index] == 'Rejected'
+                                ? Colors.red
+                                : Colors.grey,
                       )
                     : OutlinedDotIndicator(
                         borderWidth: 4.0,
-                        color: color,
+                        color: widget.checkStatus[index] == 'Approved'
+                            ? Colors.green
+                            : widget.checkStatus[index] == 'Rejected'
+                                ? Colors.red
+                                : Colors.grey,
                       );
               },
               connectorBuilder: (_, index, type) {
                 if (index > 0) {
-                  Color color =  widget.checkStatus[index] == 'Approved'
+                  Color color = widget.checkStatus[index] == 'Approved'
                       ? Colors.green
-                      :  widget.checkStatus[index] == 'Rejected'
+                      : widget.checkStatus[index] == 'Rejected'
                           ? Colors.red
                           : Colors.grey;
                   return SolidLineConnector(
@@ -1116,7 +1165,6 @@ class _CustomTimelineState extends State<CustomTimeline> {
         const SizedBox(
           height: 15,
         ),
-
       ],
     );
   }

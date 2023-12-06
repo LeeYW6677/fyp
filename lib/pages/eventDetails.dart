@@ -2,8 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
+import 'package:fyp/pages/editEvent.dart';
 import 'package:fyp/pages/proposal.dart';
 import 'package:intl/intl.dart';
+import 'package:localstorage/localstorage.dart';
 
 class EventDetails extends StatefulWidget {
   final String selectedEvent;
@@ -28,15 +30,21 @@ class _EventDetailsState extends State<EventDetails> {
   ];
   Map<String, List<String>> positionData = {};
   final nothing = TextEditingController();
+  final LocalStorage storage = LocalStorage('user');
   List<String> preProgress = ['Planning', 'Checked', 'Recommended', 'Approved'];
   List<String> postProgress = ['Closing', 'Checked', 'Verified', 'Accepted'];
   DateTime? startDate;
   DateTime? endDate;
   List<String> checkName = ['', '', '', ''];
   List<String> checkStatus = ['', '', '', ''];
+  List<String> checkName2 = ['', '', '', ''];
+  List<String> checkStatus2 = ['', '', '', ''];
   String name = '';
-  String eventStatus = '';
   String comment = '';
+  String comment2 = '';
+  String position = '';
+  String societyID = '';
+  int progress2 = 0;
 
   Future<void> getData() async {
     try {
@@ -55,7 +63,6 @@ class _EventDetailsState extends State<EventDetails> {
       for (var position in restrictedPositions) {
         positionData[position] = [];
       }
-
       for (var doc in committeeSnapshot.docs) {
         String position = doc.data()['position'];
         String name = doc.data()['name'];
@@ -73,6 +80,13 @@ class _EventDetailsState extends State<EventDetails> {
         status = eventData['status'];
         progress = eventData['progress'];
         name = eventData['eventName'];
+        societyID = eventData['societyID'];
+      }
+
+      if (status == 'Closing') {
+        progress2 = 3;
+      } else {
+        progress2 = progress;
       }
       final QuerySnapshot<Map<String, dynamic>> approvalSnapshot =
           await firestore
@@ -94,14 +108,32 @@ class _EventDetailsState extends State<EventDetails> {
         checkStatus.add(approvalData['branchHeadStatus']);
       }
 
-      if (checkStatus.any((element) => element == 'Rejected')) {
-        eventStatus = 'Rejected';
-      } else if (checkStatus.any((element) => element == '')) {
-        eventStatus = 'Pending';
-      } else {
-        eventStatus = 'Approved';
+      final QuerySnapshot<Map<String, dynamic>> completionSnapshot =
+          await firestore
+              .collection('completion')
+              .where('eventID', isEqualTo: widget.selectedEvent)
+              .get();
+      checkName2.clear();
+      checkStatus2.clear();
+      if (completionSnapshot.docs.isNotEmpty) {
+        Map<String, dynamic> completionData =
+            completionSnapshot.docs.first.data();
+        comment2 = completionData['comment'];
+        checkName2.add('');
+        checkName2.add(completionData['presidentName']);
+        checkName2.add(completionData['advisorName']);
+        checkName2.add(completionData['branchHeadName']);
+        checkStatus2.add('Approved');
+        checkStatus2.add(completionData['presidentStatus']);
+        checkStatus2.add(completionData['advisorStatus']);
+        checkStatus2.add(completionData['branchHeadStatus']);
       }
 
+      if (status == 'Planning') {
+        nothing.text = comment.toString();
+      } else if (status == 'Closing') {
+        nothing.text = comment2.toString();
+      }
       Query<Map<String, dynamic>> query = firestore
           .collection('schedule')
           .where('eventID', isEqualTo: widget.selectedEvent)
@@ -132,9 +164,43 @@ class _EventDetailsState extends State<EventDetails> {
         endDate = date.toDate();
       }
 
+      final QuerySnapshot<Map<String, dynamic>> memberSnapshot = await firestore
+          .collection('member')
+          .where('societyID', isEqualTo: societyID)
+          .where('studentID', isEqualTo: storage.getItem('id'))
+          .get();
+
+      if (memberSnapshot.docs.isNotEmpty) {
+        Map<String, dynamic> memberData = memberSnapshot.docs.first.data();
+        String memberPosition = memberData['position'];
+        if (memberPosition.contains('President')) {
+          position = 'top';
+        } else {
+          position = 'viewer';
+        }
+      }
+      if (storage.getItem('role') == 'advisor' ||
+          storage.getItem('role') == 'branch head') {
+        position = 'top';
+      } else {
+        position = 'member';
+        for (var doc in committeeSnapshot.docs) {
+          String studentIDInCommittee = doc['studentID'];
+
+          if (studentIDInCommittee == storage.getItem('id')) {
+            position = 'org ' + doc['position'];
+            break;
+          }
+        }
+      }
+
       setState(() {
         checkName = checkName;
         checkStatus = checkStatus;
+        checkName2 = checkName2;
+        checkStatus2 = checkStatus2;
+        comment = comment;
+        comment2 = comment2;
         _isLoading = false;
       });
     } catch (error) {
@@ -143,7 +209,7 @@ class _EventDetailsState extends State<EventDetails> {
       });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Failed to fetch data. Please try again.'),
+          content: Text('Failed to fetch data. Please try again later.'),
           width: 225.0,
           behavior: SnackBarBehavior.floating,
           duration: Duration(seconds: 3),
@@ -164,7 +230,7 @@ class _EventDetailsState extends State<EventDetails> {
       appBar: const Header(),
       drawer: !Responsive.isDesktop(context)
           ? const CustomDrawer(
-              index: 1,
+              index: 3,
             )
           : null,
       body: _isLoading
@@ -178,7 +244,7 @@ class _EventDetailsState extends State<EventDetails> {
                   if (Responsive.isDesktop(context))
                     const Expanded(
                       child: CustomDrawer(
-                        index: 1,
+                        index: 3,
                       ),
                     ),
                   Expanded(
@@ -219,6 +285,20 @@ class _EventDetailsState extends State<EventDetails> {
                                 ),
                                 const SizedBox(
                                   height: 15,
+                                ),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    if (position == 'top' ||
+                                        position == 'org President' &&
+                                            (status != 'Closing' ||
+                                                progress != 3))
+                                      CustomButton(
+                                          width: 150,
+                                          buttonColor: Colors.red,
+                                          onPressed: () {},
+                                          text: 'Cancel Event'),
+                                  ],
                                 ),
                                 const Text(
                                   'Organising Committee:',
@@ -402,25 +482,27 @@ class _EventDetailsState extends State<EventDetails> {
                                     ],
                                   ),
                                 ),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    CustomButton(
-                                        buttonColor: Colors.green,
-                                        width: 150,
-                                        onPressed: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) => Proposal(
-                                                  selectedEvent:
-                                                      widget.selectedEvent),
-                                            ),
-                                          );
-                                        },
-                                        text: 'Edit'),
-                                  ],
-                                ),
+                                if (position == 'top' ||
+                                    position == 'org President')
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      CustomButton(
+                                          buttonColor: Colors.green,
+                                          width: 150,
+                                          onPressed: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) => EditEvent(
+                                                    selectedEvent:
+                                                        widget.selectedEvent),
+                                              ),
+                                            );
+                                          },
+                                          text: 'Edit'),
+                                    ],
+                                  ),
                                 const SizedBox(
                                   height: 15,
                                 ),
@@ -432,9 +514,14 @@ class _EventDetailsState extends State<EventDetails> {
                                   thickness: 0.1,
                                   color: Colors.black,
                                 ),
+                                const Center(
+                                    child: Text(
+                                  'Planning Phase',
+                                  style: TextStyle(fontSize: 16),
+                                )),
                                 CustomTimeline(
-                                  status: status,
-                                  progress: progress,
+                                  status: 'Planning',
+                                  progress: progress2,
                                   eventID: widget.selectedEvent,
                                   checkName: checkName,
                                   checkStatus: checkStatus,
@@ -442,29 +529,71 @@ class _EventDetailsState extends State<EventDetails> {
                                 const SizedBox(
                                   height: 15,
                                 ),
-                                Center(
-                                    child: Text(
-                                  'Status : $eventStatus',
-                                  style: const TextStyle(fontSize: 16),
-                                )),
+                                if (status == 'Closing')
+                                  const Center(
+                                      child: Text(
+                                    'Closing Phase',
+                                    style: TextStyle(fontSize: 16),
+                                  )),
+                                if (status == 'Closing')
+                                  CustomTimeline(
+                                    status: status,
+                                    progress: progress,
+                                    eventID: widget.selectedEvent,
+                                    checkName: checkName2,
+                                    checkStatus: checkStatus2,
+                                  ),
+                                if (status == 'Closing')
+                                  const SizedBox(
+                                    height: 15,
+                                  ),
                                 const SizedBox(
                                   height: 15,
                                 ),
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
-                                    CustomButton(
-                                        onPressed: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) => Proposal(
+                                    if (status == 'Closing' &&
+                                        position != 'member')
+                                      CustomButton(
+                                          width: 150,
+                                          onPressed: () {},
+                                          text: 'View Claim'),
+                                    const SizedBox(
+                                      width: 15,
+                                    ),
+                                    if (position != 'member')
+                                      CustomButton(
+                                          width: 150,
+                                          onPressed: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) => Proposal(
                                                   selectedEvent:
-                                                      widget.selectedEvent),
-                                            ),
-                                          );
-                                        },
-                                        text: 'View Documents'),
+                                                      widget.selectedEvent,
+                                                  position: position,
+                                                  status: status,
+                                                  progress: progress,
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                          text: 'View Documents'),
+                                  ],
+                                ),
+                                const SizedBox(
+                                  height: 15,
+                                ),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    if (status == 'Closing' &&
+                                        position == 'member' || position.startsWith('org') && progress == 0)
+                                      CustomButton(
+                                          width: 150,
+                                          onPressed: () {},
+                                          text: 'Submit Claim'),
                                     const SizedBox(
                                       width: 15,
                                     ),
@@ -588,8 +717,8 @@ class _EventDetailsState extends State<EventDetails> {
                                                       });
                                                 },
                                           text: progress == 0
-                                              ? 'Submit'
-                                              : 'Unsubmit'),
+                                              ? 'Submit documents'
+                                              : 'Unsubmit documents'),
                                     if (status == 'Closing' && progress != 3)
                                       CustomButton(
                                           width: 150,
@@ -734,14 +863,14 @@ class _EventDetailsState extends State<EventDetails> {
                                                   getData();
                                                 },
                                           text: progress == 0
-                                              ? 'Submit'
-                                              : 'Unsubmit'),
+                                              ? 'Submit documents'
+                                              : 'Unsubmit documents'),
                                   ],
                                 ),
                                 const SizedBox(
                                   height: 15,
                                 ),
-                                if (comment != '')
+                                if (comment != '' || comment2 != '')
                                   Row(
                                     children: [
                                       if (Responsive.isDesktop(context))

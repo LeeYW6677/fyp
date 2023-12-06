@@ -6,7 +6,16 @@ import 'package:fyp/functions/responsive.dart';
 
 class Budget extends StatefulWidget {
   final String selectedEvent;
-  const Budget({super.key, required this.selectedEvent});
+  final String status;
+  final int progress;
+  final String position;
+
+  const Budget(
+      {super.key,
+      required this.selectedEvent,
+      required this.status,
+      required this.progress,
+      required this.position});
 
   @override
   State<Budget> createState() => _BudgetState();
@@ -15,7 +24,6 @@ class Budget extends StatefulWidget {
 class _BudgetState extends State<Budget> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
-  String status = '';
   final item = TextEditingController();
   final price = TextEditingController();
   final quantity = TextEditingController();
@@ -23,7 +31,7 @@ class _BudgetState extends State<Budget> {
   List<BudgetItem> income = [];
   List<BudgetItem> expense = [];
   String selectedType = 'Income';
-  int progress = -1;
+  bool enabled = true;
 
   double calculateTotal(List<BudgetItem> items) {
     double total = 0;
@@ -38,6 +46,12 @@ class _BudgetState extends State<Budget> {
       setState(() {
         _isLoading = true;
       });
+      if (!widget.position.startsWith('org') ||
+          widget.position.contains('Secretary') ||
+          widget.status != 'Planning' ||
+          widget.progress != 0) {
+        enabled = false;
+      }
 
       final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
@@ -146,289 +160,320 @@ class _BudgetState extends State<Budget> {
                                           selectedEvent: widget.selectedEvent,
                                           tab: 'Pre',
                                           form: 'Budget',
-                                          status: status,
-                                          children: <Widget>[
-                                            Row(
-                                              children: [
-                                                Expanded(
-                                                  child: Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            8.0),
-                                                    child: Row(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .center,
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        if (Responsive
-                                                            .isDesktop(context))
-                                                          const Expanded(
-                                                            flex: 1,
-                                                            child: Text(
-                                                              'Item Name',
-                                                              style: TextStyle(
-                                                                  fontSize: 16),
-                                                            ),
-                                                          ),
-                                                        Expanded(
-                                                          flex: 4,
-                                                          child:
-                                                              CustomTextField(
-                                                            validator: (value) {
-                                                              if (value!
-                                                                  .isEmpty) {
-                                                                return 'Please enter item name';
-                                                              }
-                                                              return null;
-                                                            },
-                                                            hintText:
-                                                                'Enter Item Name',
-                                                            controller: item,
-                                                            screen: !Responsive
-                                                                .isDesktop(
-                                                                    context),
-                                                            labelText:
-                                                                'Item Name',
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                                Expanded(
-                                                  child: Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            8.0),
-                                                    child: Row(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .center,
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        if (Responsive
-                                                            .isDesktop(context))
-                                                          const Expanded(
-                                                            flex: 1,
-                                                            child: Text(
-                                                              'Unit Price',
-                                                              style: TextStyle(
-                                                                  fontSize: 16),
-                                                            ),
-                                                          ),
-                                                        Expanded(
-                                                          flex: 4,
-                                                          child:
-                                                              CustomTextField(
-                                                            screen: !Responsive
-                                                                .isDesktop(
-                                                                    context),
-                                                            labelText:
-                                                                'Unit Price',
-                                                            prefixText: 'RM',
-                                                            controller: price,
-                                                            hintText:
-                                                                'Enter unit price',
-                                                            inputFormatters: [
-                                                              FilteringTextInputFormatter
-                                                                  .allow(RegExp(
-                                                                      r'^\d+\.?\d{0,2}$')),
-                                                            ],
-                                                            validator: (value) {
-                                                              if (value ==
-                                                                  null) {
-                                                                return 'Please enter unit price';
-                                                              } else if (!RegExp(
-                                                                      r'^\d+(\.\d{1,2})?$')
-                                                                  .hasMatch(
-                                                                      value)) {
-                                                                return 'Invalid Price Format';
-                                                              } else if (value ==
-                                                                  '0.00') {
-                                                                return 'Price must be more than RM0.00';
-                                                              }
-                                                              return null;
-                                                            },
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            Row(
-                                              children: [
-                                                Expanded(
-                                                  child: Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            8.0),
-                                                    child: Row(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .center,
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        if (Responsive
-                                                            .isDesktop(context))
-                                                          const Expanded(
-                                                            flex: 1,
-                                                            child: Text(
-                                                              'Quantity',
-                                                              style: TextStyle(
-                                                                  fontSize: 16),
-                                                            ),
-                                                          ),
-                                                        Expanded(
-                                                          flex: 4,
-                                                          child:
-                                                              CustomTextField(
-                                                            validator: (value) {
-                                                              if (value!
-                                                                  .isEmpty) {
-                                                                return 'Please enter quantity';
-                                                              } else if (value ==
-                                                                  '0') {
-                                                                return 'Quantity must be more than 0';
-                                                              }
-                                                              return null;
-                                                            },
-                                                            labelText:
-                                                                'Quantity',
-                                                            screen: !Responsive
-                                                                .isDesktop(
-                                                                    context),
-                                                            hintText: '0',
-                                                            controller:
-                                                                quantity,
-                                                            inputFormatters: [
-                                                              FilteringTextInputFormatter
-                                                                  .digitsOnly,
-                                                            ],
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                                Expanded(
-                                                  child: Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            8.0),
-                                                    child: Row(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .center,
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        if (Responsive
-                                                            .isDesktop(context))
-                                                          const Expanded(
-                                                            flex: 1,
-                                                            child: Text(
-                                                              'Item Type',
-                                                              style: TextStyle(
-                                                                  fontSize: 16),
-                                                            ),
-                                                          ),
-                                                        Expanded(
-                                                            flex: 4,
-                                                            child: CustomDDL<
-                                                                String>(
-                                                              onChanged: (String?
-                                                                  newValue) {
-                                                                setState(() {
-                                                                  selectedType =
-                                                                      newValue!;
-                                                                });
-                                                              },
-                                                              labelText:
-                                                                  'Item Type',
-                                                              screen: !Responsive
+                                          status: widget.status,
+                                          progress: widget.progress,
+                                          position: widget.position,
+                                          children: [
+                                            if (enabled)
+                                              Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.end,
+                                                children: [
+                                                  Row(
+                                                    children: [
+                                                      Expanded(
+                                                        child: Padding(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .all(8.0),
+                                                          child: Row(
+                                                            crossAxisAlignment:
+                                                                CrossAxisAlignment
+                                                                    .center,
+                                                            mainAxisAlignment:
+                                                                MainAxisAlignment
+                                                                    .start,
+                                                            children: [
+                                                              if (Responsive
                                                                   .isDesktop(
-                                                                      context),
-                                                              controller: type,
-                                                              hintText:
-                                                                  'Select item type',
-                                                              value:
-                                                                  selectedType,
-                                                              dropdownItems: [
-                                                                'Income',
-                                                                'Expense',
-                                                              ].map((type) {
-                                                                return DropdownMenuItem<
-                                                                    String>(
-                                                                  value: type,
+                                                                      context))
+                                                                const Expanded(
+                                                                  flex: 1,
                                                                   child: Text(
-                                                                      type,
-                                                                      overflow:
-                                                                          TextOverflow
-                                                                              .ellipsis),
-                                                                );
-                                                              }).toList(),
-                                                            )),
-                                                      ],
-                                                    ),
+                                                                    'Item Name',
+                                                                    style: TextStyle(
+                                                                        fontSize:
+                                                                            16),
+                                                                  ),
+                                                                ),
+                                                              Expanded(
+                                                                flex: 4,
+                                                                child:
+                                                                    CustomTextField(
+                                                                  validator:
+                                                                      (value) {
+                                                                    if (value!
+                                                                        .isEmpty) {
+                                                                      return 'Please enter item name';
+                                                                    }
+                                                                    return null;
+                                                                  },
+                                                                  hintText:
+                                                                      'Enter Item Name',
+                                                                  controller:
+                                                                      item,
+                                                                  screen: !Responsive
+                                                                      .isDesktop(
+                                                                          context),
+                                                                  labelText:
+                                                                      'Item Name',
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      Expanded(
+                                                        child: Padding(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .all(8.0),
+                                                          child: Row(
+                                                            crossAxisAlignment:
+                                                                CrossAxisAlignment
+                                                                    .center,
+                                                            mainAxisAlignment:
+                                                                MainAxisAlignment
+                                                                    .start,
+                                                            children: [
+                                                              if (Responsive
+                                                                  .isDesktop(
+                                                                      context))
+                                                                const Expanded(
+                                                                  flex: 1,
+                                                                  child: Text(
+                                                                    'Unit Price',
+                                                                    style: TextStyle(
+                                                                        fontSize:
+                                                                            16),
+                                                                  ),
+                                                                ),
+                                                              Expanded(
+                                                                flex: 4,
+                                                                child:
+                                                                    CustomTextField(
+                                                                  screen: !Responsive
+                                                                      .isDesktop(
+                                                                          context),
+                                                                  labelText:
+                                                                      'Unit Price',
+                                                                  prefixText:
+                                                                      'RM',
+                                                                  controller:
+                                                                      price,
+                                                                  hintText:
+                                                                      'Enter unit price',
+                                                                  inputFormatters: [
+                                                                    FilteringTextInputFormatter
+                                                                        .allow(RegExp(
+                                                                            r'^\d+\.?\d{0,2}$')),
+                                                                  ],
+                                                                  validator:
+                                                                      (value) {
+                                                                    if (value ==
+                                                                        null) {
+                                                                      return 'Please enter unit price';
+                                                                    } else if (!RegExp(
+                                                                            r'^\d+(\.\d{1,2})?$')
+                                                                        .hasMatch(
+                                                                            value)) {
+                                                                      return 'Invalid Price Format';
+                                                                    } else if (value ==
+                                                                        '0.00') {
+                                                                      return 'Price must be more than RM0.00';
+                                                                    }
+                                                                    return null;
+                                                                  },
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
                                                   ),
-                                                ),
-                                              ],
-                                            ),
-                                            CustomButton(
-                                              onPressed: () async {
-                                                if (_formKey.currentState!
-                                                    .validate()) {
-                                                  BudgetItem budgetItem =
-                                                      BudgetItem(
-                                                    name: item.text,
-                                                    qty: int.parse(
-                                                        quantity.text),
-                                                    price: double.parse(
-                                                        double.parse(price.text)
-                                                            .toStringAsFixed(
-                                                                2)),
-                                                    type: type.text,
-                                                  );
+                                                  Row(
+                                                    children: [
+                                                      Expanded(
+                                                        child: Padding(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .all(8.0),
+                                                          child: Row(
+                                                            crossAxisAlignment:
+                                                                CrossAxisAlignment
+                                                                    .center,
+                                                            mainAxisAlignment:
+                                                                MainAxisAlignment
+                                                                    .start,
+                                                            children: [
+                                                              if (Responsive
+                                                                  .isDesktop(
+                                                                      context))
+                                                                const Expanded(
+                                                                  flex: 1,
+                                                                  child: Text(
+                                                                    'Quantity',
+                                                                    style: TextStyle(
+                                                                        fontSize:
+                                                                            16),
+                                                                  ),
+                                                                ),
+                                                              Expanded(
+                                                                flex: 4,
+                                                                child:
+                                                                    CustomTextField(
+                                                                  validator:
+                                                                      (value) {
+                                                                    if (value!
+                                                                        .isEmpty) {
+                                                                      return 'Please enter quantity';
+                                                                    } else if (value ==
+                                                                        '0') {
+                                                                      return 'Quantity must be more than 0';
+                                                                    }
+                                                                    return null;
+                                                                  },
+                                                                  labelText:
+                                                                      'Quantity',
+                                                                  screen: !Responsive
+                                                                      .isDesktop(
+                                                                          context),
+                                                                  hintText: '0',
+                                                                  controller:
+                                                                      quantity,
+                                                                  inputFormatters: [
+                                                                    FilteringTextInputFormatter
+                                                                        .digitsOnly,
+                                                                  ],
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      Expanded(
+                                                        child: Padding(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .all(8.0),
+                                                          child: Row(
+                                                            crossAxisAlignment:
+                                                                CrossAxisAlignment
+                                                                    .center,
+                                                            mainAxisAlignment:
+                                                                MainAxisAlignment
+                                                                    .start,
+                                                            children: [
+                                                              if (Responsive
+                                                                  .isDesktop(
+                                                                      context))
+                                                                const Expanded(
+                                                                  flex: 1,
+                                                                  child: Text(
+                                                                    'Item Type',
+                                                                    style: TextStyle(
+                                                                        fontSize:
+                                                                            16),
+                                                                  ),
+                                                                ),
+                                                              Expanded(
+                                                                  flex: 4,
+                                                                  child:
+                                                                      CustomDDL<
+                                                                          String>(
+                                                                    onChanged:
+                                                                        (String?
+                                                                            newValue) {
+                                                                      setState(
+                                                                          () {
+                                                                        selectedType =
+                                                                            newValue!;
+                                                                      });
+                                                                    },
+                                                                    labelText:
+                                                                        'Item Type',
+                                                                    screen: !Responsive
+                                                                        .isDesktop(
+                                                                            context),
+                                                                    controller:
+                                                                        type,
+                                                                    hintText:
+                                                                        'Select item type',
+                                                                    value:
+                                                                        selectedType,
+                                                                    dropdownItems:
+                                                                        [
+                                                                      'Income',
+                                                                      'Expense',
+                                                                    ].map((type) {
+                                                                      return DropdownMenuItem<
+                                                                          String>(
+                                                                        value:
+                                                                            type,
+                                                                        child: Text(
+                                                                            type,
+                                                                            overflow:
+                                                                                TextOverflow.ellipsis),
+                                                                      );
+                                                                    }).toList(),
+                                                                  )),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  CustomButton(
+                                                    onPressed: () async {
+                                                      if (_formKey.currentState!
+                                                          .validate()) {
+                                                        BudgetItem budgetItem =
+                                                            BudgetItem(
+                                                          name: item.text,
+                                                          qty: int.parse(
+                                                              quantity.text),
+                                                          price: double.parse(
+                                                              double.parse(price
+                                                                      .text)
+                                                                  .toStringAsFixed(
+                                                                      2)),
+                                                          type: type.text,
+                                                        );
 
-                                                  if (selectedType ==
-                                                      'Income') {
-                                                    income.add(budgetItem);
-                                                    setState(() {
-                                                      income = income;
-                                                    });
-                                                  } else {
-                                                    expense.add(budgetItem);
-                                                    setState(() {
-                                                      expense = expense;
-                                                    });
-                                                  }
+                                                        if (selectedType ==
+                                                            'Income') {
+                                                          income
+                                                              .add(budgetItem);
+                                                          setState(() {
+                                                            income = income;
+                                                          });
+                                                        } else {
+                                                          expense
+                                                              .add(budgetItem);
+                                                          setState(() {
+                                                            expense = expense;
+                                                          });
+                                                        }
 
-                                                  item.clear();
-                                                  quantity.clear();
-                                                  type.clear();
-                                                  price.clear();
-                                                }
-                                              },
-                                              text: 'Add',
-                                              width: 150,
-                                            ),
-                                            const SizedBox(
-                                              height: 15,
-                                            ),
+                                                        item.clear();
+                                                        quantity.clear();
+                                                        type.clear();
+                                                        price.clear();
+                                                      }
+                                                    },
+                                                    text: 'Add',
+                                                    width: 150,
+                                                  ),
+                                                  const SizedBox(
+                                                    height: 15,
+                                                  ),
+                                                ],
+                                              ),
                                             Column(
                                               children: [
                                                 Center(
-                                                  child: SingleChildScrollView(
+                                                  child: income.isNotEmpty || expense.isNotEmpty ? SingleChildScrollView(
                                                     scrollDirection:
                                                         Axis.horizontal,
                                                     child: Row(
@@ -436,7 +481,7 @@ class _BudgetState extends State<Budget> {
                                                           CrossAxisAlignment
                                                               .start,
                                                       children: [
-                                                        DataTable(                                                          
+                                                        DataTable(
                                                           columns: const [
                                                             DataColumn(
                                                               label: Text(
@@ -592,35 +637,37 @@ class _BudgetState extends State<Budget> {
                                                                   DataCell(
                                                                     Row(
                                                                       children: [
-                                                                        IconButton(
-                                                                          icon:
-                                                                              const Icon(Icons.edit),
-                                                                          onPressed:
-                                                                              () {
-                                                                            showDialog(
-                                                                              context: context,
-                                                                              builder: (_) {
-                                                                                return EditDialog(
-                                                                                  item: item,
-                                                                                  index: index,
-                                                                                  income: income,
-                                                                                  expense: expense,
-                                                                                  function: resetTable,
-                                                                                );
-                                                                              },
-                                                                            );
-                                                                          },
-                                                                        ),
-                                                                        IconButton(
-                                                                          icon:
-                                                                              const Icon(Icons.delete),
-                                                                          onPressed:
-                                                                              () {
-                                                                            setState(() {
-                                                                              expense.removeAt(index);
-                                                                            });
-                                                                          },
-                                                                        ),
+                                                                        if (enabled)
+                                                                          IconButton(
+                                                                            icon:
+                                                                                const Icon(Icons.edit),
+                                                                            onPressed:
+                                                                                () {
+                                                                              showDialog(
+                                                                                context: context,
+                                                                                builder: (_) {
+                                                                                  return EditDialog(
+                                                                                    item: item,
+                                                                                    index: index,
+                                                                                    income: income,
+                                                                                    expense: expense,
+                                                                                    function: resetTable,
+                                                                                  );
+                                                                                },
+                                                                              );
+                                                                            },
+                                                                          ),
+                                                                        if (enabled)
+                                                                          IconButton(
+                                                                            icon:
+                                                                                const Icon(Icons.delete),
+                                                                            onPressed:
+                                                                                () {
+                                                                              setState(() {
+                                                                                expense.removeAt(index);
+                                                                              });
+                                                                            },
+                                                                          ),
                                                                       ],
                                                                     ),
                                                                   ),
@@ -654,7 +701,7 @@ class _BudgetState extends State<Budget> {
                                                         ),
                                                       ],
                                                     ),
-                                                  ),
+                                                  ) : const SizedBox(height: 500, child: Center(child: Text('There is no budget item registered.'))),
                                                 ),
                                               ],
                                             ),
@@ -670,78 +717,86 @@ class _BudgetState extends State<Budget> {
                                             const SizedBox(
                                               height: 15,
                                             ),
-                                            CustomButton(
-                                              onPressed: () async {
-                                                FirebaseFirestore firestore =
-                                                    FirebaseFirestore.instance;
+                                            if (enabled)
+                                              CustomButton(
+                                                onPressed: () async {
+                                                  FirebaseFirestore firestore =
+                                                      FirebaseFirestore
+                                                          .instance;
 
-                                                CollectionReference budget =
-                                                    firestore.collection(
-                                                        'budgetItem');
+                                                  CollectionReference budget =
+                                                      firestore.collection(
+                                                          'budgetItem');
 
-                                                QuerySnapshot querySnapshot =
-                                                    await budget
-                                                        .where('eventID',
-                                                            isEqualTo: widget
-                                                                .selectedEvent)
-                                                        .get();
+                                                  QuerySnapshot querySnapshot =
+                                                      await budget
+                                                          .where('eventID',
+                                                              isEqualTo: widget
+                                                                  .selectedEvent)
+                                                          .get();
 
-                                                for (QueryDocumentSnapshot documentSnapshot
-                                                    in querySnapshot.docs) {
-                                                  await documentSnapshot
-                                                      .reference
-                                                      .delete();
-                                                }
+                                                  for (QueryDocumentSnapshot documentSnapshot
+                                                      in querySnapshot.docs) {
+                                                    await documentSnapshot
+                                                        .reference
+                                                        .delete();
+                                                  }
 
-                                                for (int index = 0;
-                                                    index < income.length;
-                                                    index++) {
-                                                  BudgetItem budgetItem =
-                                                      income[index];
+                                                  for (int index = 0;
+                                                      index < income.length;
+                                                      index++) {
+                                                    BudgetItem budgetItem =
+                                                        income[index];
 
-                                                  await budget.add({
-                                                    'eventID':
-                                                        widget.selectedEvent,
-                                                    'itemName': budgetItem.name,
-                                                    'quantity': budgetItem.qty,
-                                                    'unitPrice':
-                                                        budgetItem.price,
-                                                    'itemType': budgetItem.type,
-                                                  });
-                                                }
+                                                    await budget.add({
+                                                      'eventID':
+                                                          widget.selectedEvent,
+                                                      'itemName':
+                                                          budgetItem.name,
+                                                      'quantity':
+                                                          budgetItem.qty,
+                                                      'unitPrice':
+                                                          budgetItem.price,
+                                                      'itemType':
+                                                          budgetItem.type,
+                                                    });
+                                                  }
 
-                                                for (int index = 0;
-                                                    index < expense.length;
-                                                    index++) {
-                                                  BudgetItem budgetItem =
-                                                      expense[index];
+                                                  for (int index = 0;
+                                                      index < expense.length;
+                                                      index++) {
+                                                    BudgetItem budgetItem =
+                                                        expense[index];
 
-                                                  await budget.add({
-                                                    'eventID':
-                                                        widget.selectedEvent,
-                                                    'itemName': budgetItem.name,
-                                                    'quantity': budgetItem.qty,
-                                                    'unitPrice':
-                                                        budgetItem.price,
-                                                    'itemType': budgetItem.type,
-                                                  });
-                                                }
-                                                ScaffoldMessenger.of(context)
-                                                    .showSnackBar(
-                                                  const SnackBar(
-                                                    content:
-                                                        Text('Budget saved.'),
-                                                    width: 150.0,
-                                                    behavior: SnackBarBehavior
-                                                        .floating,
-                                                    duration:
-                                                        Duration(seconds: 3),
-                                                  ),
-                                                );
-                                              },
-                                              text: 'Save',
-                                              width: 150,
-                                            ),
+                                                    await budget.add({
+                                                      'eventID':
+                                                          widget.selectedEvent,
+                                                      'itemName':
+                                                          budgetItem.name,
+                                                      'quantity':
+                                                          budgetItem.qty,
+                                                      'unitPrice':
+                                                          budgetItem.price,
+                                                      'itemType':
+                                                          budgetItem.type,
+                                                    });
+                                                  }
+                                                  ScaffoldMessenger.of(context)
+                                                      .showSnackBar(
+                                                    const SnackBar(
+                                                      content:
+                                                          Text('Budget saved.'),
+                                                      width: 150.0,
+                                                      behavior: SnackBarBehavior
+                                                          .floating,
+                                                      duration:
+                                                          Duration(seconds: 3),
+                                                    ),
+                                                  );
+                                                },
+                                                text: 'Save',
+                                                width: 150,
+                                              ),
                                             const SizedBox(
                                               height: 15,
                                             ),

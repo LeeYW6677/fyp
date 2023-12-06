@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
@@ -46,23 +48,57 @@ class _AddEventState extends State<AddEvent> {
     try {
       FirebaseFirestore firestore = FirebaseFirestore.instance;
 
-      QuerySnapshot<Map<String, dynamic>> snapshot =
-          await firestore.collection('event').get();
+      // Get today's date in the format 'yyyyMMdd'
+      String todayDate = DateTime.now()
+          .toLocal()
+          .toString()
+          .substring(0, 10)
+          .replaceAll('-', '');
 
-      int totalCount = snapshot.size;
+      String randomDigits = Random().nextInt(999).toString().padLeft(3, '0');
 
-      String eventID = 'E${(totalCount + 1).toString().padLeft(3, '0')}';
+      // Concatenate the parts to form the eventID
+      String eventID = 'E$todayDate$randomDigits';
 
-      DocumentReference<Map<String, dynamic>> societyReference =
+      DocumentReference<Map<String, dynamic>> eventReference =
           firestore.collection('event').doc(eventID);
 
-      await societyReference.set({
+      await eventReference.set({
         'eventID': eventID,
         'eventName': eventName,
         'societyID': widget.selectedSociety,
         'status': 'Planning',
-        'progress' : 0
+        'progress': 0
       });
+
+      DocumentReference<Map<String, dynamic>> approvalReference =
+          firestore.collection('approval').doc(eventID);
+
+      await approvalReference.set({
+        'eventID': eventID,
+        'presidentName': '',
+        'presidentStatus': '',
+        'advisorName': '',
+        'advisorStatus': '',
+        'branchHeadName': '',
+        'branchHeadStatus': '',
+        'comment': '',
+      });
+
+      DocumentReference<Map<String, dynamic>> completionReference =
+          firestore.collection('completion').doc(eventID);
+
+      await completionReference.set({
+        'eventID': eventID,
+        'presidentName': '',
+        'presidentStatus': '',
+        'advisorName': '',
+        'advisorStatus': '',
+        'branchHeadName': '',
+        'branchHeadStatus': '',
+        'comment': '',
+      });
+
       return eventID;
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -93,8 +129,7 @@ class _AddEventState extends State<AddEvent> {
       String committeeName, String contactNo) async {
     try {
       FirebaseFirestore firestore = FirebaseFirestore.instance;
-      CollectionReference committee =
-          firestore.collection('organisingCommittee');
+      CollectionReference committee = firestore.collection('committee');
 
       await committee.add({
         'eventID': eventID,
@@ -115,7 +150,8 @@ class _AddEventState extends State<AddEvent> {
     }
   }
 
-   Future<void> onTextChanged(String value, TextEditingController controller) async {
+  Future<void> onTextChanged(
+      String value, TextEditingController controller) async {
     if (RegExp(r'^\d{2}[A-Z]{3}\d{5}$').hasMatch(value)) {
       DocumentSnapshot<Map<String, dynamic>> student =
           await FirebaseFirestore.instance.collection('user').doc(value).get();
@@ -215,10 +251,10 @@ class _AddEventState extends State<AddEvent> {
                                           ),
                                         ),
                                       ),
-                                      if(Responsive.isDesktop(context))
-                                      const Expanded(
-                                        child: SizedBox(),
-                                      ),
+                                      if (Responsive.isDesktop(context))
+                                        const Expanded(
+                                          child: SizedBox(),
+                                        ),
                                     ],
                                   ),
                                   const SizedBox(height: 50),
@@ -283,9 +319,12 @@ class _AddEventState extends State<AddEvent> {
                                               Expanded(
                                                 flex: 4,
                                                 child: CustomTextField(
-                                                  screen: !Responsive.isDesktop(context),
+                                                  screen: !Responsive.isDesktop(
+                                                      context),
                                                   labelText: 'Student ID',
-                                                  onChanged: (value) => onTextChanged(value, presidentName),
+                                                  onChanged: (value) =>
+                                                      onTextChanged(
+                                                          value, presidentName),
                                                   validator: (value) {
                                                     if (value!.isEmpty) {
                                                       return 'Please enter student ID';
@@ -323,9 +362,12 @@ class _AddEventState extends State<AddEvent> {
                                               Expanded(
                                                 flex: 4,
                                                 child: CustomTextField(
-                                                  screen: !Responsive.isDesktop(context),
+                                                  screen: !Responsive.isDesktop(
+                                                      context),
                                                   labelText: 'Student ID',
-                                                  onChanged: (value) => onTextChanged(value, secretaryName),
+                                                  onChanged: (value) =>
+                                                      onTextChanged(
+                                                          value, secretaryName),
                                                   validator: (value) {
                                                     if (value!.isEmpty) {
                                                       return 'Please enter student ID';
@@ -363,9 +405,12 @@ class _AddEventState extends State<AddEvent> {
                                               Expanded(
                                                 flex: 4,
                                                 child: CustomTextField(
-                                                  screen: !Responsive.isDesktop(context),
+                                                  screen: !Responsive.isDesktop(
+                                                      context),
                                                   labelText: 'Student ID',
-                                                  onChanged: (value) => onTextChanged(value, treasurerName),
+                                                  onChanged: (value) =>
+                                                      onTextChanged(
+                                                          value, treasurerName),
                                                   validator: (value) {
                                                     if (value!.isEmpty) {
                                                       return 'Please enter student ID';
@@ -546,9 +591,12 @@ class _AddEventState extends State<AddEvent> {
                                               Expanded(
                                                 flex: 4,
                                                 child: CustomTextField(
-                                                  screen: !Responsive.isDesktop(context),
+                                                  screen: !Responsive.isDesktop(
+                                                      context),
                                                   labelText: 'Student ID',
-                                                  onChanged: (value) => onTextChanged(value, vpresidentName),
+                                                  onChanged: (value) =>
+                                                      onTextChanged(value,
+                                                          vpresidentName),
                                                   validator: (value) {
                                                     if (value!.isEmpty) {
                                                       return 'Please enter student ID';
@@ -586,9 +634,12 @@ class _AddEventState extends State<AddEvent> {
                                               Expanded(
                                                 flex: 4,
                                                 child: CustomTextField(
-                                                  screen: !Responsive.isDesktop(context),
+                                                  screen: !Responsive.isDesktop(
+                                                      context),
                                                   labelText: 'Student ID',
-                                                  onChanged: (value) => onTextChanged(value, vsecretaryName),
+                                                  onChanged: (value) =>
+                                                      onTextChanged(value,
+                                                          vsecretaryName),
                                                   validator: (value) {
                                                     if (value!.isEmpty) {
                                                       return 'Please enter student ID';
@@ -626,9 +677,12 @@ class _AddEventState extends State<AddEvent> {
                                               Expanded(
                                                 flex: 4,
                                                 child: CustomTextField(
-                                                  screen: !Responsive.isDesktop(context),
+                                                  screen: !Responsive.isDesktop(
+                                                      context),
                                                   labelText: 'Student ID',
-                                                  onChanged: (value) => onTextChanged(value, vtreasurerName),
+                                                  onChanged: (value) =>
+                                                      onTextChanged(value,
+                                                          vtreasurerName),
                                                   validator: (value) {
                                                     if (value!.isEmpty) {
                                                       return 'Please enter student ID';

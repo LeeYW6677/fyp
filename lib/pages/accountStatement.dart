@@ -6,7 +6,15 @@ import 'package:fyp/functions/responsive.dart';
 
 class Account extends StatefulWidget {
   final String selectedEvent;
-  const Account({super.key, required this.selectedEvent});
+  final String status;
+  final int progress;
+  final String position;
+  const Account(
+      {super.key,
+      required this.selectedEvent,
+      required this.status,
+      required this.progress,
+      required this.position});
 
   @override
   State<Account> createState() => _AccountState();
@@ -15,14 +23,13 @@ class Account extends StatefulWidget {
 class _AccountState extends State<Account> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _isLoading = true;
-  String status = '';
   final item = TextEditingController();
   final price = TextEditingController();
   final type = TextEditingController();
   String selectedType = 'Income';
   List<AccountStatement> income = [];
   List<AccountStatement> expense = [];
-  int progress = -1;
+  bool enabled = true;
 
   void resetTable() {
     setState(() {
@@ -44,6 +51,14 @@ class _AccountState extends State<Account> {
       setState(() {
         _isLoading = true;
       });
+
+      if (!widget.position.startsWith('org') ||
+          widget.position.contains('Secretary') ||
+          widget.status != 'Closing' ||
+          widget.progress != 0) {
+        enabled = false;
+      }
+
       final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
       final QuerySnapshot<Map<String, dynamic>> budgetSnapshot = await firestore
@@ -142,239 +157,247 @@ class _AccountState extends State<Account> {
                                           selectedEvent: widget.selectedEvent,
                                           tab: 'Post',
                                           form: 'Account',
-                                          status: status,
+                                          status: widget.status,
+                                          position: widget.position,
+                                          progress: widget.progress,
                                           children: [
-                                            Row(
+                                            if(enabled)
+                                            Column(
+                                              crossAxisAlignment: CrossAxisAlignment.end,
                                               children: [
-                                                Expanded(
-                                                  child: Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            8.0),
-                                                    child: Row(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .center,
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        if (Responsive
-                                                            .isDesktop(context))
-                                                          const Expanded(
-                                                            flex: 1,
-                                                            child: Text(
-                                                              'Description',
-                                                              style: TextStyle(
-                                                                  fontSize: 16),
-                                                            ),
-                                                          ),
-                                                        Expanded(
-                                                          flex: 4,
-                                                          child:
-                                                              CustomTextField(
-                                                            validator: (value) {
-                                                              if (value!
-                                                                  .isEmpty) {
-                                                                return 'Please enter description';
-                                                              }
-                                                              return null;
-                                                            },
-                                                            hintText:
-                                                                'Enter Description',
-                                                            controller: item,
-                                                            screen: !Responsive
-                                                                .isDesktop(
-                                                                    context),
-                                                            labelText:
-                                                                'Description',
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                                Expanded(
-                                                  child: Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            8.0),
-                                                    child: Row(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .center,
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        if (Responsive
-                                                            .isDesktop(context))
-                                                          const Expanded(
-                                                            flex: 1,
-                                                            child: Text(
-                                                              'Amount',
-                                                              style: TextStyle(
-                                                                  fontSize: 16),
-                                                            ),
-                                                          ),
-                                                        Expanded(
-                                                          flex: 4,
-                                                          child:
-                                                              CustomTextField(
-                                                            screen: !Responsive
-                                                                .isDesktop(
-                                                                    context),
-                                                            labelText: 'Amount',
-                                                            prefixText: 'RM',
-                                                            controller: price,
-                                                            hintText:
-                                                                'Enter amount',
-                                                            inputFormatters: [
-                                                              FilteringTextInputFormatter
-                                                                  .allow(RegExp(
-                                                                      r'^\d+\.?\d{0,2}$')),
-                                                            ],
-                                                            validator: (value) {
-                                                              if (value ==
-                                                                  null) {
-                                                                return 'Please enter amount';
-                                                              } else if (!RegExp(
-                                                                      r'^\d+(\.\d{1,2})?$')
-                                                                  .hasMatch(
-                                                                      value)) {
-                                                                return 'Invalid Amount Format';
-                                                              } else if (value ==
-                                                                  '0.00') {
-                                                                return 'Amount must be more than RM 0.00';
-                                                              }
-                                                              return null;
-                                                            },
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            Row(
-                                              children: [
-                                                Expanded(
-                                                  child: Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            8.0),
-                                                    child: Row(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .center,
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        if (Responsive
-                                                            .isDesktop(context))
-                                                          const Expanded(
-                                                            flex: 1,
-                                                            child: Text(
-                                                              'Record Type',
-                                                              style: TextStyle(
-                                                                  fontSize: 16),
-                                                            ),
-                                                          ),
-                                                        Expanded(
-                                                            flex: 4,
-                                                            child: CustomDDL<
-                                                                String>(
-                                                              onChanged: (String?
-                                                                  newValue) {
-                                                                setState(() {
-                                                                  selectedType =
-                                                                      newValue!;
-                                                                });
-                                                              },
-                                                              labelText:
-                                                                  'Record Type',
-                                                              screen: !Responsive
-                                                                  .isDesktop(
-                                                                      context),
-                                                              controller: type,
-                                                              hintText:
-                                                                  'Select record type',
-                                                              value:
-                                                                  selectedType,
-                                                              dropdownItems: [
-                                                                'Income',
-                                                                'Expense',
-                                                              ].map((type) {
-                                                                return DropdownMenuItem<
-                                                                    String>(
-                                                                  value: type,
-                                                                  child: Text(
-                                                                      type,
-                                                                      overflow:
-                                                                          TextOverflow
-                                                                              .ellipsis),
-                                                                );
-                                                              }).toList(),
-                                                            )),
-                                                        if (Responsive
-                                                            .isDesktop(context))
-                                                          const Expanded(
-                                                              flex: 1,
+                                                Row(
+                                                  children: [
+                                                    Expanded(
+                                                      child: Padding(
+                                                        padding:
+                                                            const EdgeInsets.all(
+                                                                8.0),
+                                                        child: Row(
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .center,
+                                                          mainAxisAlignment:
+                                                              MainAxisAlignment
+                                                                  .start,
+                                                          children: [
+                                                            if (Responsive
+                                                                .isDesktop(context))
+                                                              const Expanded(
+                                                                flex: 1,
+                                                                child: Text(
+                                                                  'Description',
+                                                                  style: TextStyle(
+                                                                      fontSize: 16),
+                                                                ),
+                                                              ),
+                                                            Expanded(
+                                                              flex: 4,
                                                               child:
-                                                                  SizedBox()),
-                                                        const Expanded(
-                                                            flex: 4,
-                                                            child: SizedBox()),
-                                                      ],
+                                                                  CustomTextField(
+                                                                validator: (value) {
+                                                                  if (value!
+                                                                      .isEmpty) {
+                                                                    return 'Please enter description';
+                                                                  }
+                                                                  return null;
+                                                                },
+                                                                hintText:
+                                                                    'Enter Description',
+                                                                controller: item,
+                                                                screen: !Responsive
+                                                                    .isDesktop(
+                                                                        context),
+                                                                labelText:
+                                                                    'Description',
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
                                                     ),
-                                                  ),
+                                                    Expanded(
+                                                      child: Padding(
+                                                        padding:
+                                                            const EdgeInsets.all(
+                                                                8.0),
+                                                        child: Row(
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .center,
+                                                          mainAxisAlignment:
+                                                              MainAxisAlignment
+                                                                  .start,
+                                                          children: [
+                                                            if (Responsive
+                                                                .isDesktop(context))
+                                                              const Expanded(
+                                                                flex: 1,
+                                                                child: Text(
+                                                                  'Amount',
+                                                                  style: TextStyle(
+                                                                      fontSize: 16),
+                                                                ),
+                                                              ),
+                                                            Expanded(
+                                                              flex: 4,
+                                                              child:
+                                                                  CustomTextField(
+                                                                screen: !Responsive
+                                                                    .isDesktop(
+                                                                        context),
+                                                                labelText: 'Amount',
+                                                                prefixText: 'RM',
+                                                                controller: price,
+                                                                hintText:
+                                                                    'Enter amount',
+                                                                inputFormatters: [
+                                                                  FilteringTextInputFormatter
+                                                                      .allow(RegExp(
+                                                                          r'^\d+\.?\d{0,2}$')),
+                                                                ],
+                                                                validator: (value) {
+                                                                  if (value ==
+                                                                      null) {
+                                                                    return 'Please enter amount';
+                                                                  } else if (!RegExp(
+                                                                          r'^\d+(\.\d{1,2})?$')
+                                                                      .hasMatch(
+                                                                          value)) {
+                                                                    return 'Invalid Amount Format';
+                                                                  } else if (value ==
+                                                                      '0.00') {
+                                                                    return 'Amount must be more than RM 0.00';
+                                                                  }
+                                                                  return null;
+                                                                },
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                Row(
+                                                  children: [
+                                                    Expanded(
+                                                      child: Padding(
+                                                        padding:
+                                                            const EdgeInsets.all(
+                                                                8.0),
+                                                        child: Row(
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .center,
+                                                          mainAxisAlignment:
+                                                              MainAxisAlignment
+                                                                  .start,
+                                                          children: [
+                                                            if (Responsive
+                                                                .isDesktop(context))
+                                                              const Expanded(
+                                                                flex: 1,
+                                                                child: Text(
+                                                                  'Record Type',
+                                                                  style: TextStyle(
+                                                                      fontSize: 16),
+                                                                ),
+                                                              ),
+                                                            Expanded(
+                                                                flex: 4,
+                                                                child: CustomDDL<
+                                                                    String>(
+                                                                  onChanged: (String?
+                                                                      newValue) {
+                                                                    setState(() {
+                                                                      selectedType =
+                                                                          newValue!;
+                                                                    });
+                                                                  },
+                                                                  labelText:
+                                                                      'Record Type',
+                                                                  screen: !Responsive
+                                                                      .isDesktop(
+                                                                          context),
+                                                                  controller: type,
+                                                                  hintText:
+                                                                      'Select record type',
+                                                                  value:
+                                                                      selectedType,
+                                                                  dropdownItems: [
+                                                                    'Income',
+                                                                    'Expense',
+                                                                  ].map((type) {
+                                                                    return DropdownMenuItem<
+                                                                        String>(
+                                                                      value: type,
+                                                                      child: Text(
+                                                                          type,
+                                                                          overflow:
+                                                                              TextOverflow
+                                                                                  .ellipsis),
+                                                                    );
+                                                                  }).toList(),
+                                                                )),
+                                                            if (Responsive
+                                                                .isDesktop(context))
+                                                              const Expanded(
+                                                                  flex: 1,
+                                                                  child:
+                                                                      SizedBox()),
+                                                            const Expanded(
+                                                                flex: 4,
+                                                                child: SizedBox()),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                CustomButton(
+                                                  onPressed: () async {
+                                                    if (_formKey.currentState!
+                                                        .validate()) {
+                                                      AccountStatement statement =
+                                                          AccountStatement(
+                                                        name: item.text,
+                                                        price: double.parse(
+                                                            double.parse(price.text)
+                                                                .toStringAsFixed(
+                                                                    2)),
+                                                        type: type.text,
+                                                      );
+
+                                                      if (selectedType ==
+                                                          'Income') {
+                                                        income.add(statement);
+                                                        setState(() {
+                                                          income = income;
+                                                        });
+                                                      } else {
+                                                        expense.add(statement);
+                                                        setState(() {
+                                                          expense = expense;
+                                                        });
+                                                      }
+
+                                                      item.clear();
+                                                      type.clear();
+                                                      price.clear();
+                                                    }
+                                                  },
+                                                  text: 'Add',
+                                                  width: 150,
+                                                ),
+                                                const SizedBox(
+                                                  height: 15,
                                                 ),
                                               ],
-                                            ),
-                                            CustomButton(
-                                              onPressed: () async {
-                                                if (_formKey.currentState!
-                                                    .validate()) {
-                                                  AccountStatement statement =
-                                                      AccountStatement(
-                                                    name: item.text,
-                                                    price: double.parse(
-                                                        double.parse(price.text)
-                                                            .toStringAsFixed(
-                                                                2)),
-                                                    type: type.text,
-                                                  );
-
-                                                  if (selectedType ==
-                                                      'Income') {
-                                                    income.add(statement);
-                                                    setState(() {
-                                                      income = income;
-                                                    });
-                                                  } else {
-                                                    expense.add(statement);
-                                                    setState(() {
-                                                      expense = expense;
-                                                    });
-                                                  }
-
-                                                  item.clear();
-                                                  type.clear();
-                                                  price.clear();
-                                                }
-                                              },
-                                              text: 'Add',
-                                              width: 150,
-                                            ),
-                                            const SizedBox(
-                                              height: 15,
                                             ),
                                             Column(
                                               children: [
                                                 Center(
-                                                  child: SingleChildScrollView(
+                                                  child: income.isNotEmpty || expense.isNotEmpty ? SingleChildScrollView(
                                                     scrollDirection:
                                                         Axis.horizontal,
                                                     child: Row(
@@ -383,7 +406,6 @@ class _AccountState extends State<Account> {
                                                               .start,
                                                       children: [
                                                         DataTable(
-                                                          
                                                           columns: const [
                                                             DataColumn(
                                                               label: Text(
@@ -396,8 +418,8 @@ class _AccountState extends State<Account> {
                                                                 label: Text(
                                                                     'Amount')),
                                                             DataColumn(
-                                                                label: Text(
-                                                                    '')),
+                                                                label:
+                                                                    Text('')),
                                                           ],
                                                           rows: [
                                                             ...income
@@ -461,9 +483,6 @@ class _AccountState extends State<Account> {
                                                               );
                                                             }).toList(),
                                                             DataRow(
-                                                              color: MaterialStateProperty
-                                                                  .all<Color>(Colors
-                                                                      .black12),
                                                               cells: [
                                                                 const DataCell(Text(
                                                                     'Total Income',
@@ -486,9 +505,10 @@ class _AccountState extends State<Account> {
                                                             ),
                                                           ],
                                                         ),
-                                                        const SizedBox(width: 15,),
+                                                        const SizedBox(
+                                                          width: 15,
+                                                        ),
                                                         DataTable(
-                                                          
                                                           columns: const [
                                                             DataColumn(
                                                                 label: Text(
@@ -500,8 +520,8 @@ class _AccountState extends State<Account> {
                                                                 label: Text(
                                                                     'Amount')),
                                                             DataColumn(
-                                                                label: Text(
-                                                                    '')),
+                                                                label:
+                                                                    Text('')),
                                                           ],
                                                           rows: [
                                                             ...expense
@@ -529,6 +549,7 @@ class _AccountState extends State<Account> {
                                                                   DataCell(
                                                                     Row(
                                                                       children: [
+                                                                        if (enabled)
                                                                         IconButton(
                                                                           icon:
                                                                               const Icon(Icons.edit),
@@ -548,6 +569,7 @@ class _AccountState extends State<Account> {
                                                                             );
                                                                           },
                                                                         ),
+                                                                        if (enabled)
                                                                         IconButton(
                                                                           icon:
                                                                               const Icon(Icons.delete),
@@ -565,9 +587,6 @@ class _AccountState extends State<Account> {
                                                               );
                                                             }).toList(),
                                                             DataRow(
-                                                              color: MaterialStateProperty
-                                                                  .all<Color>(Colors
-                                                                      .black12),
                                                               cells: [
                                                                 const DataCell(Text(
                                                                     'Total Expense',
@@ -592,7 +611,7 @@ class _AccountState extends State<Account> {
                                                         ),
                                                       ],
                                                     ),
-                                                  ),
+                                                  ) : const SizedBox(height: 500, child: Center(child: Text('There is no item reigstered.'))),
                                                 ),
                                               ],
                                             ),
@@ -608,6 +627,7 @@ class _AccountState extends State<Account> {
                                             const SizedBox(
                                               height: 15,
                                             ),
+                                            if (enabled)
                                             CustomButton(
                                               onPressed: () async {
                                                 FirebaseFirestore firestore =

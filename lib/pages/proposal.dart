@@ -6,7 +6,15 @@ import 'package:flutter/services.dart';
 
 class Proposal extends StatefulWidget {
   final String selectedEvent;
-  const Proposal({super.key, required this.selectedEvent});
+  final String status;
+  final int progress;
+  final String position;
+  const Proposal(
+      {super.key,
+      required this.selectedEvent,
+      required this.status,
+      required this.progress,
+      required this.position});
 
   @override
   State<Proposal> createState() => _ProposalState();
@@ -15,13 +23,19 @@ class Proposal extends StatefulWidget {
 class _ProposalState extends State<Proposal> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _isLoading = true;
-  String status = '';
-  int progress = -1;
+  bool enabled = true;
   Future<void> getData() async {
     try {
       setState(() {
         _isLoading = true;
       });
+
+      if (!widget.position.startsWith('org') ||
+          widget.position.contains('Treasurer') ||
+          widget.status != 'Planning' ||
+          widget.progress != 0) {
+        enabled = false;
+      }
       final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
       // Fetch event data
@@ -36,8 +50,6 @@ class _ProposalState extends State<Proposal> {
         selectedType = eventData['type'] ?? 'Talk';
         description.text = eventData['description'] ?? '';
         aim.text = eventData['aim'] ?? '';
-        status = eventData['status'];
-        progress = eventData['progress'];
       }
 
       setState(() {
@@ -123,7 +135,9 @@ class _ProposalState extends State<Proposal> {
                                           selectedEvent: widget.selectedEvent,
                                           tab: 'Pre',
                                           form: 'Proposal',
-                                          status:  status,
+                                          status: widget.status,
+                                          progress: widget.progress,
+                                          position: widget.position,
                                           children: [
                                             Row(
                                               children: [
@@ -154,6 +168,7 @@ class _ProposalState extends State<Proposal> {
                                                           flex: 4,
                                                           child:
                                                               CustomTextField(
+                                                            enabled: enabled,
                                                             screen: !Responsive
                                                                 .isDesktop(
                                                                     context),
@@ -202,6 +217,7 @@ class _ProposalState extends State<Proposal> {
                                                             flex: 4,
                                                             child: CustomDDL<
                                                                 String>(
+                                                              enabled: enabled,
                                                               onChanged: (String?
                                                                   newValue) {
                                                                 setState(() {
@@ -237,7 +253,7 @@ class _ProposalState extends State<Proposal> {
                                                                       type,
                                                                       overflow:
                                                                           TextOverflow
-                                                                              .ellipsis),
+                                                                              .ellipsis, style: TextStyle(color: Colors.black),),
                                                                 );
                                                               }).toList(),
                                                             )),
@@ -281,6 +297,8 @@ class _ProposalState extends State<Proposal> {
                                                               flex: 9,
                                                               child:
                                                                   CustomTextField(
+                                                                enabled:
+                                                                    enabled,
                                                                 screen: !Responsive
                                                                     .isDesktop(
                                                                         context),
@@ -337,6 +355,8 @@ class _ProposalState extends State<Proposal> {
                                                               flex: 9,
                                                               child:
                                                                   CustomTextField(
+                                                                enabled:
+                                                                    enabled,
                                                                 maxLength: 400,
                                                                 labelText:
                                                                     'Aim',
@@ -401,6 +421,8 @@ class _ProposalState extends State<Proposal> {
                                                               width: 50,
                                                               child:
                                                                   CustomTextField(
+                                                                enabled:
+                                                                    enabled,
                                                                 inputFormatters: [
                                                                   FilteringTextInputFormatter
                                                                       .digitsOnly
@@ -434,6 +456,8 @@ class _ProposalState extends State<Proposal> {
                                                               width: 50,
                                                               child:
                                                                   CustomTextField(
+                                                                enabled:
+                                                                    enabled,
                                                                 inputFormatters: [
                                                                   FilteringTextInputFormatter
                                                                       .digitsOnly
@@ -467,6 +491,8 @@ class _ProposalState extends State<Proposal> {
                                                               width: 50,
                                                               child:
                                                                   CustomTextField(
+                                                                enabled:
+                                                                    enabled,
                                                                 inputFormatters: [
                                                                   FilteringTextInputFormatter
                                                                       .digitsOnly
@@ -495,7 +521,13 @@ class _ProposalState extends State<Proposal> {
                                               mainAxisAlignment:
                                                   MainAxisAlignment.end,
                                               children: [
-                                                if (status == 'Planning')
+                                                if (widget.status ==
+                                                        'Planning' &&
+                                                    widget.position
+                                                        .startsWith('org') &&
+                                                    !widget.position.contains(
+                                                        'Treasurer') &&
+                                                    widget.progress == 0)
                                                   CustomButton(
                                                     onPressed: () async {
                                                       if (member.text != '0' &&
@@ -599,7 +631,6 @@ class _ProposalState extends State<Proposal> {
                                                 ),
                                               ],
                                             ),
-
                                           ])),
                                 ]))
                       ]),

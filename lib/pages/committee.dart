@@ -5,14 +5,22 @@ import 'package:fyp/functions/responsive.dart';
 
 class OrgCommittee extends StatefulWidget {
   final String selectedEvent;
-  const OrgCommittee({super.key, required this.selectedEvent});
+  final String status;
+  final int progress;
+  final String position;
+  const OrgCommittee(
+      {super.key,
+      required this.selectedEvent,
+      required this.status,
+      required this.progress,
+      required this.position});
 
   @override
   State<OrgCommittee> createState() => _OrgCommitteeState();
 }
 
 class _OrgCommitteeState extends State<OrgCommittee> {
-  int progress = -1;
+  bool enabled = true;
   List<String> restrictedPositions = [
     'president',
     'vice president',
@@ -24,7 +32,6 @@ class _OrgCommitteeState extends State<OrgCommittee> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
   List<Committee> committeeList = [];
-  String status = '';
 
   void resetTable() {
     setState(() {
@@ -38,6 +45,12 @@ class _OrgCommitteeState extends State<OrgCommittee> {
         _isLoading = true;
       });
 
+      if (!widget.position.startsWith('org') ||
+          widget.position.contains('Treasurer') ||
+          widget.status != 'Planning' ||
+          widget.progress != 0) {
+        enabled = false;
+      }
       final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
       final QuerySnapshot<Map<String, dynamic>> committeeSnapshot =
@@ -174,390 +187,462 @@ class _OrgCommitteeState extends State<OrgCommittee> {
                                           selectedEvent: widget.selectedEvent,
                                           tab: 'Pre',
                                           form: 'Committee',
-                                          status: status,
+                                          status: widget.status,
+                                          position: widget.position,
+                                          progress: widget.progress,
                                           children: [
-                                            Row(
-                                              children: [
-                                                Expanded(
-                                                  child: Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            8.0),
-                                                    child: Row(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .center,
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .start,
+                                            if (enabled)
+                                              Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.end,
+                                                  children: [
+                                                    Row(
                                                       children: [
-                                                        if (Responsive
-                                                            .isDesktop(context))
-                                                          const Expanded(
-                                                            flex: 1,
-                                                            child: Text(
-                                                              'Student ID',
-                                                              style: TextStyle(
-                                                                  fontSize: 16),
-                                                            ),
-                                                          ),
                                                         Expanded(
-                                                          flex: 4,
-                                                          child:
-                                                              CustomTextField(
-                                                            hintText:
-                                                                'Enter Student ID',
-                                                            controller: id,
-                                                            errorText: idError,
-                                                            screen: !Responsive
-                                                                .isDesktop(
-                                                                    context),
-                                                            labelText:
-                                                                'Student ID',
-                                                            validator: (value) {
-                                                              if (value!
-                                                                  .isEmpty) {
-                                                                return 'Please enter student ID';
-                                                              } else if (!RegExp(
-                                                                      r'^\d{2}[A-Z]{3}\d{5}$')
-                                                                  .hasMatch(
-                                                                      value)) {
-                                                                return 'Invalid student ID';
-                                                              }
-                                                              return null;
-                                                            },
-                                                            onChanged: (value) {
-                                                              onTextChanged(
-                                                                  value,
-                                                                  name,
-                                                                  contact);
-                                                            },
+                                                          child: Padding(
+                                                            padding:
+                                                                const EdgeInsets
+                                                                    .all(8.0),
+                                                            child: Row(
+                                                              crossAxisAlignment:
+                                                                  CrossAxisAlignment
+                                                                      .center,
+                                                              mainAxisAlignment:
+                                                                  MainAxisAlignment
+                                                                      .start,
+                                                              children: [
+                                                                if (Responsive
+                                                                    .isDesktop(
+                                                                        context))
+                                                                  const Expanded(
+                                                                    flex: 1,
+                                                                    child: Text(
+                                                                      'Student ID',
+                                                                      style: TextStyle(
+                                                                          fontSize:
+                                                                              16),
+                                                                    ),
+                                                                  ),
+                                                                Expanded(
+                                                                  flex: 4,
+                                                                  child:
+                                                                      CustomTextField(
+                                                                    hintText:
+                                                                        'Enter Student ID',
+                                                                    controller:
+                                                                        id,
+                                                                    errorText:
+                                                                        idError,
+                                                                    screen: !Responsive
+                                                                        .isDesktop(
+                                                                            context),
+                                                                    labelText:
+                                                                        'Student ID',
+                                                                    validator:
+                                                                        (value) {
+                                                                      if (value!
+                                                                          .isEmpty) {
+                                                                        return 'Please enter student ID';
+                                                                      } else if (!RegExp(
+                                                                              r'^\d{2}[A-Z]{3}\d{5}$')
+                                                                          .hasMatch(
+                                                                              value)) {
+                                                                        return 'Invalid student ID';
+                                                                      }
+                                                                      return null;
+                                                                    },
+                                                                    onChanged:
+                                                                        (value) {
+                                                                      onTextChanged(
+                                                                          value,
+                                                                          name,
+                                                                          contact);
+                                                                    },
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                            ),
                                                           ),
                                                         ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                                Expanded(
-                                                  child: Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            8.0),
-                                                    child: Row(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .center,
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        if (Responsive
-                                                            .isDesktop(context))
-                                                          const Expanded(
-                                                            flex: 1,
-                                                            child: Text(
-                                                              'Position',
-                                                              style: TextStyle(
-                                                                  fontSize: 16),
-                                                            ),
-                                                          ),
                                                         Expanded(
-                                                          flex: 4,
-                                                          child:
-                                                              CustomTextField(
-                                                            validator: (value) {
-                                                              if (value!
-                                                                  .isEmpty) {
-                                                                return 'Please enter position';
-                                                              }
+                                                          child: Padding(
+                                                            padding:
+                                                                const EdgeInsets
+                                                                    .all(8.0),
+                                                            child: Row(
+                                                              crossAxisAlignment:
+                                                                  CrossAxisAlignment
+                                                                      .center,
+                                                              mainAxisAlignment:
+                                                                  MainAxisAlignment
+                                                                      .start,
+                                                              children: [
+                                                                if (Responsive
+                                                                    .isDesktop(
+                                                                        context))
+                                                                  const Expanded(
+                                                                    flex: 1,
+                                                                    child: Text(
+                                                                      'Position',
+                                                                      style: TextStyle(
+                                                                          fontSize:
+                                                                              16),
+                                                                    ),
+                                                                  ),
+                                                                Expanded(
+                                                                  flex: 4,
+                                                                  child:
+                                                                      CustomTextField(
+                                                                    validator:
+                                                                        (value) {
+                                                                      if (value!
+                                                                          .isEmpty) {
+                                                                        return 'Please enter position';
+                                                                      }
 
-                                                              if (restrictedPositions
-                                                                  .contains(value
-                                                                      .toLowerCase())) {
-                                                                return 'Position not allowed';
+                                                                      if (restrictedPositions
+                                                                          .contains(
+                                                                              value.toLowerCase())) {
+                                                                        return 'Position not allowed';
+                                                                      }
+
+                                                                      return null;
+                                                                    },
+                                                                    screen: !Responsive
+                                                                        .isDesktop(
+                                                                            context),
+                                                                    labelText:
+                                                                        'Position',
+                                                                    controller:
+                                                                        position,
+                                                                    hintText:
+                                                                        'Enter position',
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    Row(
+                                                      children: [
+                                                        Expanded(
+                                                          child: Padding(
+                                                            padding:
+                                                                const EdgeInsets
+                                                                    .all(8.0),
+                                                            child: Row(
+                                                              crossAxisAlignment:
+                                                                  CrossAxisAlignment
+                                                                      .center,
+                                                              mainAxisAlignment:
+                                                                  MainAxisAlignment
+                                                                      .start,
+                                                              children: [
+                                                                if (Responsive
+                                                                    .isDesktop(
+                                                                        context))
+                                                                  const Expanded(
+                                                                    flex: 1,
+                                                                    child: Text(
+                                                                      'Name',
+                                                                      style: TextStyle(
+                                                                          fontSize:
+                                                                              16),
+                                                                    ),
+                                                                  ),
+                                                                Expanded(
+                                                                  flex: 4,
+                                                                  child:
+                                                                      CustomTextField(
+                                                                    screen: !Responsive
+                                                                        .isDesktop(
+                                                                            context),
+                                                                    enabled:
+                                                                        false,
+                                                                    labelText:
+                                                                        'Name',
+                                                                    controller:
+                                                                        name,
+                                                                    hintText:
+                                                                        'Associated Student Name',
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        Expanded(
+                                                          child: Padding(
+                                                            padding:
+                                                                const EdgeInsets
+                                                                    .all(8.0),
+                                                            child: Row(
+                                                              crossAxisAlignment:
+                                                                  CrossAxisAlignment
+                                                                      .center,
+                                                              mainAxisAlignment:
+                                                                  MainAxisAlignment
+                                                                      .start,
+                                                              children: [
+                                                                if (Responsive
+                                                                    .isDesktop(
+                                                                        context))
+                                                                  const Expanded(
+                                                                    flex: 1,
+                                                                    child: Text(
+                                                                      'Contact No.',
+                                                                      style: TextStyle(
+                                                                          fontSize:
+                                                                              16),
+                                                                    ),
+                                                                  ),
+                                                                Expanded(
+                                                                  flex: 4,
+                                                                  child:
+                                                                      CustomTextField(
+                                                                    screen: !Responsive
+                                                                        .isDesktop(
+                                                                            context),
+                                                                    prefixText:
+                                                                        '+60',
+                                                                    labelText:
+                                                                        'Contact No.',
+                                                                    enabled:
+                                                                        false,
+                                                                    controller:
+                                                                        contact,
+                                                                    hintText:
+                                                                        'Associated Contact No.',
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment.end,
+                                                      children: [
+                                                        CustomButton(
+                                                            width: 150,
+                                                            onPressed: () {
+                                                              if (_formKey
+                                                                  .currentState!
+                                                                  .validate()) {
+                                                                if (idError ==
+                                                                    null) {
+                                                                  Committee
+                                                                      newCommittee =
+                                                                      Committee(
+                                                                    studentID:
+                                                                        id.text,
+                                                                    name: name
+                                                                        .text,
+                                                                    position:
+                                                                        position
+                                                                            .text,
+                                                                    contact:
+                                                                        contact
+                                                                            .text,
+                                                                  );
+
+                                                                  committeeList.add(
+                                                                      newCommittee);
+                                                                  setState(() {
+                                                                    committeeList =
+                                                                        committeeList;
+                                                                  });
+                                                                  id.clear();
+                                                                  name.clear();
+                                                                  position
+                                                                      .clear();
+                                                                  contact
+                                                                      .clear();
+                                                                }
                                                               }
-
-                                                              return null;
                                                             },
-                                                            screen: !Responsive
-                                                                .isDesktop(
-                                                                    context),
-                                                            labelText:
-                                                                'Position',
-                                                            controller:
-                                                                position,
-                                                            hintText:
-                                                                'Enter position',
-                                                          ),
+                                                            text: 'Add'),
+                                                        const SizedBox(
+                                                          width: 15,
                                                         ),
                                                       ],
                                                     ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            Row(
-                                              children: [
-                                                Expanded(
-                                                  child: Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            8.0),
-                                                    child: Row(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .center,
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        if (Responsive
-                                                            .isDesktop(context))
-                                                          const Expanded(
-                                                            flex: 1,
-                                                            child: Text(
-                                                              'Name',
-                                                              style: TextStyle(
-                                                                  fontSize: 16),
-                                                            ),
-                                                          ),
-                                                        Expanded(
-                                                          flex: 4,
-                                                          child:
-                                                              CustomTextField(
-                                                            screen: !Responsive
-                                                                .isDesktop(
-                                                                    context),
-                                                            enabled: false,
-                                                            labelText: 'Name',
-                                                            controller: name,
-                                                            hintText:
-                                                                'Associated Student Name',
-                                                          ),
-                                                        ),
-                                                      ],
+                                                    const SizedBox(
+                                                      height: 15,
                                                     ),
-                                                  ),
-                                                ),
-                                                Expanded(
-                                                  child: Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            8.0),
-                                                    child: Row(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .center,
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        if (Responsive
-                                                            .isDesktop(context))
-                                                          const Expanded(
-                                                            flex: 1,
-                                                            child: Text(
-                                                              'Contact No.',
-                                                              style: TextStyle(
-                                                                  fontSize: 16),
-                                                            ),
-                                                          ),
-                                                        Expanded(
-                                                          flex: 4,
-                                                          child:
-                                                              CustomTextField(
-                                                            screen: !Responsive
-                                                                .isDesktop(
-                                                                    context),
-                                                            prefixText: '+60',
-                                                            labelText:
-                                                                'Contact No.',
-                                                            enabled: false,
-                                                            controller: contact,
-                                                            hintText:
-                                                                'Associated Contact No.',
-                                                          ),
-                                                        ),
-                                                      ],
+                                                    const Divider(
+                                                      thickness: 0.1,
+                                                      color: Colors.black,
                                                     ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.end,
-                                              children: [
-                                                CustomButton(
-                                                    width: 150,
-                                                    onPressed: () {
-                                                      if (_formKey.currentState!
-                                                          .validate()) {
-                                                        if (idError == null) {
-                                                          Committee
-                                                              newCommittee =
-                                                              Committee(
-                                                            studentID: id.text,
-                                                            name: name.text,
-                                                            position:
-                                                                position.text,
-                                                            contact:
-                                                                contact.text,
-                                                          );
-
-                                                          committeeList.add(
-                                                              newCommittee);
-                                                          setState(() {
-                                                            committeeList =
-                                                                committeeList;
-                                                          });
-                                                          id.clear();
-                                                          name.clear();
-                                                          position.clear();
-                                                          contact.clear();
-                                                        }
-                                                      }
-                                                    },
-                                                    text: 'Add'),
-                                                const SizedBox(
-                                                  width: 15,
-                                                ),
-                                              ],
-                                            ),
-                                            const SizedBox(
-                                              height: 15,
-                                            ),
+                                                  ]),
                                             Column(
-  children: [
-    Center(
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: DataTable(
-          columns: const [
-            DataColumn(label: Text('Name')),
-            DataColumn(label: Text('Student ID')),
-            DataColumn(label: Text('Position')),
-            DataColumn(label: Text('Contact No.')),
-            DataColumn(label: Text('')),
-          ],
-          rows: committeeList
-              .asMap()
-              .entries
-              .map(
-                (entry) => DataRow(
-                  cells: [
-                    DataCell(Text(entry.value.name)),
-                    DataCell(Text(entry.value.studentID)),
-                    DataCell(Text(entry.value.position)),
-                    DataCell(Text('+60${entry.value.contact}')),
-                    DataCell(
-                      Row(
-                        children: [
-                          if (!restrictedPositions.contains(entry.value.position.toLowerCase()))
-                            IconButton(
-                              icon: const Icon(Icons.edit),
-                              onPressed: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (_) {
-                                    return EditDialog(
-                                      committee: entry.value,
-                                      index: entry.key,
-                                      list: committeeList,
-                                      function: resetTable,
-                                    );
-                                  },
-                                );
-                              },
-                            ),
-                          if (!restrictedPositions.contains(entry.value.position.toLowerCase()))
-                            IconButton(
-                              icon: const Icon(Icons.delete),
-                              onPressed: () {
-                                setState(() {
-                                  committeeList.removeAt(entry.key);
-                                });
-                              },
-                            ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              )
-              .toList(),
-        ),
-      ),
-    ),
-  ],
-),
-                                            CustomButton(
-                                                width: 150,
-                                                onPressed: () async {
-                                                  if (committeeList
-                                                      .isNotEmpty) {
-                                                    FirebaseFirestore
-                                                        firestore =
-                                                        FirebaseFirestore
-                                                            .instance;
+                                              children: [
+                                                Center(
+                                                  child: SingleChildScrollView(
+                                                    scrollDirection:
+                                                        Axis.horizontal,
+                                                    child: DataTable(
+                                                      columns: const [
+                                                        DataColumn(
+                                                            label:
+                                                                Text('Name')),
+                                                        DataColumn(
+                                                            label: Text(
+                                                                'Student ID')),
+                                                        DataColumn(
+                                                            label: Text(
+                                                                'Position')),
+                                                        DataColumn(
+                                                            label: Text(
+                                                                'Contact No.')),
+                                                        DataColumn(
+                                                            label: Text('')),
+                                                      ],
+                                                      rows: committeeList
+                                                          .asMap()
+                                                          .entries
+                                                          .map(
+                                                            (entry) => DataRow(
+                                                              cells: [
+                                                                DataCell(Text(
+                                                                    entry.value
+                                                                        .name)),
+                                                                DataCell(Text(entry
+                                                                    .value
+                                                                    .studentID)),
+                                                                DataCell(Text(entry
+                                                                    .value
+                                                                    .position)),
+                                                                DataCell(Text(
+                                                                    '+60${entry.value.contact}')),
+                                                                DataCell(
+                                                                  Row(
+                                                                    children: [
+                                                                      if (!restrictedPositions.contains(entry
+                                                                              .value
+                                                                              .position
+                                                                              .toLowerCase()) &&
+                                                                          enabled)
+                                                                        IconButton(
+                                                                          icon:
+                                                                              const Icon(Icons.edit),
+                                                                          onPressed:
+                                                                              () {
+                                                                            showDialog(
+                                                                              context: context,
+                                                                              builder: (_) {
+                                                                                return EditDialog(
+                                                                                  committee: entry.value,
+                                                                                  index: entry.key,
+                                                                                  list: committeeList,
+                                                                                  function: resetTable,
+                                                                                );
+                                                                              },
+                                                                            );
+                                                                          },
+                                                                        ),
+                                                                      if (!restrictedPositions.contains(entry
+                                                                              .value
+                                                                              .position
+                                                                              .toLowerCase()) &&
+                                                                          enabled)
+                                                                        IconButton(
+                                                                          icon:
+                                                                              const Icon(Icons.delete),
+                                                                          onPressed:
+                                                                              () {
+                                                                            setState(() {
+                                                                              committeeList.removeAt(entry.key);
+                                                                            });
+                                                                          },
+                                                                        ),
+                                                                    ],
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          )
+                                                          .toList(),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            if (enabled)
+                                              CustomButton(
+                                                  width: 150,
+                                                  onPressed: () async {
+                                                    if (committeeList
+                                                        .isNotEmpty) {
+                                                      FirebaseFirestore
+                                                          firestore =
+                                                          FirebaseFirestore
+                                                              .instance;
 
-                                                    CollectionReference
-                                                        committees =
-                                                        firestore.collection(
-                                                            'committee');
+                                                      CollectionReference
+                                                          committees =
+                                                          firestore.collection(
+                                                              'committee');
 
-                                                    QuerySnapshot
-                                                        querySnapshot =
-                                                        await committees
-                                                            .where('eventID',
-                                                                isEqualTo: widget
-                                                                    .selectedEvent)
-                                                            .get();
+                                                      QuerySnapshot
+                                                          querySnapshot =
+                                                          await committees
+                                                              .where('eventID',
+                                                                  isEqualTo: widget
+                                                                      .selectedEvent)
+                                                              .get();
 
-                                                    for (QueryDocumentSnapshot documentSnapshot
-                                                        in querySnapshot.docs) {
-                                                      await documentSnapshot
-                                                          .reference
-                                                          .delete();
+                                                      for (QueryDocumentSnapshot documentSnapshot
+                                                          in querySnapshot
+                                                              .docs) {
+                                                        await documentSnapshot
+                                                            .reference
+                                                            .delete();
+                                                      }
+
+                                                      for (int index = 0;
+                                                          index <
+                                                              committeeList
+                                                                  .length;
+                                                          index++) {
+                                                        Committee committee =
+                                                            committeeList[
+                                                                index];
+
+                                                        await committees.add({
+                                                          'eventID': widget
+                                                              .selectedEvent,
+                                                          'studentID': committee
+                                                              .studentID,
+                                                          'name':
+                                                              committee.name,
+                                                          'position': committee
+                                                              .position,
+                                                          'contact':
+                                                              committee.contact,
+                                                        });
+                                                      }
+                                                      ScaffoldMessenger.of(
+                                                              context)
+                                                          .showSnackBar(
+                                                        const SnackBar(
+                                                          content: Text(
+                                                              'Committee List saved.'),
+                                                          width: 150.0,
+                                                          behavior:
+                                                              SnackBarBehavior
+                                                                  .floating,
+                                                          duration: Duration(
+                                                              seconds: 3),
+                                                        ),
+                                                      );
                                                     }
-
-                                                    for (int index = 0;
-                                                        index <
-                                                            committeeList
-                                                                .length;
-                                                        index++) {
-                                                      Committee committee =
-                                                          committeeList[index];
-
-                                                      await committees.add({
-                                                        'eventID': widget
-                                                            .selectedEvent,
-                                                        'studentID':
-                                                            committee.studentID,
-                                                        'name': committee.name,
-                                                        'position':
-                                                            committee.position,
-                                                        'contact':
-                                                            committee.contact,
-                                                      });
-                                                    }
-                                                    ScaffoldMessenger.of(
-                                                            context)
-                                                        .showSnackBar(
-                                                      const SnackBar(
-                                                        content: Text(
-                                                            'Committee List saved.'),
-                                                        width: 150.0,
-                                                        behavior:
-                                                            SnackBarBehavior
-                                                                .floating,
-                                                        duration: Duration(
-                                                            seconds: 3),
-                                                      ),
-                                                    );
-                                                  }
-                                                },
-                                                text: 'Save'),
+                                                  },
+                                                  text: 'Save'),
                                             const SizedBox(
                                               height: 15,
                                             ),

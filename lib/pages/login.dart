@@ -66,11 +66,12 @@ class _LoginState extends State<Login> {
         storage.setItem('name', userQuery.docs.first['name']);
         storage.setItem('id', userQuery.docs.first.id);
         storage.setItem('role', role);
-        Navigator.push(
+        Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(
             builder: (context) => const Home(),
           ),
+          (route) => false,
         );
       } else {
         Navigator.pop(context);

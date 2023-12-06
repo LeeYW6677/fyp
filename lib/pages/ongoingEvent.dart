@@ -3,17 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
 import 'package:fyp/pages/addEvent.dart';
-import 'package:fyp/pages/editEvent.dart';
+import 'package:fyp/pages/eventDetails.dart';
 import 'package:fyp/pages/organisedEvent.dart';
-import 'package:fyp/pages/proposal.dart';
 import 'package:intl/intl.dart';
 import 'package:localstorage/localstorage.dart';
 
 class OngoingEvent extends StatefulWidget {
   final String selectedSociety;
-  final String position;
-  const OngoingEvent(
-      {super.key, required this.selectedSociety, this.position = ''});
+  const OngoingEvent({super.key, required this.selectedSociety});
 
   @override
   State<OngoingEvent> createState() => _OngoingEventState();
@@ -28,6 +25,8 @@ class _OngoingEventState extends State<OngoingEvent> {
   List<String> checkStatus = ['', '', '', ''];
   String eventDate = '';
   String eventStatus = '';
+  String startDateString = '';
+  String endDateString = '';
 
   Future<void> getData() async {
     try {
@@ -39,101 +38,107 @@ class _OngoingEventState extends State<OngoingEvent> {
       final QuerySnapshot<Map<String, dynamic>> eventSnapshot = await firestore
           .collection('event')
           .where('societyID', isEqualTo: widget.selectedSociety)
-          .where('status', isNotEqualTo: 'Completed')
           .get();
+
+        final List<DocumentSnapshot<Map<String, dynamic>>> filteredEvents =
+            eventSnapshot.docs.where((eventDoc) {
+          final status = eventDoc['status'];
+          final progress = eventDoc['progress'];
+
+          return status != 'Closing' || progress != 3;
+        }).toList();
 
       ongoingEvents.clear();
 
-      for (var eventDocSnapshot in eventSnapshot.docs) {
-        Map<String, dynamic> eventData = eventDocSnapshot.data();
-        String eventId = eventData['eventID'];
+      for (var eventDoc in filteredEvents) {
+        Map<String, dynamic>? eventData = eventDoc.data();
 
-        final QuerySnapshot<Map<String, dynamic>> committeeSnapshot =
-            await firestore
-                .collection('committee')
-                .where('eventID', isEqualTo: eventId)
-                .where('position', isEqualTo: 'President')
-                .get();
+        if (eventData != null) {
+          String eventId = eventData['eventID'];
 
-        String presidentName = 'Unassigned';
-        if (committeeSnapshot.docs.isNotEmpty) {
-          Map<String, dynamic> committeeData =
-              committeeSnapshot.docs.first.data();
-          presidentName = committeeData['name'] ?? 'Unassigned';
+          final QuerySnapshot<Map<String, dynamic>> committeeSnapshot =
+              await firestore
+                  .collection('committee')
+                  .where('eventID', isEqualTo: eventId)
+                  .where('position', isEqualTo: 'President')
+                  .get();
+
+          String presidentName = 'Unassigned';
+
+          if (committeeSnapshot.docs.isNotEmpty) {
+            Map<String, dynamic> committeeData =
+                committeeSnapshot.docs.first.data();
+            presidentName = committeeData['name'] ?? 'Unassigned';
+          }
+
+          final QuerySnapshot<Map<String, dynamic>> approvalSnapshot =
+              await firestore
+                  .collection('approval')
+                  .where('eventID', isEqualTo: eventId)
+                  .get();
+
+          checkName.clear();
+          checkStatus.clear();
+
+          if (approvalSnapshot.docs.isNotEmpty) {
+            Map<String, dynamic> approvalData =
+                approvalSnapshot.docs.first.data();
+            checkName.addAll([
+              '',
+              approvalData['presidentName'],
+              approvalData['advisorName'],
+              approvalData['branchHeadName']
+            ]);
+            checkStatus.addAll([
+              'Approved',
+              approvalData['presidentStatus'],
+              approvalData['advisorStatus'],
+              approvalData['branchHeadStatus']
+            ]);
+          }
+
+          eventStatus = checkStatus.any((element) => element == 'Rejected')
+              ? 'Rejected'
+              : 'Pending';
+
+          final Query<Map<String, dynamic>> query = firestore
+              .collection('schedule')
+              .where('eventID', isEqualTo: eventId)
+              .orderBy('date');
+
+          final QuerySnapshot<Map<String, dynamic>> snapshot =
+              await query.limit(1).get();
+
+          final Query<Map<String, dynamic>> query2 = firestore
+              .collection('schedule')
+              .where('eventID', isEqualTo: eventId)
+              .orderBy('date', descending: true);
+
+          final QuerySnapshot<Map<String, dynamic>> snapshot2 =
+              await query2.limit(1).get();
+
+          startDate = snapshot.docs.isNotEmpty
+              ? (snapshot.docs.first['date'] as Timestamp).toDate()
+              : null;
+          endDate = snapshot2.docs.isNotEmpty
+              ? (snapshot2.docs.first['date'] as Timestamp).toDate()
+              : null;
+
+          startDateString = startDate != null
+              ? DateFormat('dd/MM/yyyy').format(startDate!)
+              : 'Undecided';
+          endDateString = endDate != null
+              ? DateFormat('dd/MM/yyyy').format(endDate!)
+              : 'Undecided';
+
+          ongoingEvents.add({
+            ...eventData,
+            'president': presidentName,
+            'startDate': startDateString,
+            'endDate': endDateString,
+            'eventStatus': eventStatus,
+          });
         }
-
-        final QuerySnapshot<Map<String, dynamic>> approvalSnapshot =
-            await firestore
-                .collection('approval')
-                .where('eventID', isEqualTo: eventId)
-                .get();
-        checkName.clear();
-        checkStatus.clear();
-
-        if (approvalSnapshot.docs.isNotEmpty) {
-          Map<String, dynamic> approvalData =
-              approvalSnapshot.docs.first.data();
-          checkName.add('');
-          checkName.add(approvalData['presidentName']);
-          checkName.add(approvalData['advisorName']);
-          checkName.add(approvalData['branchHeadName']);
-          checkStatus.add('Approved');
-          checkStatus.add(approvalData['presidentStatus']);
-          checkStatus.add(approvalData['advisorStatus']);
-          checkStatus.add(approvalData['branchHeadStatus']);
-        }
-
-        if (checkStatus.any((element) => element == 'Rejected')) {
-          eventStatus = 'Rejected';
-        } else {
-          eventStatus = 'Pending';
-        }
-
-        Query<Map<String, dynamic>> query = firestore
-            .collection('schedule')
-            .where('eventID', isEqualTo: eventId)
-            .orderBy('date');
-
-        QuerySnapshot<Map<String, dynamic>> snapshot =
-            await query.limit(1).get();
-
-        Query<Map<String, dynamic>> query2 = firestore
-            .collection('schedule')
-            .where('eventID', isEqualTo: eventId)
-            .orderBy('date', descending: true);
-
-        QuerySnapshot<Map<String, dynamic>> snapshot2 =
-            await query2.limit(1).get();
-
-        if (snapshot.docs.isNotEmpty) {
-          DocumentSnapshot<Map<String, dynamic>> earliestDoc =
-              snapshot.docs.first;
-
-          Timestamp date = earliestDoc['date'];
-          startDate = date.toDate();
-        }
-
-        if (snapshot2.docs.isNotEmpty) {
-          DocumentSnapshot<Map<String, dynamic>> latestDoc =
-              snapshot2.docs.first;
-
-          Timestamp date = latestDoc['date'];
-          endDate = date.toDate();
-        }
-        if (startDate != null && endDate != null) {
-          eventDate = DateFormat('dd/MM/yyyy').format(startDate!) +
-              ' - ' +
-              DateFormat('dd/MM/yyyy').format(endDate!);
-        } else {
-          eventDate = 'Undecided';
-        }
-
-        ongoingEvents.add({
-          ...eventData,
-          'president': presidentName,
-          'eventDate': eventDate,
-          'eventStatus': eventStatus,
-        });
       }
 
       setState(() {
@@ -213,7 +218,7 @@ class _OngoingEventState extends State<OngoingEvent> {
                                     children: [
                                       TextButton(
                                         onPressed: () {
-                                          Navigator.push(
+                                          Navigator.pushReplacement(
                                             context,
                                             MaterialPageRoute(
                                                 builder: (context) =>
@@ -237,7 +242,7 @@ class _OngoingEventState extends State<OngoingEvent> {
                                       ),
                                       TextButton(
                                         onPressed: () {
-                                          Navigator.push(
+                                          Navigator.pushReplacement(
                                             context,
                                             MaterialPageRoute(
                                                 builder: (context) =>
@@ -258,7 +263,7 @@ class _OngoingEventState extends State<OngoingEvent> {
                                                 BorderRadius.circular(0.0),
                                           ),
                                         ),
-                                        child: const Text('Organising'),
+                                        child: const Text('Organised'),
                                       ),
                                     ],
                                   ),
@@ -285,7 +290,11 @@ class _OngoingEventState extends State<OngoingEvent> {
                                                         label:
                                                             Text('President')),
                                                     DataColumn(
-                                                        label: Text('Date')),
+                                                        label:
+                                                            Text('Start Date')),
+                                                    DataColumn(
+                                                        label:
+                                                            Text('End Date')),
                                                     DataColumn(
                                                         label: Text('Phase')),
                                                     DataColumn(
@@ -293,14 +302,12 @@ class _OngoingEventState extends State<OngoingEvent> {
                                                             Text('Progress')),
                                                     DataColumn(
                                                         label: Text('Status')),
-                                                    DataColumn(
-                                                        label: Text('Action')),
+                                                    DataColumn(label: Text('')),
                                                   ],
                                                   source: _EventDataSource(
                                                       ongoingEvents,
                                                       context,
-                                                      widget.selectedSociety,
-                                                      widget.position),
+                                                      widget.selectedSociety),
                                                   refresh: getData,
                                                   context: context,
                                                 ),
@@ -434,12 +441,14 @@ class _CustomDataTableState extends State<CustomDataTable> {
                         case 1:
                           return member['president'];
                         case 2:
-                          return member['eventDate'];
+                          return member['startDate'];
                         case 3:
-                          return member['status'];
+                          return member['endDate'];
                         case 4:
-                          return member['progress'];
+                          return member['status'];
                         case 5:
+                          return member['progress'];
+                        case 6:
                           return member['eventStatus'];
                         default:
                           return '';
@@ -471,11 +480,9 @@ class _EventDataSource extends DataTableSource {
   final Set<int> selectedRows = {};
   final BuildContext context;
   final String selectedSociety;
-  final String position;
   int rowsPerPage = 10;
 
-  _EventDataSource(
-      this.originalEvent, this.context, this.selectedSociety, this.position) {
+  _EventDataSource(this.originalEvent, this.context, this.selectedSociety) {
     _initializeDisplayedEvent();
   }
 
@@ -495,7 +502,8 @@ class _EventDataSource extends DataTableSource {
         DataCell(Text(event['president'] != null
             ? event['president'].toString()
             : 'Not decided')),
-        DataCell(Text(event['eventDate'].toString())),
+        DataCell(Text(event['startDate'].toString())),
+        DataCell(Text(event['endDate'].toString())),
         DataCell(Text(event['status'].toString())),
         DataCell(Text('${event['progress']}/3')),
         DataCell(Text(event['eventStatus'].toString())),
@@ -507,7 +515,7 @@ class _EventDataSource extends DataTableSource {
                   context,
                   MaterialPageRoute(
                     builder: (context) =>
-                        Proposal(selectedEvent: event['eventID']),
+                        EventDetails(selectedEvent: event['eventID']),
                   ),
                 );
               },
@@ -548,10 +556,16 @@ class _EventDataSource extends DataTableSource {
       final aValue = getField(a);
       final bValue = getField(b);
 
-      if (columnIndex == 2) {
-        final aDate = DateTime.parse(aValue.toString());
-        final bDate = DateTime.parse(bValue.toString());
-        return ascending ? aDate.compareTo(bDate) : bDate.compareTo(aDate);
+      if (columnIndex == 2 || columnIndex == 3) {
+        if (aValue.toString().toLowerCase() == 'undecided') {
+          return bValue.toString().toLowerCase() == 'undecided' ? 0 : 1;
+        } else if (bValue.toString().toLowerCase() == 'undecided') {
+          return -1;
+        } else {
+          final aDate = DateFormat('dd/MM/yyyy').parse(aValue.toString());
+          final bDate = DateFormat('dd/MM/yyyy').parse(bValue.toString());
+          return ascending ? aDate.compareTo(bDate) : bDate.compareTo(aDate);
+        }
       } else {
         return ascending
             ? Comparable.compare(aValue, bValue)

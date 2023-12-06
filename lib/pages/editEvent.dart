@@ -2,13 +2,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
+import 'package:fyp/pages/eventDetails.dart';
 import 'package:fyp/pages/ongoingEvent.dart';
 
 class EditEvent extends StatefulWidget {
   final String selectedEvent;
-  final String selectedSociety;
   const EditEvent(
-      {super.key, required this.selectedEvent, required this.selectedSociety});
+      {super.key, required this.selectedEvent});
 
   @override
   State<EditEvent> createState() => _EditEventState();
@@ -933,9 +933,9 @@ class _EditEventState extends State<EditEvent> {
                                                     context,
                                                     MaterialPageRoute(
                                                       builder: (context) =>
-                                                          OngoingEvent(
-                                                        selectedSociety: widget
-                                                            .selectedSociety,
+                                                          EventDetails(
+                                                        selectedEvent: widget
+                                                            .selectedEvent,
                                                       ),
                                                     ),
                                                   );

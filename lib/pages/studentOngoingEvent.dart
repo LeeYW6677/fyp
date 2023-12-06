@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
-import 'package:fyp/pages/proposal.dart';
+import 'package:fyp/pages/eventDetails.dart';
 import 'package:fyp/pages/studentOrganisedEvent.dart';
 import 'package:intl/intl.dart';
 import 'package:localstorage/localstorage.dart';
@@ -20,15 +20,6 @@ class _StudentOngoingEventState extends State<StudentOngoingEvent> {
   DateTime? startDate;
   DateTime? endDate;
   List<Map<String, dynamic>> ongoingEvents = [];
-  List<String> position = [
-    'President',
-    'Vice President',
-    'Secretary',
-    'Vice Secretary',
-    'Treasurer',
-    'Vice Treasurer',
-    'Member',
-  ];
   List<String> checkName = ['', '', '', ''];
   List<String> checkStatus = ['', '', '', ''];
 
@@ -43,8 +34,8 @@ class _StudentOngoingEventState extends State<StudentOngoingEvent> {
       final QuerySnapshot<Map<String, dynamic>> relatedEvent = await firestore
           .collection('committee')
           .where('studentID', isEqualTo: storage.getItem('id'))
-          .where('position', whereIn: position)
           .get();
+          
       if (relatedEvent.docs.isNotEmpty) {
         List<String> eventIds =
             relatedEvent.docs.map((doc) => doc['eventID'] as String).toList();
@@ -54,12 +45,18 @@ class _StudentOngoingEventState extends State<StudentOngoingEvent> {
                 .collection('event')
                 .where('eventID', whereIn: eventIds)
                 .get();
+        final List<DocumentSnapshot<Map<String, dynamic>>> filteredEvents =
+            eventSnapshot.docs.where((eventDoc) {
+          final status = eventDoc['status'];
+          final progress = eventDoc['progress'];
 
-        for (var docSnapshot in eventSnapshot.docs) {
-          Map<String, dynamic> eventData = docSnapshot.data();
-          String status = eventData['status'];
+          return status != 'Closing' || progress != 3;
+        }).toList();
 
-          if (status != 'Completed') {
+        for (var docSnapshot in filteredEvents) {
+          Map<String, dynamic>? eventData = docSnapshot.data();
+
+          if (eventData != null) {
             ongoingEvents.add(eventData);
           }
         }
@@ -124,7 +121,8 @@ class _StudentOngoingEventState extends State<StudentOngoingEvent> {
 
           QuerySnapshot<Map<String, dynamic>> snapshot2 =
               await query2.limit(1).get();
-
+          startDate = null;
+          endDate = null;
           if (snapshot.docs.isNotEmpty) {
             DocumentSnapshot<Map<String, dynamic>> earliestDoc =
                 snapshot.docs.first;
@@ -141,12 +139,13 @@ class _StudentOngoingEventState extends State<StudentOngoingEvent> {
             endDate = date.toDate();
           }
           if (startDate != null && endDate != null) {
-            ongoingEvents[eventIndex]['eventDate'] =
-                DateFormat('dd/MM/yyyy').format(startDate!) +
-                    ' - ' +
-                    DateFormat('dd/MM/yyyy').format(endDate!);
+            ongoingEvents[eventIndex]['startDate'] =
+                DateFormat('dd/MM/yyyy').format(startDate!);
+            ongoingEvents[eventIndex]['endDate'] =
+                DateFormat('dd/MM/yyyy').format(endDate!);
           } else {
-            ongoingEvents[eventIndex]['eventDate'] = 'Undecided';
+            ongoingEvents[eventIndex]['startDate'] = 'Undecided';
+            ongoingEvents[eventIndex]['endDate'] = 'Undecided';
           }
         }
         setState(() {
@@ -159,8 +158,8 @@ class _StudentOngoingEventState extends State<StudentOngoingEvent> {
         _isLoading = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to fetch data. Please try again.'),
+        SnackBar(
+          content: Text('Failed to fetch data. Please try again later'),
           width: 225.0,
           behavior: SnackBarBehavior.floating,
           duration: Duration(seconds: 3),
@@ -292,7 +291,11 @@ class _StudentOngoingEventState extends State<StudentOngoingEvent> {
                                                           label: Text(
                                                               'President')),
                                                       DataColumn(
-                                                          label: Text('Date')),
+                                                          label: Text(
+                                                              'StartDate')),
+                                                      DataColumn(
+                                                          label:
+                                                              Text('End Date')),
                                                       DataColumn(
                                                           label: Text('Phase')),
                                                       DataColumn(
@@ -414,16 +417,18 @@ class _CustomDataTableState extends State<CustomDataTable> {
                     (Map<String, dynamic> member) {
                       switch (columnIndex) {
                         case 0:
-                          return member['name'];
+                          return member['eventName'];
                         case 1:
                           return member['president'];
                         case 2:
-                          return member['eventDate'];
+                          return member['startDate'];
                         case 3:
-                          return member['status'];
+                          return member['endDate'];
                         case 4:
-                          return member['progress'];
+                          return member['status'];
                         case 5:
+                          return member['progress'];
+                        case 6:
                           return member['eventStatus'];
                         default:
                           return '';
@@ -476,7 +481,8 @@ class _EventDataSource extends DataTableSource {
         DataCell(Text(event['president'] != null
             ? event['president'].toString()
             : 'Not decided')),
-        DataCell(Text(event['eventDate'].toString())),
+        DataCell(Text(event['startDate'].toString())),
+        DataCell(Text(event['endDate'].toString())),
         DataCell(Text(event['status'].toString())),
         DataCell(Text('${event['progress']}/3')),
         DataCell(Text(event['eventStatus'].toString())),
@@ -487,8 +493,8 @@ class _EventDataSource extends DataTableSource {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) =>
-                        Proposal(selectedEvent: event['eventID'].toString()),
+                    builder: (context) => EventDetails(
+                        selectedEvent: event['eventID'].toString()),
                   ),
                 );
               },
@@ -529,10 +535,16 @@ class _EventDataSource extends DataTableSource {
       final aValue = getField(a);
       final bValue = getField(b);
 
-      if (columnIndex == 2) {
-        final aDate = DateTime.parse(aValue.toString());
-        final bDate = DateTime.parse(bValue.toString());
-        return ascending ? aDate.compareTo(bDate) : bDate.compareTo(aDate);
+      if (columnIndex == 2 || columnIndex == 3) {
+        if (aValue.toString().toLowerCase() == 'undecided') {
+          return bValue.toString().toLowerCase() == 'undecided' ? 0 : 1;
+        } else if (bValue.toString().toLowerCase() == 'undecided') {
+          return -1;
+        } else {
+          final aDate = DateFormat('dd/MM/yyyy').parse(aValue.toString());
+          final bDate = DateFormat('dd/MM/yyyy').parse(bValue.toString());
+          return ascending ? aDate.compareTo(bDate) : bDate.compareTo(aDate);
+        }
       } else {
         return ascending
             ? Comparable.compare(aValue, bValue)

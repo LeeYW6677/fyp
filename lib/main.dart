@@ -46,7 +46,7 @@ class _SocietyManagementSystemState extends State<SocietyManagementSystem> {
           thumbVisibility: MaterialStateProperty.all<bool>(true),
         ),
       ),
-      home: user != null ? StudentOngoingEvent() : const Login(),
+      home: user != null ? EventDetails(selectedEvent: 'E001',) : const Login(),
     );
   }
 }

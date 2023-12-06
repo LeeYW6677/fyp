@@ -5,7 +5,15 @@ import 'package:fyp/functions/responsive.dart';
 
 class Participant extends StatefulWidget {
   final String selectedEvent;
-  const Participant({super.key, required this.selectedEvent});
+  final String status;
+  final int progress;
+  final String position;
+  const Participant(
+      {super.key,
+      required this.selectedEvent,
+      required this.status,
+      required this.progress,
+      required this.position});
 
   @override
   State<Participant> createState() => _ParticipantState();
@@ -14,13 +22,12 @@ class Participant extends StatefulWidget {
 class _ParticipantState extends State<Participant> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _isLoading = true;
-  String status = '';
+  bool enabled = true;
   final id = TextEditingController();
   final name = TextEditingController();
   final contact = TextEditingController();
   List<Participants> participantList = [];
   String? idError;
-  int progress = -1;
   List<String> checkName = [];
   List<String> checkStatus = [];
 
@@ -35,6 +42,14 @@ class _ParticipantState extends State<Participant> {
       setState(() {
         _isLoading = true;
       });
+
+      if (!widget.position.startsWith('org') &&
+          widget.position.contains('Treasurer') &&
+          widget.status != 'Closing' &&
+          widget.progress != 0) {
+        enabled = false;
+      }
+
       final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
       final QuerySnapshot<Map<String, dynamic>> participantSnapshot =
@@ -54,7 +69,6 @@ class _ParticipantState extends State<Participant> {
         }).toList();
       }
       setState(() {
-        status = status;
         _isLoading = false;
       });
     } catch (error) {
@@ -164,367 +178,396 @@ class _ParticipantState extends State<Participant> {
                                           selectedEvent: widget.selectedEvent,
                                           tab: 'Post',
                                           form: 'Participant',
-                                          status: status,
+                                          status: widget.status,
+                                          position: widget.position,
+                                          progress: widget.progress,
                                           children: [
-                                            Row(
-                                              children: [
-                                                Expanded(
-                                                  child: Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            8.0),
-                                                    child: Row(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .center,
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        if (Responsive
-                                                            .isDesktop(context))
-                                                          const Expanded(
-                                                            flex: 1,
-                                                            child: Text(
-                                                              'Student ID',
-                                                              style: TextStyle(
-                                                                  fontSize: 16),
-                                                            ),
-                                                          ),
-                                                        Expanded(
-                                                          flex: 4,
-                                                          child:
-                                                              CustomTextField(
-                                                            hintText:
-                                                                'Enter Student ID',
-                                                            controller: id,
-                                                            errorText: idError,
-                                                            screen: !Responsive
-                                                                .isDesktop(
-                                                                    context),
-                                                            labelText:
-                                                                'Student ID',
-                                                            validator: (value) {
-                                                              if (value!
-                                                                  .isEmpty) {
-                                                                return 'Please enter student ID';
-                                                              } else if (!RegExp(
-                                                                      r'^\d{2}[A-Z]{3}\d{5}$')
-                                                                  .hasMatch(
-                                                                      value)) {
-                                                                return 'Invalid student ID';
-                                                              }
-                                                              return null;
-                                                            },
-                                                            onChanged: (value) {
-                                                              onTextChanged(
-                                                                  value,
-                                                                  name,
-                                                                  contact);
-                                                            },
-                                                          ),
-                                                        ),
-                                                        if (Responsive
-                                                            .isDesktop(context))
-                                                          const Expanded(
-                                                              flex: 1,
-                                                              child:
-                                                                  SizedBox()),
-                                                        const Expanded(
-                                                            flex: 4,
-                                                            child: SizedBox()),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            Row(
-                                              children: [
-                                                Expanded(
-                                                  child: Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            8.0),
-                                                    child: Row(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .center,
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        if (Responsive
-                                                            .isDesktop(context))
-                                                          const Expanded(
-                                                            flex: 1,
-                                                            child: Text(
-                                                              'Name',
-                                                              style: TextStyle(
-                                                                  fontSize: 16),
-                                                            ),
-                                                          ),
-                                                        Expanded(
-                                                          flex: 4,
-                                                          child:
-                                                              CustomTextField(
-                                                            screen: !Responsive
-                                                                .isDesktop(
-                                                                    context),
-                                                            enabled: false,
-                                                            labelText: 'Name',
-                                                            controller: name,
-                                                            hintText:
-                                                                'Associated Student Name',
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                                Expanded(
-                                                  child: Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            8.0),
-                                                    child: Row(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .center,
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        if (Responsive
-                                                            .isDesktop(context))
-                                                          const Expanded(
-                                                            flex: 1,
-                                                            child: Text(
-                                                              'Contact No.',
-                                                              style: TextStyle(
-                                                                  fontSize: 16),
-                                                            ),
-                                                          ),
-                                                        Expanded(
-                                                          flex: 4,
-                                                          child:
-                                                              CustomTextField(
-                                                            screen: !Responsive
-                                                                .isDesktop(
-                                                                    context),
-                                                            prefixText: '+60',
-                                                            labelText:
-                                                                'Contact No.',
-                                                            enabled: false,
-                                                            controller: contact,
-                                                            hintText:
-                                                                'Associated Contact No.',
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.end,
-                                              children: [
-                                                CustomButton(
-                                                    width: 150,
-                                                    onPressed: () {
-                                                      if (_formKey.currentState!
-                                                          .validate()) {
-                                                        if (idError == null) {
-                                                          Participants
-                                                              newParticipants =
-                                                              Participants(
-                                                            studentID: id.text,
-                                                            name: name.text,
-                                                            contact:
-                                                                contact.text,
-                                                          );
-
-                                                          participantList.add(
-                                                              newParticipants);
-                                                          setState(() {
-                                                            participantList =
-                                                                participantList;
-                                                          });
-                                                          id.clear();
-                                                          name.clear();
-                                                          contact.clear();
-                                                        }
-                                                      }
-                                                    },
-                                                    text: 'Add'),
-                                                const SizedBox(
-                                                  width: 15,
-                                                ),
-                                              ],
-                                            ),
-                                            const SizedBox(
-                                              height: 15,
-                                            ),
-                                            if(participantList.isNotEmpty)
-                                            Column(
-                                              children: [
-                                                Center(
-                                                  child: SingleChildScrollView(
-                                                    scrollDirection:
-                                                        Axis.horizontal,
-                                                    child: DataTable(
-                                                      columns: const [
-                                                        DataColumn(
-                                                            label:
-                                                                Text('Name')),
-                                                        DataColumn(
-                                                            label: Text(
-                                                                'Student ID')),
-                                                        DataColumn(
-                                                            label: Text(
-                                                                'Contact No.')),
-                                                        DataColumn(
-                                                            label:
-                                                                Text('')),
-                                                      ],
-                                                      rows: participantList
-                                                          .asMap()
-                                                          .entries
-                                                          .map((entry) {
-                                                        final int index =
-                                                            entry.key;
-                                                        final Participants
-                                                            participant =
-                                                            entry.value;
-
-                                                        return DataRow(
-                                                          cells: [
-                                                            DataCell(Text(
-                                                                participant
-                                                                    .name)),
-                                                            DataCell(Text(
-                                                                participant
-                                                                    .studentID)),
-                                                            DataCell(Text(
-                                                                '+60${participant.contact}')),
-                                                            DataCell(Row(
-                                                              children: [
-                                                                IconButton(
-                                                                  icon: const Icon(
-                                                                      Icons
-                                                                          .edit),
-                                                                  onPressed:
-                                                                      () {
-                                                                    showDialog(
-                                                                        context:
-                                                                            context,
-                                                                        builder:
-                                                                            (_) {
-                                                                          return EditDialog(
-                                                                            participant:
-                                                                                participant,
-                                                                            index:
-                                                                                index,
-                                                                            list:
-                                                                                participantList,
-                                                                            function:
-                                                                                resetTable,
-                                                                          );
-                                                                        });
+                                            if (enabled)
+                                              Column(
+                                                children: [
+                                                  Row(
+                                                    children: [
+                                                      Expanded(
+                                                        child: Padding(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .all(8.0),
+                                                          child: Row(
+                                                            crossAxisAlignment:
+                                                                CrossAxisAlignment
+                                                                    .center,
+                                                            mainAxisAlignment:
+                                                                MainAxisAlignment
+                                                                    .start,
+                                                            children: [
+                                                              if (Responsive
+                                                                  .isDesktop(
+                                                                      context))
+                                                                const Expanded(
+                                                                  flex: 1,
+                                                                  child: Text(
+                                                                    'Student ID',
+                                                                    style: TextStyle(
+                                                                        fontSize:
+                                                                            16),
+                                                                  ),
+                                                                ),
+                                                              Expanded(
+                                                                flex: 4,
+                                                                child:
+                                                                    CustomTextField(
+                                                                  hintText:
+                                                                      'Enter Student ID',
+                                                                  controller:
+                                                                      id,
+                                                                  errorText:
+                                                                      idError,
+                                                                  screen: !Responsive
+                                                                      .isDesktop(
+                                                                          context),
+                                                                  labelText:
+                                                                      'Student ID',
+                                                                  validator:
+                                                                      (value) {
+                                                                    if (value!
+                                                                        .isEmpty) {
+                                                                      return 'Please enter student ID';
+                                                                    } else if (!RegExp(
+                                                                            r'^\d{2}[A-Z]{3}\d{5}$')
+                                                                        .hasMatch(
+                                                                            value)) {
+                                                                      return 'Invalid student ID';
+                                                                    }
+                                                                    return null;
+                                                                  },
+                                                                  onChanged:
+                                                                      (value) {
+                                                                    onTextChanged(
+                                                                        value,
+                                                                        name,
+                                                                        contact);
                                                                   },
                                                                 ),
-                                                                IconButton(
-                                                                  icon: const Icon(
-                                                                      Icons
-                                                                          .delete),
-                                                                  onPressed:
-                                                                      () {
-                                                                    setState(
-                                                                        () {
-                                                                      participantList
-                                                                          .removeAt(
-                                                                              index);
-                                                                    });
-                                                                  },
-                                                                ),
-                                                              ],
-                                                            )),
-                                                          ],
-                                                        );
-                                                      }).toList(),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            CustomButton(
-                                                width: 150,
-                                                onPressed: () async {
-                                                  if (participantList
-                                                      .isNotEmpty) {
-                                                    FirebaseFirestore
-                                                        firestore =
-                                                        FirebaseFirestore
-                                                            .instance;
-
-                                                    CollectionReference
-                                                        participants =
-                                                        firestore.collection(
-                                                            'participant');
-
-                                                    QuerySnapshot
-                                                        querySnapshot =
-                                                        await participants
-                                                            .where('eventID',
-                                                                isEqualTo: widget
-                                                                    .selectedEvent)
-                                                            .get();
-
-                                                    for (QueryDocumentSnapshot documentSnapshot
-                                                        in querySnapshot.docs) {
-                                                      await documentSnapshot
-                                                          .reference
-                                                          .delete();
-                                                    }
-
-                                                    for (int index = 0;
-                                                        index <
-                                                            participantList
-                                                                .length;
-                                                        index++) {
-                                                      Participants person =
-                                                          participantList[
-                                                              index];
-
-                                                      await participants.add({
-                                                        'eventID': widget
-                                                            .selectedEvent,
-                                                        'studentID':
-                                                            person.studentID,
-                                                        'name': person.name,
-                                                        'contact':
-                                                            person.contact,
-                                                      });
-                                                    }
-                                                    ScaffoldMessenger.of(
-                                                            context)
-                                                        .showSnackBar(
-                                                      const SnackBar(
-                                                        content: Text(
-                                                            'Participant List saved.'),
-                                                        width: 150.0,
-                                                        behavior:
-                                                            SnackBarBehavior
-                                                                .floating,
-                                                        duration: Duration(
-                                                            seconds: 3),
+                                                              ),
+                                                              if (Responsive
+                                                                  .isDesktop(
+                                                                      context))
+                                                                const Expanded(
+                                                                    flex: 1,
+                                                                    child:
+                                                                        SizedBox()),
+                                                              const Expanded(
+                                                                  flex: 4,
+                                                                  child:
+                                                                      SizedBox()),
+                                                            ],
+                                                          ),
+                                                        ),
                                                       ),
-                                                    );
-                                                  }
-                                                },
-                                                text: 'Save'),
+                                                    ],
+                                                  ),
+                                                  Row(
+                                                    children: [
+                                                      Expanded(
+                                                        child: Padding(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .all(8.0),
+                                                          child: Row(
+                                                            crossAxisAlignment:
+                                                                CrossAxisAlignment
+                                                                    .center,
+                                                            mainAxisAlignment:
+                                                                MainAxisAlignment
+                                                                    .start,
+                                                            children: [
+                                                              if (Responsive
+                                                                  .isDesktop(
+                                                                      context))
+                                                                const Expanded(
+                                                                  flex: 1,
+                                                                  child: Text(
+                                                                    'Name',
+                                                                    style: TextStyle(
+                                                                        fontSize:
+                                                                            16),
+                                                                  ),
+                                                                ),
+                                                              Expanded(
+                                                                flex: 4,
+                                                                child:
+                                                                    CustomTextField(
+                                                                  screen: !Responsive
+                                                                      .isDesktop(
+                                                                          context),
+                                                                  enabled:
+                                                                      false,
+                                                                  labelText:
+                                                                      'Name',
+                                                                  controller:
+                                                                      name,
+                                                                  hintText:
+                                                                      'Associated Student Name',
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      Expanded(
+                                                        child: Padding(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .all(8.0),
+                                                          child: Row(
+                                                            crossAxisAlignment:
+                                                                CrossAxisAlignment
+                                                                    .center,
+                                                            mainAxisAlignment:
+                                                                MainAxisAlignment
+                                                                    .start,
+                                                            children: [
+                                                              if (Responsive
+                                                                  .isDesktop(
+                                                                      context))
+                                                                const Expanded(
+                                                                  flex: 1,
+                                                                  child: Text(
+                                                                    'Contact No.',
+                                                                    style: TextStyle(
+                                                                        fontSize:
+                                                                            16),
+                                                                  ),
+                                                                ),
+                                                              Expanded(
+                                                                flex: 4,
+                                                                child:
+                                                                    CustomTextField(
+                                                                  screen: !Responsive
+                                                                      .isDesktop(
+                                                                          context),
+                                                                  prefixText:
+                                                                      '+60',
+                                                                  labelText:
+                                                                      'Contact No.',
+                                                                  enabled:
+                                                                      false,
+                                                                  controller:
+                                                                      contact,
+                                                                  hintText:
+                                                                      'Associated Contact No.',
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment.end,
+                                                    children: [
+                                                      CustomButton(
+                                                          width: 150,
+                                                          onPressed: () {
+                                                            if (_formKey
+                                                                .currentState!
+                                                                .validate()) {
+                                                              if (idError ==
+                                                                  null) {
+                                                                Participants
+                                                                    newParticipants =
+                                                                    Participants(
+                                                                  studentID:
+                                                                      id.text,
+                                                                  name:
+                                                                      name.text,
+                                                                  contact:
+                                                                      contact
+                                                                          .text,
+                                                                );
+
+                                                                participantList.add(
+                                                                    newParticipants);
+                                                                setState(() {
+                                                                  participantList =
+                                                                      participantList;
+                                                                });
+                                                                id.clear();
+                                                                name.clear();
+                                                                contact.clear();
+                                                              }
+                                                            }
+                                                          },
+                                                          text: 'Add'),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(
+                                                    height: 15,
+                                                  ),
+                                                  const Divider(
+                                                    thickness: 0.1,
+                                                    color: Colors.black,
+                                                  ),
+                                                ],
+                                              ),
+                                              Column(
+                                                children: [
+                                                  Center(
+                                                    child: participantList.isNotEmpty ?
+                                                        SingleChildScrollView(
+                                                      scrollDirection:
+                                                          Axis.horizontal,
+                                                      child: DataTable(
+                                                        columns: const [
+                                                          DataColumn(
+                                                              label:
+                                                                  Text('Name')),
+                                                          DataColumn(
+                                                              label: Text(
+                                                                  'Student ID')),
+                                                          DataColumn(
+                                                              label: Text(
+                                                                  'Contact No.')),
+                                                          DataColumn(
+                                                              label: Text('')),
+                                                        ],
+                                                        rows: participantList
+                                                            .asMap()
+                                                            .entries
+                                                            .map((entry) {
+                                                          final int index =
+                                                              entry.key;
+                                                          final Participants
+                                                              participant =
+                                                              entry.value;
+
+                                                          return DataRow(
+                                                            cells: [
+                                                              DataCell(Text(
+                                                                  participant
+                                                                      .name)),
+                                                              DataCell(Text(
+                                                                  participant
+                                                                      .studentID)),
+                                                              DataCell(Text(
+                                                                  '+60${participant.contact}')),
+                                                              DataCell(Row(
+                                                                children: [
+                                                                  if (enabled)
+                                                                    IconButton(
+                                                                      icon: const Icon(
+                                                                          Icons
+                                                                              .edit),
+                                                                      onPressed:
+                                                                          () {
+                                                                        showDialog(
+                                                                            context:
+                                                                                context,
+                                                                            builder:
+                                                                                (_) {
+                                                                              return EditDialog(
+                                                                                participant: participant,
+                                                                                index: index,
+                                                                                list: participantList,
+                                                                                function: resetTable,
+                                                                              );
+                                                                            });
+                                                                      },
+                                                                    ),
+                                                                  if (enabled)
+                                                                    IconButton(
+                                                                      icon: const Icon(
+                                                                          Icons
+                                                                              .delete),
+                                                                      onPressed:
+                                                                          () {
+                                                                        setState(
+                                                                            () {
+                                                                          participantList
+                                                                              .removeAt(index);
+                                                                        });
+                                                                      },
+                                                                    ),
+                                                                ],
+                                                              )),
+                                                            ],
+                                                          );
+                                                        }).toList(),
+                                                      ),
+                                                    ) : const SizedBox(height: 500, child: Center(child: Text('There is no participant registered.'))),
+                                                  ),
+                                                ],
+                                              ),
+                                            if (enabled)
+                                              CustomButton(
+                                                  width: 150,
+                                                  onPressed: () async {
+                                                    if (participantList
+                                                        .isNotEmpty) {
+                                                      FirebaseFirestore
+                                                          firestore =
+                                                          FirebaseFirestore
+                                                              .instance;
+
+                                                      CollectionReference
+                                                          participants =
+                                                          firestore.collection(
+                                                              'participant');
+
+                                                      QuerySnapshot
+                                                          querySnapshot =
+                                                          await participants
+                                                              .where('eventID',
+                                                                  isEqualTo: widget
+                                                                      .selectedEvent)
+                                                              .get();
+
+                                                      for (QueryDocumentSnapshot documentSnapshot
+                                                          in querySnapshot
+                                                              .docs) {
+                                                        await documentSnapshot
+                                                            .reference
+                                                            .delete();
+                                                      }
+
+                                                      for (int index = 0;
+                                                          index <
+                                                              participantList
+                                                                  .length;
+                                                          index++) {
+                                                        Participants person =
+                                                            participantList[
+                                                                index];
+
+                                                        await participants.add({
+                                                          'eventID': widget
+                                                              .selectedEvent,
+                                                          'studentID':
+                                                              person.studentID,
+                                                          'name': person.name,
+                                                          'contact':
+                                                              person.contact,
+                                                        });
+                                                      }
+                                                      ScaffoldMessenger.of(
+                                                              context)
+                                                          .showSnackBar(
+                                                        const SnackBar(
+                                                          content: Text(
+                                                              'Participant List saved.'),
+                                                          width: 150.0,
+                                                          behavior:
+                                                              SnackBarBehavior
+                                                                  .floating,
+                                                          duration: Duration(
+                                                              seconds: 3),
+                                                        ),
+                                                      );
+                                                    }
+                                                  },
+                                                  text: 'Save'),
                                             const SizedBox(
                                               height: 15,
                                             ),
