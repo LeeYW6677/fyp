@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
 import 'package:fyp/pages/eventDetails.dart';
-import 'package:fyp/pages/ongoingEvent.dart';
 
 class EditEvent extends StatefulWidget {
   final String selectedEvent;

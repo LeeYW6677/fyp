@@ -9,13 +9,16 @@ class Budget extends StatefulWidget {
   final String status;
   final int progress;
   final String position;
-
+  final bool rejected;
+  final bool rejected2;
   const Budget(
       {super.key,
       required this.selectedEvent,
       required this.status,
       required this.progress,
-      required this.position});
+      required this.position,
+      required this.rejected,
+      required this.rejected2});
 
   @override
   State<Budget> createState() => _BudgetState();
@@ -49,7 +52,7 @@ class _BudgetState extends State<Budget> {
       if (!widget.position.startsWith('org') ||
           widget.position.contains('Secretary') ||
           widget.status != 'Planning' ||
-          widget.progress != 0) {
+          (widget.progress != 0 && !widget.rejected)) {
         enabled = false;
       }
 
@@ -163,6 +166,8 @@ class _BudgetState extends State<Budget> {
                                           status: widget.status,
                                           progress: widget.progress,
                                           position: widget.position,
+                                          rejected2: widget.rejected2,
+                                          rejected: widget.rejected,
                                           children: [
                                             if (enabled)
                                               Column(
@@ -473,235 +478,244 @@ class _BudgetState extends State<Budget> {
                                             Column(
                                               children: [
                                                 Center(
-                                                  child: income.isNotEmpty || expense.isNotEmpty ? SingleChildScrollView(
-                                                    scrollDirection:
-                                                        Axis.horizontal,
-                                                    child: Row(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        DataTable(
-                                                          columns: const [
-                                                            DataColumn(
-                                                              label: Text(
-                                                                  'Item Name'),
-                                                            ),
-                                                            DataColumn(
-                                                                label: Text(
-                                                                    'Unit Price')),
-                                                            DataColumn(
-                                                                label: Text(
-                                                                    'Qty')),
-                                                            DataColumn(
-                                                                label: Text(
-                                                                    'Total')),
-                                                            DataColumn(
-                                                                label:
-                                                                    Text('')),
-                                                          ],
-                                                          rows: [
-                                                            ...income
-                                                                .asMap()
-                                                                .entries
-                                                                .map((entry) {
-                                                              final int index =
-                                                                  entry.key;
-                                                              final BudgetItem
-                                                                  item =
-                                                                  entry.value;
-
-                                                              return DataRow(
-                                                                cells: [
-                                                                  DataCell(Text(
-                                                                      item.name)),
-                                                                  DataCell(Text(
-                                                                      'RM ${item.price.toStringAsFixed(2)}')),
-                                                                  DataCell(Text(item
-                                                                      .qty
-                                                                      .toString())),
-                                                                  DataCell(
-                                                                    Text(
-                                                                      'RM ${(item.qty * item.price).toStringAsFixed(2)}',
-                                                                    ),
+                                                  child: income.isNotEmpty ||
+                                                          expense.isNotEmpty
+                                                      ? SingleChildScrollView(
+                                                          scrollDirection:
+                                                              Axis.horizontal,
+                                                          child: Row(
+                                                            crossAxisAlignment:
+                                                                CrossAxisAlignment
+                                                                    .start,
+                                                            children: [
+                                                              DataTable(
+                                                                columns: const [
+                                                                  DataColumn(
+                                                                    label: Text(
+                                                                        'Item Name'),
                                                                   ),
-                                                                  DataCell(
-                                                                    Row(
-                                                                      children: [
-                                                                        IconButton(
-                                                                          icon:
-                                                                              const Icon(Icons.edit),
-                                                                          onPressed:
-                                                                              () {
-                                                                            showDialog(
-                                                                              context: context,
-                                                                              builder: (_) {
-                                                                                return EditDialog(
-                                                                                  item: item,
-                                                                                  index: index,
-                                                                                  income: income,
-                                                                                  expense: expense,
-                                                                                  function: resetTable,
-                                                                                );
-                                                                              },
-                                                                            );
-                                                                          },
-                                                                        ),
-                                                                        IconButton(
-                                                                          icon:
-                                                                              const Icon(Icons.delete),
-                                                                          onPressed:
-                                                                              () {
-                                                                            setState(() {
-                                                                              income.removeAt(index);
-                                                                            });
-                                                                          },
-                                                                        ),
-                                                                      ],
-                                                                    ),
-                                                                  ),
+                                                                  DataColumn(
+                                                                      label: Text(
+                                                                          'Unit Price')),
+                                                                  DataColumn(
+                                                                      label: Text(
+                                                                          'Qty')),
+                                                                  DataColumn(
+                                                                      label: Text(
+                                                                          'Total')),
+                                                                  DataColumn(
+                                                                      label: Text(
+                                                                          '')),
                                                                 ],
-                                                              );
-                                                            }).toList(),
-                                                            DataRow(
-                                                              cells: [
-                                                                const DataCell(Text(
-                                                                    'Total Income',
-                                                                    style: TextStyle(
-                                                                        fontWeight:
-                                                                            FontWeight.bold))),
-                                                                const DataCell(
-                                                                    Text('')),
-                                                                const DataCell(
-                                                                    Text('')),
-                                                                DataCell(
-                                                                  Text(
-                                                                    'RM ${calculateTotal(income).toStringAsFixed(2)}',
-                                                                    style: const TextStyle(
-                                                                        fontWeight:
-                                                                            FontWeight.bold),
-                                                                  ),
-                                                                ),
-                                                                const DataCell(
-                                                                    Text('')),
-                                                              ],
-                                                            ),
-                                                          ],
-                                                        ),
-                                                        const SizedBox(
-                                                          width: 15,
-                                                        ),
-                                                        DataTable(
-                                                          columns: const [
-                                                            DataColumn(
-                                                                label: Text(
-                                                                    'Item Name')),
-                                                            DataColumn(
-                                                                label: Text(
-                                                                    'Unit Price')),
-                                                            DataColumn(
-                                                                label: Text(
-                                                                    'Qty')),
-                                                            DataColumn(
-                                                                label: Text(
-                                                                    'Total')),
-                                                            DataColumn(
-                                                                label:
-                                                                    Text('')),
-                                                          ],
-                                                          rows: [
-                                                            ...expense
-                                                                .asMap()
-                                                                .entries
-                                                                .map((entry) {
-                                                              final int index =
-                                                                  entry.key;
-                                                              final BudgetItem
-                                                                  item =
-                                                                  entry.value;
+                                                                rows: [
+                                                                  ...income
+                                                                      .asMap()
+                                                                      .entries
+                                                                      .map(
+                                                                          (entry) {
+                                                                    final int
+                                                                        index =
+                                                                        entry
+                                                                            .key;
+                                                                    final BudgetItem
+                                                                        item =
+                                                                        entry
+                                                                            .value;
 
-                                                              return DataRow(
-                                                                cells: [
-                                                                  DataCell(Text(
-                                                                      item.name)),
-                                                                  DataCell(Text(
-                                                                      'RM${item.price.toStringAsFixed(2)}')),
-                                                                  DataCell(Text(item
-                                                                      .qty
-                                                                      .toString())),
-                                                                  DataCell(
-                                                                    Text(
-                                                                      'RM ${(item.qty * item.price).toStringAsFixed(2)}',
-                                                                    ),
-                                                                  ),
-                                                                  DataCell(
-                                                                    Row(
-                                                                      children: [
-                                                                        if (enabled)
-                                                                          IconButton(
-                                                                            icon:
-                                                                                const Icon(Icons.edit),
-                                                                            onPressed:
-                                                                                () {
-                                                                              showDialog(
-                                                                                context: context,
-                                                                                builder: (_) {
-                                                                                  return EditDialog(
-                                                                                    item: item,
-                                                                                    index: index,
-                                                                                    income: income,
-                                                                                    expense: expense,
-                                                                                    function: resetTable,
+                                                                    return DataRow(
+                                                                      cells: [
+                                                                        DataCell(
+                                                                            Text(item.name)),
+                                                                        DataCell(
+                                                                            Text('RM ${item.price.toStringAsFixed(2)}')),
+                                                                        DataCell(Text(item
+                                                                            .qty
+                                                                            .toString())),
+                                                                        DataCell(
+                                                                          Text(
+                                                                            'RM ${(item.qty * item.price).toStringAsFixed(2)}',
+                                                                          ),
+                                                                        ),
+                                                                        DataCell(
+                                                                          Row(
+                                                                            children: [
+                                                                              IconButton(
+                                                                                icon: const Icon(Icons.edit),
+                                                                                onPressed: () {
+                                                                                  showDialog(
+                                                                                    context: context,
+                                                                                    builder: (_) {
+                                                                                      return EditDialog(
+                                                                                        item: item,
+                                                                                        index: index,
+                                                                                        income: income,
+                                                                                        expense: expense,
+                                                                                        function: resetTable,
+                                                                                      );
+                                                                                    },
                                                                                   );
                                                                                 },
-                                                                              );
-                                                                            },
+                                                                              ),
+                                                                              IconButton(
+                                                                                icon: const Icon(Icons.delete),
+                                                                                onPressed: () {
+                                                                                  setState(() {
+                                                                                    income.removeAt(index);
+                                                                                  });
+                                                                                },
+                                                                              ),
+                                                                            ],
                                                                           ),
-                                                                        if (enabled)
-                                                                          IconButton(
-                                                                            icon:
-                                                                                const Icon(Icons.delete),
-                                                                            onPressed:
-                                                                                () {
-                                                                              setState(() {
-                                                                                expense.removeAt(index);
-                                                                              });
-                                                                            },
-                                                                          ),
+                                                                        ),
                                                                       ],
-                                                                    ),
+                                                                    );
+                                                                  }).toList(),
+                                                                  DataRow(
+                                                                    cells: [
+                                                                      const DataCell(Text(
+                                                                          'Total Income',
+                                                                          style:
+                                                                              TextStyle(fontWeight: FontWeight.bold))),
+                                                                      const DataCell(
+                                                                          Text(
+                                                                              '')),
+                                                                      const DataCell(
+                                                                          Text(
+                                                                              '')),
+                                                                      DataCell(
+                                                                        Text(
+                                                                          'RM ${calculateTotal(income).toStringAsFixed(2)}',
+                                                                          style:
+                                                                              const TextStyle(fontWeight: FontWeight.bold),
+                                                                        ),
+                                                                      ),
+                                                                      const DataCell(
+                                                                          Text(
+                                                                              '')),
+                                                                    ],
                                                                   ),
                                                                 ],
-                                                              );
-                                                            }).toList(),
-                                                            DataRow(
-                                                              cells: [
-                                                                const DataCell(Text(
-                                                                    'Total Expense',
-                                                                    style: TextStyle(
-                                                                        fontWeight:
-                                                                            FontWeight.bold))),
-                                                                const DataCell(
-                                                                    Text('')),
-                                                                const DataCell(
-                                                                    Text('')),
-                                                                DataCell(
-                                                                  Text(
-                                                                    'RM ${calculateTotal(expense).toStringAsFixed(2)}',
-                                                                    style: const TextStyle(
-                                                                        fontWeight:
-                                                                            FontWeight.bold),
+                                                              ),
+                                                              const SizedBox(
+                                                                width: 15,
+                                                              ),
+                                                              DataTable(
+                                                                columns: const [
+                                                                  DataColumn(
+                                                                      label: Text(
+                                                                          'Item Name')),
+                                                                  DataColumn(
+                                                                      label: Text(
+                                                                          'Unit Price')),
+                                                                  DataColumn(
+                                                                      label: Text(
+                                                                          'Qty')),
+                                                                  DataColumn(
+                                                                      label: Text(
+                                                                          'Total')),
+                                                                  DataColumn(
+                                                                      label: Text(
+                                                                          '')),
+                                                                ],
+                                                                rows: [
+                                                                  ...expense
+                                                                      .asMap()
+                                                                      .entries
+                                                                      .map(
+                                                                          (entry) {
+                                                                    final int
+                                                                        index =
+                                                                        entry
+                                                                            .key;
+                                                                    final BudgetItem
+                                                                        item =
+                                                                        entry
+                                                                            .value;
+
+                                                                    return DataRow(
+                                                                      cells: [
+                                                                        DataCell(
+                                                                            Text(item.name)),
+                                                                        DataCell(
+                                                                            Text('RM${item.price.toStringAsFixed(2)}')),
+                                                                        DataCell(Text(item
+                                                                            .qty
+                                                                            .toString())),
+                                                                        DataCell(
+                                                                          Text(
+                                                                            'RM ${(item.qty * item.price).toStringAsFixed(2)}',
+                                                                          ),
+                                                                        ),
+                                                                        DataCell(
+                                                                          Row(
+                                                                            children: [
+                                                                              if (enabled)
+                                                                                IconButton(
+                                                                                  icon: const Icon(Icons.edit),
+                                                                                  onPressed: () {
+                                                                                    showDialog(
+                                                                                      context: context,
+                                                                                      builder: (_) {
+                                                                                        return EditDialog(
+                                                                                          item: item,
+                                                                                          index: index,
+                                                                                          income: income,
+                                                                                          expense: expense,
+                                                                                          function: resetTable,
+                                                                                        );
+                                                                                      },
+                                                                                    );
+                                                                                  },
+                                                                                ),
+                                                                              if (enabled)
+                                                                                IconButton(
+                                                                                  icon: const Icon(Icons.delete),
+                                                                                  onPressed: () {
+                                                                                    setState(() {
+                                                                                      expense.removeAt(index);
+                                                                                    });
+                                                                                  },
+                                                                                ),
+                                                                            ],
+                                                                          ),
+                                                                        ),
+                                                                      ],
+                                                                    );
+                                                                  }).toList(),
+                                                                  DataRow(
+                                                                    cells: [
+                                                                      const DataCell(Text(
+                                                                          'Total Expense',
+                                                                          style:
+                                                                              TextStyle(fontWeight: FontWeight.bold))),
+                                                                      const DataCell(
+                                                                          Text(
+                                                                              '')),
+                                                                      const DataCell(
+                                                                          Text(
+                                                                              '')),
+                                                                      DataCell(
+                                                                        Text(
+                                                                          'RM ${calculateTotal(expense).toStringAsFixed(2)}',
+                                                                          style:
+                                                                              const TextStyle(fontWeight: FontWeight.bold),
+                                                                        ),
+                                                                      ),
+                                                                      const DataCell(
+                                                                          Text(
+                                                                              '')),
+                                                                    ],
                                                                   ),
-                                                                ),
-                                                                const DataCell(
-                                                                    Text('')),
-                                                              ],
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ) : const SizedBox(height: 500, child: Center(child: Text('There is no budget item registered.'))),
+                                                                ],
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        )
+                                                      : const SizedBox(
+                                                          height: 500,
+                                                          child: Center(
+                                                              child: Text(
+                                                                  'There is no budget item registered.'))),
                                                 ),
                                               ],
                                             ),

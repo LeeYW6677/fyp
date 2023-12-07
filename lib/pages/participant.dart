@@ -8,12 +8,16 @@ class Participant extends StatefulWidget {
   final String status;
   final int progress;
   final String position;
+  final bool rejected;
+  final bool rejected2;
   const Participant(
       {super.key,
       required this.selectedEvent,
       required this.status,
       required this.progress,
-      required this.position});
+      required this.position,
+      required this.rejected,
+      required this.rejected2});
 
   @override
   State<Participant> createState() => _ParticipantState();
@@ -43,10 +47,10 @@ class _ParticipantState extends State<Participant> {
         _isLoading = true;
       });
 
-      if (!widget.position.startsWith('org') &&
-          widget.position.contains('Treasurer') &&
-          widget.status != 'Closing' &&
-          widget.progress != 0) {
+      if (!widget.position.startsWith('org') ||
+          widget.position.contains('Treasurer') ||
+          widget.status != 'Closing' ||
+          (widget.progress != 0 && !widget.rejected2)) {
         enabled = false;
       }
 
@@ -181,6 +185,8 @@ class _ParticipantState extends State<Participant> {
                                           status: widget.status,
                                           position: widget.position,
                                           progress: widget.progress,
+                                          rejected2: widget.rejected2,
+                                          rejected: widget.rejected,
                                           children: [
                                             if (enabled)
                                               Column(
@@ -412,94 +418,95 @@ class _ParticipantState extends State<Participant> {
                                                   ),
                                                 ],
                                               ),
-                                              Column(
-                                                children: [
-                                                  Center(
-                                                    child: participantList.isNotEmpty ?
-                                                        SingleChildScrollView(
-                                                      scrollDirection:
-                                                          Axis.horizontal,
-                                                      child: DataTable(
-                                                        columns: const [
-                                                          DataColumn(
-                                                              label:
-                                                                  Text('Name')),
-                                                          DataColumn(
-                                                              label: Text(
-                                                                  'Student ID')),
-                                                          DataColumn(
-                                                              label: Text(
-                                                                  'Contact No.')),
-                                                          DataColumn(
-                                                              label: Text('')),
-                                                        ],
-                                                        rows: participantList
-                                                            .asMap()
-                                                            .entries
-                                                            .map((entry) {
-                                                          final int index =
-                                                              entry.key;
-                                                          final Participants
-                                                              participant =
-                                                              entry.value;
-
-                                                          return DataRow(
-                                                            cells: [
-                                                              DataCell(Text(
-                                                                  participant
-                                                                      .name)),
-                                                              DataCell(Text(
-                                                                  participant
-                                                                      .studentID)),
-                                                              DataCell(Text(
-                                                                  '+60${participant.contact}')),
-                                                              DataCell(Row(
-                                                                children: [
-                                                                  if (enabled)
-                                                                    IconButton(
-                                                                      icon: const Icon(
-                                                                          Icons
-                                                                              .edit),
-                                                                      onPressed:
-                                                                          () {
-                                                                        showDialog(
-                                                                            context:
-                                                                                context,
-                                                                            builder:
-                                                                                (_) {
-                                                                              return EditDialog(
-                                                                                participant: participant,
-                                                                                index: index,
-                                                                                list: participantList,
-                                                                                function: resetTable,
-                                                                              );
-                                                                            });
-                                                                      },
-                                                                    ),
-                                                                  if (enabled)
-                                                                    IconButton(
-                                                                      icon: const Icon(
-                                                                          Icons
-                                                                              .delete),
-                                                                      onPressed:
-                                                                          () {
-                                                                        setState(
-                                                                            () {
-                                                                          participantList
-                                                                              .removeAt(index);
-                                                                        });
-                                                                      },
-                                                                    ),
-                                                                ],
-                                                              )),
+                                            Column(
+                                              children: [
+                                                Center(
+                                                  child: participantList
+                                                          .isNotEmpty
+                                                      ? SingleChildScrollView(
+                                                          scrollDirection:
+                                                              Axis.horizontal,
+                                                          child: DataTable(
+                                                            columns: const [
+                                                              DataColumn(
+                                                                  label: Text(
+                                                                      'Name')),
+                                                              DataColumn(
+                                                                  label: Text(
+                                                                      'Student ID')),
+                                                              DataColumn(
+                                                                  label: Text(
+                                                                      'Contact No.')),
+                                                              DataColumn(
+                                                                  label:
+                                                                      Text('')),
                                                             ],
-                                                          );
-                                                        }).toList(),
-                                                      ),
-                                                    ) : const SizedBox(height: 500, child: Center(child: Text('There is no participant registered.'))),
-                                                  ),
-                                                ],
-                                              ),
+                                                            rows: participantList
+                                                                .asMap()
+                                                                .entries
+                                                                .map((entry) {
+                                                              final int index =
+                                                                  entry.key;
+                                                              final Participants
+                                                                  participant =
+                                                                  entry.value;
+
+                                                              return DataRow(
+                                                                cells: [
+                                                                  DataCell(Text(
+                                                                      participant
+                                                                          .name)),
+                                                                  DataCell(Text(
+                                                                      participant
+                                                                          .studentID)),
+                                                                  DataCell(Text(
+                                                                      '+60${participant.contact}')),
+                                                                  DataCell(Row(
+                                                                    children: [
+                                                                      if (enabled)
+                                                                        IconButton(
+                                                                          icon:
+                                                                              const Icon(Icons.edit),
+                                                                          onPressed:
+                                                                              () {
+                                                                            showDialog(
+                                                                                context: context,
+                                                                                builder: (_) {
+                                                                                  return EditDialog(
+                                                                                    participant: participant,
+                                                                                    index: index,
+                                                                                    list: participantList,
+                                                                                    function: resetTable,
+                                                                                  );
+                                                                                });
+                                                                          },
+                                                                        ),
+                                                                      if (enabled)
+                                                                        IconButton(
+                                                                          icon:
+                                                                              const Icon(Icons.delete),
+                                                                          onPressed:
+                                                                              () {
+                                                                            setState(() {
+                                                                              participantList.removeAt(index);
+                                                                            });
+                                                                          },
+                                                                        ),
+                                                                    ],
+                                                                  )),
+                                                                ],
+                                                              );
+                                                            }).toList(),
+                                                          ),
+                                                        )
+                                                      : const SizedBox(
+                                                          height: 500,
+                                                          child: Center(
+                                                              child: Text(
+                                                                  'There is no participant registered.'))),
+                                                ),
+                                              ],
+                                            ),
                                             if (enabled)
                                               CustomButton(
                                                   width: 150,

@@ -8,12 +8,16 @@ class OrgCommittee extends StatefulWidget {
   final String status;
   final int progress;
   final String position;
+  final bool rejected;
+  final bool rejected2;
   const OrgCommittee(
       {super.key,
       required this.selectedEvent,
       required this.status,
       required this.progress,
-      required this.position});
+      required this.position,
+      required this.rejected,
+      required this.rejected2});
 
   @override
   State<OrgCommittee> createState() => _OrgCommitteeState();
@@ -48,9 +52,10 @@ class _OrgCommitteeState extends State<OrgCommittee> {
       if (!widget.position.startsWith('org') ||
           widget.position.contains('Treasurer') ||
           widget.status != 'Planning' ||
-          widget.progress != 0) {
+          (widget.progress != 0 && !widget.rejected)) {
         enabled = false;
       }
+
       final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
       final QuerySnapshot<Map<String, dynamic>> committeeSnapshot =
@@ -190,6 +195,8 @@ class _OrgCommitteeState extends State<OrgCommittee> {
                                           status: widget.status,
                                           position: widget.position,
                                           progress: widget.progress,
+                                          rejected2: widget.rejected2,
+                                          rejected: widget.rejected,
                                           children: [
                                             if (enabled)
                                               Column(

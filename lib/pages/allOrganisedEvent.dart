@@ -2,57 +2,43 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
+import 'package:fyp/pages/allOngoingEvent.dart';
 import 'package:fyp/pages/eventDetails.dart';
-import 'package:fyp/pages/studentOrganisedEvent.dart';
 import 'package:intl/intl.dart';
 import 'package:localstorage/localstorage.dart';
 
-class StudentOngoingEvent extends StatefulWidget {
-  const StudentOngoingEvent({super.key});
+class AllOrganisedEvent extends StatefulWidget {
+  const AllOrganisedEvent({super.key});
 
   @override
-  State<StudentOngoingEvent> createState() => _StudentOngoingEventState();
+  State<AllOrganisedEvent> createState() => _AllOrganisedEventState();
 }
 
-class _StudentOngoingEventState extends State<StudentOngoingEvent> {
+class _AllOrganisedEventState extends State<AllOrganisedEvent> {
   final LocalStorage storage = LocalStorage('user');
   bool _isLoading = true;
-  DateTime? startDate;
-  DateTime? endDate;
-  List<Map<String, dynamic>> ongoingEvents = [];
-  List<String> checkName = ['', '', '', ''];
-  List<String> checkStatus = ['', '', '', ''];
-
+  List<Map<String, dynamic>> completedEvents = [];
+  
   Future<void> getData() async {
     try {
       setState(() {
         _isLoading = true;
       });
       final FirebaseFirestore firestore = FirebaseFirestore.instance;
-      // Fetch event data
-
-      final QuerySnapshot<Map<String, dynamic>> relatedEvent = await firestore
-          .collection('committee')
-          .where('studentID', isEqualTo: storage.getItem('id'))
-          .get();
-
-      if (relatedEvent.docs.isNotEmpty) {
-        List<String> eventIds =
-            relatedEvent.docs.map((doc) => doc['eventID'] as String).toList();
-
         final QuerySnapshot<Map<String, dynamic>> eventSnapshot =
             await firestore
                 .collection('event')
-                .where('eventID', whereIn: eventIds)
-                .where('status', isNotEqualTo: 'Completed')
+                .where('status', isEqualTo: 'Closing')
+                .where('progress', isEqualTo: 3)
                 .get();
 
         for (var docSnapshot in eventSnapshot.docs) {
-          Map<String, dynamic>? eventData = docSnapshot.data();
+          Map<String, dynamic> eventData = docSnapshot.data();
 
-          ongoingEvents.add(eventData);
+          completedEvents.add(eventData);
         }
-        for (var eventData in ongoingEvents) {
+
+        for (var eventData in completedEvents) {
           String eventId = eventData['eventID'];
           final QuerySnapshot<Map<String, dynamic>> committeeSnapshot =
               await firestore
@@ -60,98 +46,32 @@ class _StudentOngoingEventState extends State<StudentOngoingEvent> {
                   .where('eventID', isEqualTo: eventId)
                   .where('position', isEqualTo: 'President')
                   .get();
-          int eventIndex =
-              ongoingEvents.indexWhere((event) => event['eventID'] == eventId);
+
           for (var committeeDocSnapshot in committeeSnapshot.docs) {
             Map<String, dynamic> committeeData = committeeDocSnapshot.data();
+            int eventIndex = completedEvents
+                .indexWhere((event) => event['eventID'] == eventId);
 
             if (eventIndex != -1) {
-              ongoingEvents[eventIndex]['president'] =
+              completedEvents[eventIndex]['president'] =
                   committeeData['name'] ?? 'Unassigned';
             }
           }
-
-          final QuerySnapshot<Map<String, dynamic>> approvalSnapshot =
-              await firestore
-                  .collection('approval')
-                  .where('eventID', isEqualTo: eventId)
-                  .get();
-          checkName.clear();
-          checkStatus.clear();
-
-          if (approvalSnapshot.docs.isNotEmpty) {
-            Map<String, dynamic> approvalData =
-                approvalSnapshot.docs.first.data();
-            checkName.add('');
-            checkName.add(approvalData['presidentName']);
-            checkName.add(approvalData['advisorName']);
-            checkName.add(approvalData['branchHeadName']);
-            checkStatus.add('Approved');
-            checkStatus.add(approvalData['presidentStatus']);
-            checkStatus.add(approvalData['advisorStatus']);
-            checkStatus.add(approvalData['branchHeadStatus']);
-          }
-
-          if (checkStatus.any((element) => element == 'Rejected')) {
-            ongoingEvents[eventIndex]['eventStatus'] = 'Rejected';
-          } else {
-            ongoingEvents[eventIndex]['eventStatus'] = 'Pending';
-          }
-
-          Query<Map<String, dynamic>> query = firestore
-              .collection('schedule')
-              .where('eventID', isEqualTo: eventId)
-              .orderBy('date');
-
-          QuerySnapshot<Map<String, dynamic>> snapshot =
-              await query.limit(1).get();
-
-          Query<Map<String, dynamic>> query2 = firestore
-              .collection('schedule')
-              .where('eventID', isEqualTo: eventId)
-              .orderBy('date', descending: true);
-
-          QuerySnapshot<Map<String, dynamic>> snapshot2 =
-              await query2.limit(1).get();
-          startDate = null;
-          endDate = null;
-          if (snapshot.docs.isNotEmpty) {
-            DocumentSnapshot<Map<String, dynamic>> earliestDoc =
-                snapshot.docs.first;
-
-            Timestamp date = earliestDoc['date'];
-            startDate = date.toDate();
-          }
-
-          if (snapshot2.docs.isNotEmpty) {
-            DocumentSnapshot<Map<String, dynamic>> latestDoc =
-                snapshot2.docs.first;
-
-            Timestamp date = latestDoc['date'];
-            endDate = date.toDate();
-          }
-          if (startDate != null && endDate != null) {
-            ongoingEvents[eventIndex]['startDate'] =
-                DateFormat('dd/MM/yyyy').format(startDate!);
-            ongoingEvents[eventIndex]['endDate'] =
-                DateFormat('dd/MM/yyyy').format(endDate!);
-          } else {
-            ongoingEvents[eventIndex]['startDate'] = 'Undecided';
-            ongoingEvents[eventIndex]['endDate'] = 'Undecided';
-          }
-        }
+        
         setState(() {
-          ongoingEvents = ongoingEvents;
-          _isLoading = false;
+          completedEvents = completedEvents;
         });
       }
+      setState(() {
+        _isLoading = false;
+      });
     } catch (error) {
       setState(() {
         _isLoading = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to fetch data. Please try again later'),
+        const SnackBar(
+          content: Text('Failed to fetch data. Please try again.'),
           width: 225.0,
           behavior: SnackBarBehavior.floating,
           duration: Duration(seconds: 3),
@@ -215,16 +135,16 @@ class _StudentOngoingEventState extends State<StudentOngoingEvent> {
                                     children: [
                                       TextButton(
                                         onPressed: () {
-                                          Navigator.push(
+                                          Navigator.pushReplacement(
                                             context,
                                             MaterialPageRoute(
                                                 builder: (context) =>
-                                                    const StudentOngoingEvent()),
+                                                    const AllOngoingEvent()),
                                           );
                                         },
                                         style: TextButton.styleFrom(
                                           padding: const EdgeInsets.all(24.0),
-                                          backgroundColor: Colors.white,
+                                          backgroundColor: Colors.grey[200],
                                           foregroundColor: Colors.black,
                                           side: const BorderSide(
                                               color: Colors.grey, width: 1.0),
@@ -237,16 +157,16 @@ class _StudentOngoingEventState extends State<StudentOngoingEvent> {
                                       ),
                                       TextButton(
                                         onPressed: () {
-                                          Navigator.push(
+                                          Navigator.pushReplacement(
                                             context,
                                             MaterialPageRoute(
                                                 builder: (context) =>
-                                                    const StudentOrganisedEvent()),
+                                                    const AllOrganisedEvent()),
                                           );
                                         },
                                         style: TextButton.styleFrom(
                                           padding: const EdgeInsets.all(24.0),
-                                          backgroundColor: Colors.grey[200],
+                                          backgroundColor: Colors.white,
                                           foregroundColor: Colors.black,
                                           side: const BorderSide(
                                               color: Colors.grey, width: 1.0),
@@ -268,47 +188,53 @@ class _StudentOngoingEventState extends State<StudentOngoingEvent> {
                                             border: Border.all(
                                                 width: 1.0, color: Colors.grey),
                                           ),
-                                          child: Padding(
-                                            padding: const EdgeInsets.all(16.0),
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.end,
-                                              children: [
-                                                CustomDataTable(
-                                                    columns: const [
-                                                      DataColumn(
-                                                        label: Text('Name'),
+                                          child: completedEvents.isNotEmpty
+                                              ? Padding(
+                                                  padding: const EdgeInsets.all(
+                                                      16.0),
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment.end,
+                                                    children: [
+                                                      CustomDataTable2(
+                                                          columns: const [
+                                                            DataColumn(
+                                                              label:
+                                                                  Text('Name'),
+                                                            ),
+                                                            DataColumn(
+                                                                label: Text(
+                                                                    'President')),
+                                                            DataColumn(
+                                                                label: Text(
+                                                                    'Start Date')),
+                                                            DataColumn(
+                                                                label: Text(
+                                                                    'End Date')),
+                                                            DataColumn(
+                                                                label: Text(
+                                                                    'Participant')),
+                                                            DataColumn(
+                                                                label:
+                                                                    Text('')),
+                                                          ],
+                                                          source:
+                                                              _EventDataSource2(
+                                                                  completedEvents,
+                                                                  context),
+                                                          refresh: getData,
+                                                          context: context),
+                                                      const SizedBox(
+                                                        height: 15,
                                                       ),
-                                                      DataColumn(
-                                                          label: Text(
-                                                              'President')),
-                                                      DataColumn(
-                                                          label: Text(
-                                                              'StartDate')),
-                                                      DataColumn(
-                                                          label:
-                                                              Text('End Date')),
-                                                      DataColumn(
-                                                          label: Text('Phase')),
-                                                      DataColumn(
-                                                          label:
-                                                              Text('Progress')),
-                                                      DataColumn(
-                                                          label:
-                                                              Text('Status')),
-                                                      DataColumn(
-                                                          label: Text('')),
                                                     ],
-                                                    source: _EventDataSource(
-                                                        ongoingEvents, context),
-                                                    refresh: getData,
-                                                    context: context),
-                                                const SizedBox(
-                                                  height: 15,
-                                                ),
-                                              ],
-                                            ),
-                                          ),
+                                                  ),
+                                                )
+                                              : const SizedBox(
+                                                  height: 500,
+                                                  child: Center(
+                                                      child: Text(
+                                                          'You have not organised any event.'))),
                                         ),
                                       ),
                                     ],
@@ -325,13 +251,13 @@ class _StudentOngoingEventState extends State<StudentOngoingEvent> {
   }
 }
 
-class CustomDataTable extends StatefulWidget {
+class CustomDataTable2 extends StatefulWidget {
   final List<DataColumn> columns;
-  final _EventDataSource source;
+  final _EventDataSource2 source;
   final VoidCallback refresh;
   final BuildContext context;
 
-  const CustomDataTable({
+  const CustomDataTable2({
     Key? key,
     required this.columns,
     required this.source,
@@ -340,10 +266,10 @@ class CustomDataTable extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _CustomDataTableState createState() => _CustomDataTableState();
+  _CustomDataTable2State createState() => _CustomDataTable2State();
 }
 
-class _CustomDataTableState extends State<CustomDataTable> {
+class _CustomDataTable2State extends State<CustomDataTable2> {
   int selectedRowsPerPage = 10;
   int? _sortColumnIndex;
   bool _sortAscending = true;
@@ -409,7 +335,7 @@ class _CustomDataTableState extends State<CustomDataTable> {
                     (Map<String, dynamic> member) {
                       switch (columnIndex) {
                         case 0:
-                          return member['eventName'];
+                          return member['name'];
                         case 1:
                           return member['president'];
                         case 2:
@@ -417,11 +343,7 @@ class _CustomDataTableState extends State<CustomDataTable> {
                         case 3:
                           return member['endDate'];
                         case 4:
-                          return member['status'];
-                        case 5:
-                          return member['progress'];
-                        case 6:
-                          return member['eventStatus'];
+                          return member['participant'];
                         default:
                           return '';
                       }
@@ -445,15 +367,14 @@ class _CustomDataTableState extends State<CustomDataTable> {
   }
 }
 
-class _EventDataSource extends DataTableSource {
-  final LocalStorage storage = LocalStorage('user');
+class _EventDataSource2 extends DataTableSource {
   final List<Map<String, dynamic>> originalEvent;
   List<Map<String, dynamic>> displayedEvent = [];
   final Set<int> selectedRows = {};
   final BuildContext context;
   int rowsPerPage = 10;
 
-  _EventDataSource(this.originalEvent, this.context) {
+  _EventDataSource2(this.originalEvent, this.context) {
     _initializeDisplayedEvent();
   }
 
@@ -470,14 +391,10 @@ class _EventDataSource extends DataTableSource {
     return DataRow(
       cells: [
         DataCell(Text(event['eventName'].toString())),
-        DataCell(Text(event['president'] != null
-            ? event['president'].toString()
-            : 'Not decided')),
+        DataCell(Text(event['president'].toString())),
         DataCell(Text(event['startDate'].toString())),
         DataCell(Text(event['endDate'].toString())),
-        DataCell(Text(event['status'].toString())),
-        DataCell(Text('${event['progress']}/3')),
-        DataCell(Text(event['eventStatus'].toString())),
+        DataCell(Text(event['participant'].toString())),
         DataCell(Row(
           children: [
             CustomButton(
@@ -486,12 +403,16 @@ class _EventDataSource extends DataTableSource {
                   context,
                   MaterialPageRoute(
                     builder: (context) => EventDetails(
-                        selectedEvent: event['eventID'].toString()),
+                      selectedEvent: event['eventID'],
+                    ),
                   ),
                 );
               },
               text: 'View',
               width: 100,
+            ),
+            const SizedBox(
+              width: 15,
             ),
           ],
         )),

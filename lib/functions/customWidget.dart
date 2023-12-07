@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fyp/pages/accountStatement.dart';
 import 'package:fyp/pages/advisor.dart';
+import 'package:fyp/pages/advisorEvent.dart';
 import 'package:fyp/pages/advisorProfile.dart';
+import 'package:fyp/pages/allOngoingEvent.dart';
 import 'package:fyp/pages/budget.dart';
 import 'package:fyp/pages/committee.dart';
 import 'package:fyp/pages/evaluation.dart';
@@ -296,46 +298,80 @@ class CustomDrawer extends StatelessWidget {
                       ),
                     ],
                   ),
-                if (role != 'branch head')
-                  ListTile(
-                      leading: Icon(
-                        Icons.event,
+                ListTile(
+                    leading: Icon(
+                      Icons.event,
+                      color: index == 3 ? Colors.white : Colors.black,
+                    ),
+                    title: Text(
+                      'Event',
+                      style: TextStyle(
                         color: index == 3 ? Colors.white : Colors.black,
                       ),
-                      title: Text(
-                        'Event',
-                        style: TextStyle(
-                          color: index == 3 ? Colors.white : Colors.black,
-                        ),
-                      ),
-                      onTap: () {
+                    ),
+                    onTap: () {
+                      if (role == 'student') {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => const StudentOngoingEvent(),
                           ),
                         );
-                      },
-                      tileColor: index == 3 ? Colors.blue : null,
-                      shape: const Border(
-                        bottom: BorderSide(
-                          color: Color.fromARGB(255, 219, 219, 219),
-                        ),
-                      )),
-                if (role != 'branch head')
+                      } else if (role == 'advisor') {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const AdvisorEvent(),
+                          ),
+                        );
+                      }else if (role =='branch head'){
+                         Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const AllOngoingEvent(),
+                          ),
+                        );
+                      }
+                    },
+                    tileColor: index == 3 ? Colors.blue : null,
+                    shape: const Border(
+                      bottom: BorderSide(
+                        color: Color.fromARGB(255, 219, 219, 219),
+                      ),
+                    )),
+                if (role == 'student')
                   ListTile(
                       leading: Icon(
                         Icons.money,
                         color: index == 4 ? Colors.white : Colors.black,
                       ),
                       title: Text(
-                        'Claim',
+                        'Approval',
                         style: TextStyle(
                           color: index == 4 ? Colors.white : Colors.black,
                         ),
                       ),
                       onTap: () {},
                       tileColor: index == 4 ? Colors.blue : null,
+                      shape: const Border(
+                        bottom: BorderSide(
+                          color: Color.fromARGB(255, 219, 219, 219),
+                        ),
+                      )),    
+                if (role == 'student')
+                  ListTile(
+                      leading: Icon(
+                        Icons.money,
+                        color: index == 5 ? Colors.white : Colors.black,
+                      ),
+                      title: Text(
+                        'Claim',
+                        style: TextStyle(
+                          color: index == 5 ? Colors.white : Colors.black,
+                        ),
+                      ),
+                      onTap: () {},
+                      tileColor: index == 5 ? Colors.blue : null,
                       shape: const Border(
                         bottom: BorderSide(
                           color: Color.fromARGB(255, 219, 219, 219),
@@ -724,6 +760,8 @@ class TabContainer extends StatelessWidget {
   final String status;
   final int progress;
   final String position;
+  final bool rejected;
+  final bool rejected2;
 
   const TabContainer({
     super.key,
@@ -734,6 +772,8 @@ class TabContainer extends StatelessWidget {
     required this.status,
     required this.progress,
     required this.position,
+    required this.rejected,
+    required this.rejected2,
   });
 
   @override
@@ -753,6 +793,8 @@ class TabContainer extends StatelessWidget {
                       position: position,
                       status: status,
                       progress: progress,
+                      rejected2: rejected2,
+                      rejected: rejected,
                     ),
                   ),
                 );
@@ -775,6 +817,8 @@ class TabContainer extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) => Evaluation(
+                        rejected2: rejected2,
+                        rejected: rejected,
                         selectedEvent: selectedEvent,
                         position: position,
                         status: status,
@@ -824,6 +868,8 @@ class TabContainer extends StatelessWidget {
                                       position: position,
                                       status: status,
                                       progress: progress,
+                                      rejected2: rejected2,
+                                      rejected: rejected,
                                     ),
                                   ),
                                 );
@@ -853,6 +899,8 @@ class TabContainer extends StatelessWidget {
                                       position: position,
                                       status: status,
                                       progress: progress,
+                                      rejected2: rejected2,
+                                      rejected: rejected,
                                     ),
                                   ),
                                 );
@@ -882,6 +930,8 @@ class TabContainer extends StatelessWidget {
                                       position: position,
                                       status: status,
                                       progress: progress,
+                                      rejected2: rejected2,
+                                      rejected: rejected,
                                     ),
                                   ),
                                 );
@@ -907,6 +957,8 @@ class TabContainer extends StatelessWidget {
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => Budget(
+                                      rejected2: rejected2,
+                                      rejected: rejected,
                                       selectedEvent: selectedEvent,
                                       position: position,
                                       status: status,
@@ -936,6 +988,8 @@ class TabContainer extends StatelessWidget {
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => Evaluation(
+                                      rejected2: rejected2,
+                                      rejected: rejected,
                                       selectedEvent: selectedEvent,
                                       position: position,
                                       status: status,
@@ -965,6 +1019,8 @@ class TabContainer extends StatelessWidget {
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => Participant(
+                                      rejected2: rejected2,
+                                      rejected: rejected,
                                       selectedEvent: selectedEvent,
                                       position: position,
                                       status: status,
@@ -994,6 +1050,8 @@ class TabContainer extends StatelessWidget {
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => Account(
+                                      rejected2: rejected2,
+                                      rejected: rejected,
                                       selectedEvent: selectedEvent,
                                       position: position,
                                       status: status,

@@ -9,13 +9,19 @@ import 'package:firebase_storage/firebase_storage.dart';
 
 class Evaluation extends StatefulWidget {
   final String selectedEvent;
-    final String status;
+  final String status;
   final int progress;
   final String position;
-  const Evaluation({super.key, required this.selectedEvent,
+  final bool rejected;
+  final bool rejected2;
+  const Evaluation(
+      {super.key,
+      required this.selectedEvent,
       required this.status,
       required this.progress,
-      required this.position});
+      required this.position,
+      required this.rejected,
+      required this.rejected2});
 
   @override
   State<Evaluation> createState() => _EvaluationState();
@@ -56,9 +62,10 @@ class _EvaluationState extends State<Evaluation> {
       if (!widget.position.startsWith('org') ||
           widget.position.contains('Treasurer') ||
           widget.status != 'Closing' ||
-          widget.progress != 0) {
+          (widget.progress != 0 && !widget.rejected2)) {
         enabled = false;
       }
+
       final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
       final QuerySnapshot<Map<String, dynamic>> evaluationSnapshot =
@@ -152,6 +159,8 @@ class _EvaluationState extends State<Evaluation> {
                                           status: widget.status,
                                           position: widget.position,
                                           progress: widget.progress,
+                                          rejected2: widget.rejected2,
+                                          rejected: widget.rejected,
                                           children: [
                                             Row(
                                               children: [
@@ -184,7 +193,8 @@ class _EvaluationState extends State<Evaluation> {
                                                               flex: 9,
                                                               child:
                                                                   CustomTextField(
-                                                                    enabled: enabled,
+                                                                enabled:
+                                                                    enabled,
                                                                 screen: !Responsive
                                                                     .isDesktop(
                                                                         context),
@@ -241,7 +251,8 @@ class _EvaluationState extends State<Evaluation> {
                                                               flex: 9,
                                                               child:
                                                                   CustomTextField(
-                                                                    enabled: enabled,
+                                                                enabled:
+                                                                    enabled,
                                                                 screen: !Responsive
                                                                     .isDesktop(
                                                                         context),
@@ -298,7 +309,8 @@ class _EvaluationState extends State<Evaluation> {
                                                               flex: 9,
                                                               child:
                                                                   CustomTextField(
-                                                                    enabled: enabled,
+                                                                enabled:
+                                                                    enabled,
                                                                 screen: !Responsive
                                                                     .isDesktop(
                                                                         context),
@@ -355,7 +367,8 @@ class _EvaluationState extends State<Evaluation> {
                                                               flex: 9,
                                                               child:
                                                                   CustomTextField(
-                                                                    enabled: enabled,
+                                                                enabled:
+                                                                    enabled,
                                                                 screen: !Responsive
                                                                     .isDesktop(
                                                                         context),
@@ -401,8 +414,10 @@ class _EvaluationState extends State<Evaluation> {
                                                     child: Row(
                                                       children: [
                                                         InkWell(
-                                                          onTap: enabled ? () =>
-                                                              _pickImage(0) : null,
+                                                          onTap: enabled
+                                                              ? () =>
+                                                                  _pickImage(0)
+                                                              : null,
                                                           child: Column(
                                                             mainAxisAlignment:
                                                                 MainAxisAlignment
@@ -505,8 +520,10 @@ class _EvaluationState extends State<Evaluation> {
                                                           width: 20,
                                                         ),
                                                         InkWell(
-                                                          onTap: enabled ? () =>
-                                                              _pickImage(1) : null,
+                                                          onTap: enabled
+                                                              ? () =>
+                                                                  _pickImage(1)
+                                                              : null,
                                                           child: Column(
                                                             mainAxisAlignment:
                                                                 MainAxisAlignment
@@ -610,8 +627,10 @@ class _EvaluationState extends State<Evaluation> {
                                                         const SizedBox(
                                                             width: 20.0),
                                                         InkWell(
-                                                          onTap: enabled ? () =>
-                                                              _pickImage(2) : null,
+                                                          onTap: enabled
+                                                              ? () =>
+                                                                  _pickImage(2)
+                                                              : null,
                                                           child: Column(
                                                             mainAxisAlignment:
                                                                 MainAxisAlignment
@@ -719,132 +738,139 @@ class _EvaluationState extends State<Evaluation> {
                                             const SizedBox(
                                               height: 15,
                                             ),
-                                            if(enabled)
-                                            CustomButton(
-                                                width: 150,
-                                                onPressed: () async {
-                                                  if (_formKey.currentState!
-                                                      .validate()) {
-                                                    if (_imageFiles.every(
-                                                            (image) =>
-                                                                image !=
-                                                                null) &&
-                                                        valid.every((element) =>
-                                                            element == true)) {
-                                                      List<String> imageUrls =
-                                                          [];
-                                                      for (int index = 0;
-                                                          index <
-                                                              _imageFiles
-                                                                  .length;
-                                                          index++) {
-                                                        XFile? imageFile =
-                                                            _imageFiles[index];
+                                            if (enabled)
+                                              CustomButton(
+                                                  width: 150,
+                                                  onPressed: () async {
+                                                    if (_formKey.currentState!
+                                                        .validate()) {
+                                                      if (_imageFiles.every(
+                                                              (image) =>
+                                                                  image !=
+                                                                  null) &&
+                                                          valid.every(
+                                                              (element) =>
+                                                                  element ==
+                                                                  true)) {
+                                                        List<String> imageUrls =
+                                                            [];
+                                                        for (int index = 0;
+                                                            index <
+                                                                _imageFiles
+                                                                    .length;
+                                                            index++) {
+                                                          XFile? imageFile =
+                                                              _imageFiles[
+                                                                  index];
 
-                                                        if (imageFile != null) {
-                                                          String imageName =
-                                                              'image_$index.jpg';
+                                                          if (imageFile !=
+                                                              null) {
+                                                            String imageName =
+                                                                'image_$index.jpg';
 
-                                                          try {
-                                                            List<int>
-                                                                fileBytes =
-                                                                await imageFile
-                                                                    .readAsBytes();
-                                                            Uint8List
-                                                                imageBytes =
-                                                                Uint8List.fromList(
-                                                                    fileBytes);
+                                                            try {
+                                                              List<int>
+                                                                  fileBytes =
+                                                                  await imageFile
+                                                                      .readAsBytes();
+                                                              Uint8List
+                                                                  imageBytes =
+                                                                  Uint8List
+                                                                      .fromList(
+                                                                          fileBytes);
 
-                                                            await FirebaseStorage
-                                                                .instance
-                                                                .ref(
-                                                                    '${widget.selectedEvent}/$imageName')
-                                                                .putData(
-                                                                    imageBytes);
+                                                              await FirebaseStorage
+                                                                  .instance
+                                                                  .ref(
+                                                                      '${widget.selectedEvent}/$imageName')
+                                                                  .putData(
+                                                                      imageBytes);
 
-                                                            String imageUrl =
-                                                                await FirebaseStorage
-                                                                    .instance
-                                                                    .ref(
-                                                                        '${widget.selectedEvent}/$imageName')
-                                                                    .getDownloadURL();
+                                                              String imageUrl =
+                                                                  await FirebaseStorage
+                                                                      .instance
+                                                                      .ref(
+                                                                          '${widget.selectedEvent}/$imageName')
+                                                                      .getDownloadURL();
 
-                                                            imageUrls
-                                                                .add(imageUrl);
-                                                          } catch (e) {
-                                                            ScaffoldMessenger
-                                                                    .of(context)
-                                                                .showSnackBar(
-                                                              const SnackBar(
-                                                                content: Text(
-                                                                    'Failed to upload image.'),
-                                                                width: 225.0,
-                                                                behavior:
-                                                                    SnackBarBehavior
-                                                                        .floating,
-                                                                duration:
-                                                                    Duration(
-                                                                        seconds:
-                                                                            3),
-                                                              ),
-                                                            );
+                                                              imageUrls.add(
+                                                                  imageUrl);
+                                                            } catch (e) {
+                                                              ScaffoldMessenger
+                                                                      .of(context)
+                                                                  .showSnackBar(
+                                                                const SnackBar(
+                                                                  content: Text(
+                                                                      'Failed to upload image.'),
+                                                                  width: 225.0,
+                                                                  behavior:
+                                                                      SnackBarBehavior
+                                                                          .floating,
+                                                                  duration:
+                                                                      Duration(
+                                                                          seconds:
+                                                                              3),
+                                                                ),
+                                                              );
+                                                            }
                                                           }
                                                         }
+                                                        DocumentReference docRef =
+                                                            FirebaseFirestore
+                                                                .instance
+                                                                .collection(
+                                                                    'evaluation')
+                                                                .doc(widget
+                                                                    .selectedEvent);
+
+                                                        await docRef.set({
+                                                          'eventID': widget
+                                                              .selectedEvent,
+                                                          'description':
+                                                              description.text,
+                                                          'conclusion':
+                                                              conclusion.text,
+                                                          'problem':
+                                                              problem.text,
+                                                          'improvement':
+                                                              improvement.text,
+                                                          'imageUrls':
+                                                              imageUrls,
+                                                        });
+
+                                                        ScaffoldMessenger.of(
+                                                                context)
+                                                            .showSnackBar(
+                                                          const SnackBar(
+                                                            content: Text(
+                                                                'Evaluation Report Saved.'),
+                                                            width: 225.0,
+                                                            behavior:
+                                                                SnackBarBehavior
+                                                                    .floating,
+                                                            duration: Duration(
+                                                                seconds: 3),
+                                                          ),
+                                                        );
+                                                      } else {
+                                                        ScaffoldMessenger.of(
+                                                                context)
+                                                            .showSnackBar(
+                                                          const SnackBar(
+                                                            content: Text(
+                                                                'Please upload image of the event.'),
+                                                            width: 225.0,
+                                                            behavior:
+                                                                SnackBarBehavior
+                                                                    .floating,
+                                                            duration: Duration(
+                                                                seconds: 3),
+                                                          ),
+                                                        );
                                                       }
-                                                      DocumentReference docRef =
-                                                          FirebaseFirestore
-                                                              .instance
-                                                              .collection(
-                                                                  'evaluation')
-                                                              .doc(widget
-                                                                  .selectedEvent);
-
-                                                      await docRef.set({
-                                                        'eventID': widget
-                                                            .selectedEvent,
-                                                        'description':
-                                                            description.text,
-                                                        'conclusion':
-                                                            conclusion.text,
-                                                        'problem': problem.text,
-                                                        'improvement':
-                                                            improvement.text,
-                                                        'imageUrls': imageUrls,
-                                                      });
-
-                                                      ScaffoldMessenger.of(
-                                                              context)
-                                                          .showSnackBar(
-                                                        const SnackBar(
-                                                          content: Text(
-                                                              'Evaluation Report Saved.'),
-                                                          width: 225.0,
-                                                          behavior:
-                                                              SnackBarBehavior
-                                                                  .floating,
-                                                          duration: Duration(
-                                                              seconds: 3),
-                                                        ),
-                                                      );
-                                                    } else {
-                                                      ScaffoldMessenger.of(
-                                                              context)
-                                                          .showSnackBar(
-                                                        const SnackBar(
-                                                          content: Text(
-                                                              'Please upload image of the event.'),
-                                                          width: 225.0,
-                                                          behavior:
-                                                              SnackBarBehavior
-                                                                  .floating,
-                                                          duration: Duration(
-                                                              seconds: 3),
-                                                        ),
-                                                      );
                                                     }
-                                                  }
-                                                },
-                                                text: 'Save'),
+                                                  },
+                                                  text: 'Save'),
                                             const SizedBox(
                                               height: 15,
                                             ),

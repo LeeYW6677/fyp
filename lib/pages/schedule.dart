@@ -9,12 +9,16 @@ class Schedule extends StatefulWidget {
   final String status;
   final int progress;
   final String position;
+  final bool rejected;
+  final bool rejected2;
   const Schedule(
       {super.key,
       required this.selectedEvent,
       required this.status,
       required this.progress,
-      required this.position});
+      required this.position,
+      required this.rejected,
+      required this.rejected2});
 
   @override
   State<Schedule> createState() => _ScheduleState();
@@ -35,7 +39,7 @@ class _ScheduleState extends State<Schedule> {
       if (!widget.position.startsWith('org') ||
           widget.position.contains('Treasurer') ||
           widget.status != 'Planning' ||
-          widget.progress != 0) {
+          (widget.progress != 0 && !widget.rejected)) {
         enabled = false;
       }
 
@@ -164,637 +168,631 @@ class _ScheduleState extends State<Schedule> {
                                           position: widget.position,
                                           progress: widget.progress,
                                           children: [
-                                            if(enabled)
-                                            Column(
-                                              crossAxisAlignment: CrossAxisAlignment.end,
-                                              children: [
-                                                Row(
-                                                  children: [
-                                                    Expanded(
-                                                      child: Padding(
-                                                        padding:
-                                                            const EdgeInsets.all(
-                                                                8.0),
-                                                        child: Row(
-                                                          crossAxisAlignment:
-                                                              CrossAxisAlignment
-                                                                  .center,
-                                                          mainAxisAlignment:
-                                                              MainAxisAlignment
-                                                                  .start,
-                                                          children: [
-                                                            if (Responsive
-                                                                .isDesktop(context))
+                                            if (enabled)
+                                              Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.end,
+                                                children: [
+                                                  Row(
+                                                    children: [
+                                                      Expanded(
+                                                        child: Padding(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .all(8.0),
+                                                          child: Row(
+                                                            crossAxisAlignment:
+                                                                CrossAxisAlignment
+                                                                    .center,
+                                                            mainAxisAlignment:
+                                                                MainAxisAlignment
+                                                                    .start,
+                                                            children: [
+                                                              if (Responsive
+                                                                  .isDesktop(
+                                                                      context))
+                                                                const Expanded(
+                                                                  flex: 1,
+                                                                  child: Text(
+                                                                    'Date',
+                                                                    style: TextStyle(
+                                                                        fontSize:
+                                                                            16),
+                                                                  ),
+                                                                ),
+                                                              Expanded(
+                                                                flex: 4,
+                                                                child:
+                                                                    CustomTextField(
+                                                                  errorText:
+                                                                      dateError,
+                                                                  screen: !Responsive
+                                                                      .isDesktop(
+                                                                          context),
+                                                                  labelText:
+                                                                      'Date',
+                                                                  validator:
+                                                                      (value) {
+                                                                    final DateFormat
+                                                                        dateFormat =
+                                                                        DateFormat(
+                                                                            'dd-MM-yyyy');
+
+                                                                    if (value!
+                                                                        .isEmpty) {
+                                                                      return 'Please enter date';
+                                                                    } else {
+                                                                      try {
+                                                                        DateTime
+                                                                            enteredDate =
+                                                                            dateFormat.parseStrict(value);
+                                                                        if (enteredDate.isBefore(DateTime.now().add(const Duration(
+                                                                            days:
+                                                                                6)))) {
+                                                                          return 'Date must be 1 week after today';
+                                                                        }
+                                                                      } catch (e) {
+                                                                        return 'Invalid Date Format. Format: dd-MM-yyyy';
+                                                                      }
+                                                                      if (!RegExp(
+                                                                              r'^\d{2}-\d{2}-\d{4}$')
+                                                                          .hasMatch(
+                                                                              value)) {
+                                                                        return 'Invalid Date Format. Format: dd-MM-yyyy';
+                                                                      }
+                                                                      return null;
+                                                                    }
+                                                                  },
+                                                                  controller:
+                                                                      date,
+                                                                  hintText:
+                                                                      'Enter date',
+                                                                  suffixIcon:
+                                                                      IconButton(
+                                                                          icon: const Icon(Icons
+                                                                              .calendar_today_rounded),
+                                                                          onPressed:
+                                                                              () async {
+                                                                            DateTime?
+                                                                                pickedDate =
+                                                                                await showDatePicker(
+                                                                              context: context,
+                                                                              initialDate: DateTime.now().add(const Duration(days: 7)),
+                                                                              firstDate: DateTime.now().add(const Duration(days: 7)),
+                                                                              lastDate: DateTime.now().add(const Duration(days: 365)),
+                                                                            );
+
+                                                                            if (pickedDate !=
+                                                                                null) {
+                                                                              setState(() {
+                                                                                date.text = DateFormat('dd-MM-yyyy').format(pickedDate);
+                                                                              });
+                                                                            }
+                                                                          }),
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      Expanded(
+                                                        child: Padding(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .all(8.0),
+                                                          child: Row(
+                                                            crossAxisAlignment:
+                                                                CrossAxisAlignment
+                                                                    .center,
+                                                            mainAxisAlignment:
+                                                                MainAxisAlignment
+                                                                    .start,
+                                                            children: [
                                                               const Expanded(
                                                                 flex: 1,
                                                                 child: Text(
-                                                                  'Date',
+                                                                  'Venue',
                                                                   style: TextStyle(
-                                                                      fontSize: 16),
+                                                                      fontSize:
+                                                                          16),
                                                                 ),
                                                               ),
-                                                            Expanded(
-                                                              flex: 4,
-                                                              child:
-                                                                  CustomTextField(
-                                                                errorText:
-                                                                    dateError,
-                                                                screen: !Responsive
-                                                                    .isDesktop(
-                                                                        context),
-                                                                labelText: 'Date',
-                                                                validator: (value) {
-                                                                  final DateFormat
-                                                                      dateFormat =
-                                                                      DateFormat(
-                                                                          'dd-MM-yyyy');
-
-                                                                  if (value!
-                                                                      .isEmpty) {
-                                                                    return 'Please enter date';
-                                                                  } else {
-                                                                    try {
-                                                                      DateTime
-                                                                          enteredDate =
-                                                                          dateFormat
-                                                                              .parseStrict(
-                                                                                  value);
-                                                                      if (enteredDate.isBefore(DateTime
-                                                                              .now()
-                                                                          .add(const Duration(
-                                                                              days:
-                                                                                  6)))) {
-                                                                        return 'Date must be 1 week after today';
-                                                                      }
-                                                                    } catch (e) {
-                                                                      return 'Invalid Date Format. Format: dd-MM-yyyy';
-                                                                    }
-                                                                    if (!RegExp(
-                                                                            r'^\d{2}-\d{2}-\d{4}$')
-                                                                        .hasMatch(
-                                                                            value)) {
-                                                                      return 'Invalid Date Format. Format: dd-MM-yyyy';
+                                                              Expanded(
+                                                                flex: 4,
+                                                                child:
+                                                                    CustomTextField(
+                                                                  validator:
+                                                                      (value) {
+                                                                    if (value!
+                                                                        .isEmpty) {
+                                                                      return 'Please enter programme venue';
                                                                     }
                                                                     return null;
-                                                                  }
-                                                                },
-                                                                controller: date,
-                                                                hintText:
-                                                                    'Enter date',
-                                                                suffixIcon:
-                                                                    IconButton(
-                                                                        icon: const Icon(
-                                                                            Icons
-                                                                                .calendar_today_rounded),
-                                                                        onPressed:
-                                                                            () async {
-                                                                          DateTime?
-                                                                              pickedDate =
-                                                                              await showDatePicker(
-                                                                            context:
-                                                                                context,
-                                                                            initialDate:
-                                                                                DateTime.now().add(const Duration(days: 7)),
-                                                                            firstDate:
-                                                                                DateTime.now().add(const Duration(days: 7)),
-                                                                            lastDate:
-                                                                                DateTime.now().add(const Duration(days: 365)),
-                                                                          );
-
-                                                                          if (pickedDate !=
-                                                                              null) {
-                                                                            setState(
-                                                                                () {
-                                                                              date.text =
-                                                                                  DateFormat('dd-MM-yyyy').format(pickedDate);
-                                                                            });
-                                                                          }
-                                                                        }),
+                                                                  },
+                                                                  screen: !Responsive
+                                                                      .isDesktop(
+                                                                          context),
+                                                                  labelText:
+                                                                      'Venue',
+                                                                  controller:
+                                                                      venue,
+                                                                  hintText:
+                                                                      'Enter programme venue',
+                                                                ),
                                                               ),
-                                                            ),
-                                                          ],
+                                                            ],
+                                                          ),
                                                         ),
                                                       ),
-                                                    ),
-                                                    Expanded(
-                                                      child: Padding(
-                                                        padding:
-                                                            const EdgeInsets.all(
-                                                                8.0),
-                                                        child: Row(
-                                                          crossAxisAlignment:
-                                                              CrossAxisAlignment
-                                                                  .center,
-                                                          mainAxisAlignment:
-                                                              MainAxisAlignment
-                                                                  .start,
-                                                          children: [
-                                                            const Expanded(
-                                                              flex: 1,
-                                                              child: Text(
-                                                                'Venue',
-                                                                style: TextStyle(
-                                                                    fontSize: 16),
-                                                              ),
-                                                            ),
-                                                            Expanded(
-                                                              flex: 4,
-                                                              child:
-                                                                  CustomTextField(
-                                                                validator: (value) {
-                                                                  if (value!
-                                                                      .isEmpty) {
-                                                                    return 'Please enter programme venue';
-                                                                  }
-                                                                  return null;
-                                                                },
-                                                                screen: !Responsive
-                                                                    .isDesktop(
-                                                                        context),
-                                                                labelText: 'Venue',
-                                                                controller: venue,
-                                                                hintText:
-                                                                    'Enter programme venue',
-                                                              ),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                                Row(
-                                                  children: [
-                                                    Expanded(
-                                                      child: Padding(
-                                                        padding:
-                                                            const EdgeInsets.all(
-                                                                8.0),
-                                                        child: Row(
-                                                          crossAxisAlignment:
-                                                              CrossAxisAlignment
-                                                                  .center,
-                                                          mainAxisAlignment:
-                                                              MainAxisAlignment
-                                                                  .start,
-                                                          children: [
-                                                            Expanded(
-                                                              child: Padding(
-                                                                padding:
-                                                                    const EdgeInsets
-                                                                        .all(8.0),
-                                                                child: Row(
-                                                                  crossAxisAlignment:
-                                                                      CrossAxisAlignment
-                                                                          .center,
-                                                                  mainAxisAlignment:
-                                                                      MainAxisAlignment
-                                                                          .start,
-                                                                  children: [
-                                                                    if (Responsive
-                                                                        .isDesktop(
-                                                                            context))
-                                                                      const Expanded(
-                                                                        flex: 1,
-                                                                        child: Text(
-                                                                          'Time',
-                                                                          style: TextStyle(
-                                                                              fontSize:
-                                                                                  16),
+                                                    ],
+                                                  ),
+                                                  Row(
+                                                    children: [
+                                                      Expanded(
+                                                        child: Padding(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .all(8.0),
+                                                          child: Row(
+                                                            crossAxisAlignment:
+                                                                CrossAxisAlignment
+                                                                    .center,
+                                                            mainAxisAlignment:
+                                                                MainAxisAlignment
+                                                                    .start,
+                                                            children: [
+                                                              Expanded(
+                                                                child: Padding(
+                                                                  padding:
+                                                                      const EdgeInsets
+                                                                          .all(
+                                                                          8.0),
+                                                                  child: Row(
+                                                                    crossAxisAlignment:
+                                                                        CrossAxisAlignment
+                                                                            .center,
+                                                                    mainAxisAlignment:
+                                                                        MainAxisAlignment
+                                                                            .start,
+                                                                    children: [
+                                                                      if (Responsive
+                                                                          .isDesktop(
+                                                                              context))
+                                                                        const Expanded(
+                                                                          flex:
+                                                                              1,
+                                                                          child:
+                                                                              Text(
+                                                                            'Time',
+                                                                            style:
+                                                                                TextStyle(fontSize: 16),
+                                                                          ),
                                                                         ),
-                                                                      ),
-                                                                    Expanded(
-                                                                      flex: 4,
-                                                                      child:
-                                                                          CustomTextField(
-                                                                        screen: !Responsive
-                                                                            .isDesktop(
-                                                                                context),
-                                                                        validator:
-                                                                            (value) {
-                                                                          final DateFormat
-                                                                              timeFormat =
-                                                                              DateFormat(
-                                                                                  'HH:mm a');
+                                                                      Expanded(
+                                                                        flex: 4,
+                                                                        child:
+                                                                            CustomTextField(
+                                                                          screen:
+                                                                              !Responsive.isDesktop(context),
+                                                                          validator:
+                                                                              (value) {
+                                                                            final DateFormat
+                                                                                timeFormat =
+                                                                                DateFormat('HH:mm a');
 
-                                                                          if (value!
-                                                                              .isEmpty) {
-                                                                            return 'Enter start time';
-                                                                          } else {
-                                                                            try {
-                                                                              DateTime
-                                                                                  parsedStartTime =
-                                                                                  timeFormat.parse(value);
-                                                                              final DateTime
-                                                                                  parsedEndTime =
-                                                                                  timeFormat.parse(end.text);
+                                                                            if (value!.isEmpty) {
+                                                                              return 'Enter start time';
+                                                                            } else {
+                                                                              try {
+                                                                                DateTime parsedStartTime = timeFormat.parse(value);
+                                                                                final DateTime parsedEndTime = timeFormat.parse(end.text);
 
-                                                                              if (parsedStartTime
-                                                                                  .isAfter(parsedEndTime)) {
-                                                                                return 'Must be before End time';
+                                                                                if (parsedStartTime.isAfter(parsedEndTime)) {
+                                                                                  return 'Must be before End time';
+                                                                                }
+                                                                              } catch (e) {
+                                                                                return 'Format: HH:mm AM/PM';
                                                                               }
-                                                                            } catch (e) {
-                                                                              return 'Format: HH:mm AM/PM';
+                                                                              final RegExp timeRegex = RegExp(r'^([01]?[0-9]|2[0-3]):[0-5][0-9] (AM|PM)$');
+                                                                              if (!timeRegex.hasMatch(value)) {
+                                                                                return 'Format: HH:mm AM/PM';
+                                                                              }
+                                                                              return null;
                                                                             }
-                                                                            final RegExp
-                                                                                timeRegex =
-                                                                                RegExp(r'^([01]?[0-9]|2[0-3]):[0-5][0-9] (AM|PM)$');
-                                                                            if (!timeRegex
-                                                                                .hasMatch(value)) {
-                                                                              return 'Format: HH:mm AM/PM';
-                                                                            }
-                                                                            return null;
-                                                                          }
-                                                                        },
-                                                                        labelText:
-                                                                            'Start Time',
-                                                                        errorText:
-                                                                            startError,
-                                                                        controller:
-                                                                            start,
-                                                                        hintText:
-                                                                            'Enter start time',
-                                                                        suffixIcon:
-                                                                            IconButton(
-                                                                                icon:
-                                                                                    const Icon(Icons.punch_clock),
-                                                                                onPressed: () async {
-                                                                                  TimeOfDay? pickedTime = await showTimePicker(
-                                                                                    context: context,
-                                                                                    initialEntryMode: TimePickerEntryMode.inputOnly,
-                                                                                    initialTime: const TimeOfDay(hour: 12, minute: 00),
-                                                                                  );
+                                                                          },
+                                                                          labelText:
+                                                                              'Start Time',
+                                                                          errorText:
+                                                                              startError,
+                                                                          controller:
+                                                                              start,
+                                                                          hintText:
+                                                                              'Enter start time',
+                                                                          suffixIcon: IconButton(
+                                                                              icon: const Icon(Icons.punch_clock),
+                                                                              onPressed: () async {
+                                                                                TimeOfDay? pickedTime = await showTimePicker(
+                                                                                  context: context,
+                                                                                  initialEntryMode: TimePickerEntryMode.inputOnly,
+                                                                                  initialTime: const TimeOfDay(hour: 12, minute: 00),
+                                                                                );
 
-                                                                                  if (pickedTime != null) {
-                                                                                    startError = null;
+                                                                                if (pickedTime != null) {
+                                                                                  startError = null;
 
-                                                                                    if (end.text.isNotEmpty) {
-                                                                                      final DateFormat timeFormat = DateFormat('hh:mm a');
-                                                                                      DateTime parsedStartTime = timeFormat.parse(pickedTime.format(context));
-                                                                                      DateTime parsedEndTime = timeFormat.parse(end.text);
+                                                                                  if (end.text.isNotEmpty) {
+                                                                                    final DateFormat timeFormat = DateFormat('hh:mm a');
+                                                                                    DateTime parsedStartTime = timeFormat.parse(pickedTime.format(context));
+                                                                                    DateTime parsedEndTime = timeFormat.parse(end.text);
 
-                                                                                      if (parsedStartTime.isBefore(parsedEndTime)) {
-                                                                                        setState(() {
-                                                                                          start.text = pickedTime.format(context);
-                                                                                        });
-                                                                                      } else {
-                                                                                        setState(() {
-                                                                                          startError = 'Must be before End Time';
-                                                                                        });
-                                                                                      }
-                                                                                    } else {
+                                                                                    if (parsedStartTime.isBefore(parsedEndTime)) {
                                                                                       setState(() {
                                                                                         start.text = pickedTime.format(context);
                                                                                       });
+                                                                                    } else {
+                                                                                      setState(() {
+                                                                                        startError = 'Must be before End Time';
+                                                                                      });
                                                                                     }
+                                                                                  } else {
+                                                                                    setState(() {
+                                                                                      start.text = pickedTime.format(context);
+                                                                                    });
                                                                                   }
-                                                                                }),
+                                                                                }
+                                                                              }),
+                                                                        ),
                                                                       ),
-                                                                    ),
-                                                                  ],
+                                                                    ],
+                                                                  ),
                                                                 ),
                                                               ),
-                                                            ),
-                                                            Expanded(
-                                                              child: Padding(
-                                                                padding:
-                                                                    const EdgeInsets
-                                                                        .all(8.0),
-                                                                child: Row(
-                                                                  crossAxisAlignment:
-                                                                      CrossAxisAlignment
-                                                                          .center,
-                                                                  mainAxisAlignment:
-                                                                      MainAxisAlignment
-                                                                          .start,
-                                                                  children: [
-                                                                    const Expanded(
-                                                                      flex: 1,
-                                                                      child: Center(
-                                                                        child: Text(
-                                                                            '-'),
+                                                              Expanded(
+                                                                child: Padding(
+                                                                  padding:
+                                                                      const EdgeInsets
+                                                                          .all(
+                                                                          8.0),
+                                                                  child: Row(
+                                                                    crossAxisAlignment:
+                                                                        CrossAxisAlignment
+                                                                            .center,
+                                                                    mainAxisAlignment:
+                                                                        MainAxisAlignment
+                                                                            .start,
+                                                                    children: [
+                                                                      const Expanded(
+                                                                        flex: 1,
+                                                                        child:
+                                                                            Center(
+                                                                          child:
+                                                                              Text('-'),
+                                                                        ),
                                                                       ),
-                                                                    ),
-                                                                    Expanded(
-                                                                      flex: 4,
-                                                                      child:
-                                                                          CustomTextField(
-                                                                        screen: !Responsive
-                                                                            .isDesktop(
-                                                                                context),
-                                                                        labelText:
-                                                                            'End Time',
-                                                                        validator:
-                                                                            (value) {
-                                                                          final DateFormat
-                                                                              timeFormat =
-                                                                              DateFormat(
-                                                                                  'HH:mm a');
+                                                                      Expanded(
+                                                                        flex: 4,
+                                                                        child:
+                                                                            CustomTextField(
+                                                                          screen:
+                                                                              !Responsive.isDesktop(context),
+                                                                          labelText:
+                                                                              'End Time',
+                                                                          validator:
+                                                                              (value) {
+                                                                            final DateFormat
+                                                                                timeFormat =
+                                                                                DateFormat('HH:mm a');
 
-                                                                          if (value!
-                                                                              .isEmpty) {
-                                                                            return 'Enter end time';
-                                                                          } else {
-                                                                            try {
-                                                                              DateTime
-                                                                                  parsedStartTime =
-                                                                                  timeFormat.parse(start.text);
-                                                                              final DateTime
-                                                                                  parsedEndTime =
-                                                                                  timeFormat.parse(value);
+                                                                            if (value!.isEmpty) {
+                                                                              return 'Enter end time';
+                                                                            } else {
+                                                                              try {
+                                                                                DateTime parsedStartTime = timeFormat.parse(start.text);
+                                                                                final DateTime parsedEndTime = timeFormat.parse(value);
 
-                                                                              if (parsedStartTime
-                                                                                  .isAfter(parsedEndTime)) {
-                                                                                return 'Must be after Start time';
+                                                                                if (parsedStartTime.isAfter(parsedEndTime)) {
+                                                                                  return 'Must be after Start time';
+                                                                                }
+                                                                              } catch (e) {
+                                                                                return 'Format: HH:mm AM/PM';
                                                                               }
-                                                                            } catch (e) {
-                                                                              return 'Format: HH:mm AM/PM';
+                                                                              final RegExp timeRegex = RegExp(r'^([01]?[0-9]|2[0-3]):[0-5][0-9] (AM|PM)$');
+                                                                              if (!timeRegex.hasMatch(value)) {
+                                                                                return 'Format: HH:mm AM/PM';
+                                                                              }
+                                                                              return null;
                                                                             }
-                                                                            final RegExp
-                                                                                timeRegex =
-                                                                                RegExp(r'^([01]?[0-9]|2[0-3]):[0-5][0-9] (AM|PM)$');
-                                                                            if (!timeRegex
-                                                                                .hasMatch(value)) {
-                                                                              return 'Format: HH:mm AM/PM';
-                                                                            }
-                                                                            return null;
-                                                                          }
-                                                                        },
-                                                                        errorText:
-                                                                            endError,
-                                                                        controller:
-                                                                            end,
-                                                                        hintText:
-                                                                            'Enter end time',
-                                                                        suffixIcon:
-                                                                            IconButton(
-                                                                                icon:
-                                                                                    const Icon(Icons.punch_clock),
-                                                                                onPressed: () async {
-                                                                                  TimeOfDay? pickedTime = await showTimePicker(
-                                                                                    context: context,
-                                                                                    initialEntryMode: TimePickerEntryMode.input,
-                                                                                    initialTime: const TimeOfDay(hour: 12, minute: 0),
-                                                                                  );
+                                                                          },
+                                                                          errorText:
+                                                                              endError,
+                                                                          controller:
+                                                                              end,
+                                                                          hintText:
+                                                                              'Enter end time',
+                                                                          suffixIcon: IconButton(
+                                                                              icon: const Icon(Icons.punch_clock),
+                                                                              onPressed: () async {
+                                                                                TimeOfDay? pickedTime = await showTimePicker(
+                                                                                  context: context,
+                                                                                  initialEntryMode: TimePickerEntryMode.input,
+                                                                                  initialTime: const TimeOfDay(hour: 12, minute: 0),
+                                                                                );
 
-                                                                                  if (pickedTime != null) {
-                                                                                    endError = null;
+                                                                                if (pickedTime != null) {
+                                                                                  endError = null;
 
-                                                                                    if (start.text != '') {
-                                                                                      final DateFormat timeFormat = DateFormat('hh:mm a');
-                                                                                      DateTime parsedStartTime = timeFormat.parse(start.text);
-                                                                                      DateTime parsedEndTime = timeFormat.parse(pickedTime.format(context));
+                                                                                  if (start.text != '') {
+                                                                                    final DateFormat timeFormat = DateFormat('hh:mm a');
+                                                                                    DateTime parsedStartTime = timeFormat.parse(start.text);
+                                                                                    DateTime parsedEndTime = timeFormat.parse(pickedTime.format(context));
 
-                                                                                      if (parsedEndTime.isAfter(parsedStartTime)) {
-                                                                                        setState(() {
-                                                                                          end.text = pickedTime.format(context);
-                                                                                        });
-                                                                                      } else {
-                                                                                        setState(() {
-                                                                                          endError = 'Must be after Start Time';
-                                                                                        });
-                                                                                      }
-                                                                                    } else {
+                                                                                    if (parsedEndTime.isAfter(parsedStartTime)) {
                                                                                       setState(() {
                                                                                         end.text = pickedTime.format(context);
                                                                                       });
+                                                                                    } else {
+                                                                                      setState(() {
+                                                                                        endError = 'Must be after Start Time';
+                                                                                      });
                                                                                     }
+                                                                                  } else {
+                                                                                    setState(() {
+                                                                                      end.text = pickedTime.format(context);
+                                                                                    });
                                                                                   }
-                                                                                }),
+                                                                                }
+                                                                              }),
+                                                                        ),
                                                                       ),
-                                                                    ),
-                                                                  ],
+                                                                    ],
+                                                                  ),
                                                                 ),
                                                               ),
-                                                            ),
-                                                          ],
+                                                            ],
+                                                          ),
                                                         ),
                                                       ),
-                                                    ),
-                                                  ],
-                                                ),
-                                                Row(
-                                                  children: [
-                                                    Expanded(
-                                                        child: Padding(
-                                                            padding:
-                                                                const EdgeInsets
-                                                                    .all(8.0),
-                                                            child: Row(
-                                                              crossAxisAlignment:
-                                                                  CrossAxisAlignment
-                                                                      .start,
-                                                              mainAxisAlignment:
-                                                                  MainAxisAlignment
-                                                                      .start,
-                                                              children: [
-                                                                if (Responsive
-                                                                    .isDesktop(
-                                                                        context))
-                                                                  const Expanded(
-                                                                    flex: 1,
-                                                                    child: Text(
-                                                                      'Details',
-                                                                      style: TextStyle(
-                                                                          fontSize:
-                                                                              16),
+                                                    ],
+                                                  ),
+                                                  Row(
+                                                    children: [
+                                                      Expanded(
+                                                          child: Padding(
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .all(8.0),
+                                                              child: Row(
+                                                                crossAxisAlignment:
+                                                                    CrossAxisAlignment
+                                                                        .start,
+                                                                mainAxisAlignment:
+                                                                    MainAxisAlignment
+                                                                        .start,
+                                                                children: [
+                                                                  if (Responsive
+                                                                      .isDesktop(
+                                                                          context))
+                                                                    const Expanded(
+                                                                      flex: 1,
+                                                                      child:
+                                                                          Text(
+                                                                        'Details',
+                                                                        style: TextStyle(
+                                                                            fontSize:
+                                                                                16),
+                                                                      ),
+                                                                    ),
+                                                                  Expanded(
+                                                                    flex: 9,
+                                                                    child:
+                                                                        CustomTextField(
+                                                                      screen: !Responsive
+                                                                          .isDesktop(
+                                                                              context),
+                                                                      labelText:
+                                                                          'Programme Details',
+                                                                      maxLength:
+                                                                          100,
+                                                                      hintText:
+                                                                          'Enter programme details',
+                                                                      controller:
+                                                                          detail,
+                                                                      maxLine:
+                                                                          3,
+                                                                      validator:
+                                                                          (value) {
+                                                                        if (value!
+                                                                            .isEmpty) {
+                                                                          return 'Please enter programme details';
+                                                                        }
+                                                                        return null;
+                                                                      },
                                                                     ),
                                                                   ),
-                                                                Expanded(
-                                                                  flex: 9,
-                                                                  child:
-                                                                      CustomTextField(
-                                                                    screen: !Responsive
-                                                                        .isDesktop(
-                                                                            context),
-                                                                    labelText:
-                                                                        'Programme Details',
-                                                                    maxLength: 100,
-                                                                    hintText:
-                                                                        'Enter programme details',
-                                                                    controller:
-                                                                        detail,
-                                                                    maxLine: 3,
-                                                                    validator:
-                                                                        (value) {
-                                                                      if (value!
-                                                                          .isEmpty) {
-                                                                        return 'Please enter programme details';
-                                                                      }
-                                                                      return null;
-                                                                    },
-                                                                  ),
-                                                                ),
-                                                              ],
-                                                            ))),
-                                                  ],
-                                                ),
-                                                CustomButton(
-                                                    width: 150,
-                                                    onPressed: () {
-                                                      if (_formKey.currentState!
-                                                          .validate()) {
-                                                        setState(() {
-                                                          startError = null;
-                                                          dateError = null;
-                                                        });
-
-                                                        Programme newProgramme =
-                                                            Programme(
-                                                          date: DateFormat(
-                                                                  'dd-MM-yyyy')
-                                                              .parse(date.text),
-                                                          startTime: DateFormat(
-                                                                  'hh:mm a')
-                                                              .parse(start.text),
-                                                          endTime:
-                                                              DateFormat('hh:mm a')
-                                                                  .parse(end.text),
-                                                          venue: venue.text,
-                                                          details: detail.text,
-                                                        );
-                                                        if (programList
-                                                                .isNotEmpty &&
-                                                            newProgramme.date
-                                                                .isBefore(
-                                                                    programList.last
-                                                                        .date)) {
+                                                                ],
+                                                              ))),
+                                                    ],
+                                                  ),
+                                                  CustomButton(
+                                                      width: 150,
+                                                      onPressed: () {
+                                                        if (_formKey
+                                                            .currentState!
+                                                            .validate()) {
                                                           setState(() {
-                                                            dateError =
-                                                                'Must start after last programme';
+                                                            startError = null;
+                                                            dateError = null;
                                                           });
-                                                          return;
-                                                        }
 
-                                                        if (programList
-                                                                .isNotEmpty &&
-                                                            newProgramme.date
-                                                                .isAtSameMomentAs(
-                                                                    programList.last
-                                                                        .date) &&
-                                                            newProgramme.startTime
-                                                                .isBefore(
-                                                                    programList.last
-                                                                        .endTime)) {
+                                                          Programme
+                                                              newProgramme =
+                                                              Programme(
+                                                            date: DateFormat(
+                                                                    'dd-MM-yyyy')
+                                                                .parse(
+                                                                    date.text),
+                                                            startTime: DateFormat(
+                                                                    'hh:mm a')
+                                                                .parse(
+                                                                    start.text),
+                                                            endTime: DateFormat(
+                                                                    'hh:mm a')
+                                                                .parse(
+                                                                    end.text),
+                                                            venue: venue.text,
+                                                            details:
+                                                                detail.text,
+                                                          );
+                                                          if (programList
+                                                                  .isNotEmpty &&
+                                                              newProgramme.date
+                                                                  .isBefore(
+                                                                      programList
+                                                                          .last
+                                                                          .date)) {
+                                                            setState(() {
+                                                              dateError =
+                                                                  'Must start after last programme';
+                                                            });
+                                                            return;
+                                                          }
+
+                                                          if (programList
+                                                                  .isNotEmpty &&
+                                                              newProgramme.date
+                                                                  .isAtSameMomentAs(
+                                                                      programList
+                                                                          .last
+                                                                          .date) &&
+                                                              newProgramme
+                                                                  .startTime
+                                                                  .isBefore(
+                                                                      programList
+                                                                          .last
+                                                                          .endTime)) {
+                                                            setState(() {
+                                                              startError =
+                                                                  'Must start after last programme';
+                                                            });
+                                                            return;
+                                                          }
+
+                                                          programList.add(
+                                                              newProgramme);
                                                           setState(() {
-                                                            startError =
-                                                                'Must start after last programme';
+                                                            programList =
+                                                                programList;
                                                           });
-                                                          return;
+
+                                                          date.clear();
+                                                          start.clear();
+                                                          end.clear();
+                                                          detail.clear();
+                                                          venue.clear();
                                                         }
-
-                                                        programList
-                                                            .add(newProgramme);
-                                                        setState(() {
-                                                          programList = programList;
-                                                        });
-
-                                                        date.clear();
-                                                        start.clear();
-                                                        end.clear();
-                                                        detail.clear();
-                                                        venue.clear();
-                                                      }
-                                                    },
-                                                    text: 'Add'),
-                                                const SizedBox(
-                                                  height: 15,
-                                                ),
-                                              ],
-                                            ),
+                                                      },
+                                                      text: 'Add'),
+                                                  const SizedBox(
+                                                    height: 15,
+                                                  ),
+                                                ],
+                                              ),
                                             if (programList.isNotEmpty)
                                               Column(
                                                 children: [
                                                   Center(
-                                                    child: programList.isNotEmpty?
-                                                        SingleChildScrollView(
-                                                      scrollDirection:
-                                                          Axis.horizontal,
-                                                      child: DataTable(
-                                                        columns: const [
-                                                          DataColumn(
-                                                              label:
-                                                                  Text('Date')),
-                                                          DataColumn(
-                                                              label:
-                                                                  Text('Time')),
-                                                          DataColumn(
-                                                              label: Text(
-                                                                  'Venue')),
-                                                          DataColumn(
-                                                              label: Text(
-                                                                  'Details')),
-                                                          DataColumn(
-                                                              label: Text('')),
-                                                        ],
-                                                        rows: programList
-                                                            .asMap()
-                                                            .entries
-                                                            .map((entry) {
-                                                          final int index =
-                                                              entry.key;
-                                                          final Programme
-                                                              program =
-                                                              entry.value;
+                                                    child: programList
+                                                            .isNotEmpty
+                                                        ? SingleChildScrollView(
+                                                            scrollDirection:
+                                                                Axis.horizontal,
+                                                            child: DataTable(
+                                                              columns: const [
+                                                                DataColumn(
+                                                                    label: Text(
+                                                                        'Date')),
+                                                                DataColumn(
+                                                                    label: Text(
+                                                                        'Time')),
+                                                                DataColumn(
+                                                                    label: Text(
+                                                                        'Venue')),
+                                                                DataColumn(
+                                                                    label: Text(
+                                                                        'Details')),
+                                                                DataColumn(
+                                                                    label: Text(
+                                                                        '')),
+                                                              ],
+                                                              rows: programList
+                                                                  .asMap()
+                                                                  .entries
+                                                                  .map((entry) {
+                                                                final int
+                                                                    index =
+                                                                    entry.key;
+                                                                final Programme
+                                                                    program =
+                                                                    entry.value;
 
-                                                          return DataRow(
-                                                            cells: [
-                                                              DataCell(Text(DateFormat(
-                                                                      'dd-MM-yyyy')
-                                                                  .format(program
-                                                                      .date))),
-                                                              DataCell(Text(
-                                                                  '${DateFormat('hh:mm a').format(program.startTime)} - ${DateFormat('hh:mm a').format(program.endTime)}')),
-                                                              DataCell(Text(
-                                                                  program
-                                                                      .venue)),
-                                                              DataCell(Text(
-                                                                  program
-                                                                      .details)),
-                                                              DataCell(Row(
-                                                                children: [
-                                                                  if(enabled)
-                                                                  IconButton(
-                                                                    icon: const Icon(
-                                                                        Icons
-                                                                            .edit),
-                                                                    onPressed:
-                                                                        () {
-                                                                      showDialog(
-                                                                          context:
-                                                                              context,
-                                                                          builder:
-                                                                              (_) {
-                                                                            return EditDialog(
-                                                                              program: program,
-                                                                              index: index,
-                                                                              programList: programList,
-                                                                              function: resetTable,
-                                                                            );
-                                                                          });
-                                                                    },
-                                                                  ),
-                                                                  if(enabled)
-                                                                  IconButton(
-                                                                    icon: const Icon(
-                                                                        Icons
-                                                                            .delete),
-                                                                    onPressed:
-                                                                        () {
-                                                                      setState(
-                                                                          () {
-                                                                        programList
-                                                                            .removeAt(index);
-                                                                      });
-                                                                    },
-                                                                  ),
-                                                                ],
-                                                              )),
-                                                            ],
-                                                          );
-                                                        }).toList(),
-                                                      ),
-                                                    ) : const SizedBox(height: 500, child: Center(child: Text('There is no programme registered.'))),
+                                                                return DataRow(
+                                                                  cells: [
+                                                                    DataCell(Text(DateFormat(
+                                                                            'dd-MM-yyyy')
+                                                                        .format(
+                                                                            program.date))),
+                                                                    DataCell(Text(
+                                                                        '${DateFormat('hh:mm a').format(program.startTime)} - ${DateFormat('hh:mm a').format(program.endTime)}')),
+                                                                    DataCell(Text(
+                                                                        program
+                                                                            .venue)),
+                                                                    DataCell(Text(
+                                                                        program
+                                                                            .details)),
+                                                                    DataCell(
+                                                                        Row(
+                                                                      children: [
+                                                                        if (enabled)
+                                                                          IconButton(
+                                                                            icon:
+                                                                                const Icon(Icons.edit),
+                                                                            onPressed:
+                                                                                () {
+                                                                              showDialog(
+                                                                                  context: context,
+                                                                                  builder: (_) {
+                                                                                    return EditDialog(
+                                                                                      program: program,
+                                                                                      index: index,
+                                                                                      programList: programList,
+                                                                                      function: resetTable,
+                                                                                    );
+                                                                                  });
+                                                                            },
+                                                                          ),
+                                                                        if (enabled)
+                                                                          IconButton(
+                                                                            icon:
+                                                                                const Icon(Icons.delete),
+                                                                            onPressed:
+                                                                                () {
+                                                                              setState(() {
+                                                                                programList.removeAt(index);
+                                                                              });
+                                                                            },
+                                                                          ),
+                                                                      ],
+                                                                    )),
+                                                                  ],
+                                                                );
+                                                              }).toList(),
+                                                            ),
+                                                          )
+                                                        : const SizedBox(
+                                                            height: 500,
+                                                            child: Center(
+                                                                child: Text(
+                                                                    'There is no programme registered.'))),
                                                   ),
                                                 ],
                                               ),

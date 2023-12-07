@@ -2,19 +2,19 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
+import 'package:fyp/pages/allOrganisedEvent.dart';
 import 'package:fyp/pages/eventDetails.dart';
-import 'package:fyp/pages/studentOrganisedEvent.dart';
 import 'package:intl/intl.dart';
 import 'package:localstorage/localstorage.dart';
 
-class StudentOngoingEvent extends StatefulWidget {
-  const StudentOngoingEvent({super.key});
+class AllOngoingEvent extends StatefulWidget {
+  const AllOngoingEvent({super.key});
 
   @override
-  State<StudentOngoingEvent> createState() => _StudentOngoingEventState();
+  State<AllOngoingEvent> createState() => _AllOngoingEventState();
 }
 
-class _StudentOngoingEventState extends State<StudentOngoingEvent> {
+class _AllOngoingEventState extends State<AllOngoingEvent> {
   final LocalStorage storage = LocalStorage('user');
   bool _isLoading = true;
   DateTime? startDate;
@@ -31,120 +31,115 @@ class _StudentOngoingEventState extends State<StudentOngoingEvent> {
       final FirebaseFirestore firestore = FirebaseFirestore.instance;
       // Fetch event data
 
-      final QuerySnapshot<Map<String, dynamic>> relatedEvent = await firestore
-          .collection('committee')
-          .where('studentID', isEqualTo: storage.getItem('id'))
-          .get();
+      final QuerySnapshot<Map<String, dynamic>> eventSnapshot =
+          await firestore.collection('event').get();
+      final List<DocumentSnapshot<Map<String, dynamic>>> filteredEvents =
+          eventSnapshot.docs.where((eventDoc) {
+        final status = eventDoc['status'];
+        final progress = eventDoc['progress'];
 
-      if (relatedEvent.docs.isNotEmpty) {
-        List<String> eventIds =
-            relatedEvent.docs.map((doc) => doc['eventID'] as String).toList();
+        return status != 'Closing' || progress != 3;
+      }).toList();
 
-        final QuerySnapshot<Map<String, dynamic>> eventSnapshot =
-            await firestore
-                .collection('event')
-                .where('eventID', whereIn: eventIds)
-                .where('status', isNotEqualTo: 'Completed')
-                .get();
+      for (var docSnapshot in filteredEvents) {
+        Map<String, dynamic>? eventData = docSnapshot.data();
 
-        for (var docSnapshot in eventSnapshot.docs) {
-          Map<String, dynamic>? eventData = docSnapshot.data();
-
+        if (eventData != null) {
           ongoingEvents.add(eventData);
         }
-        for (var eventData in ongoingEvents) {
-          String eventId = eventData['eventID'];
-          final QuerySnapshot<Map<String, dynamic>> committeeSnapshot =
-              await firestore
-                  .collection('committee')
-                  .where('eventID', isEqualTo: eventId)
-                  .where('position', isEqualTo: 'President')
-                  .get();
-          int eventIndex =
-              ongoingEvents.indexWhere((event) => event['eventID'] == eventId);
-          for (var committeeDocSnapshot in committeeSnapshot.docs) {
-            Map<String, dynamic> committeeData = committeeDocSnapshot.data();
+      }
+      for (var eventData in ongoingEvents) {
+        String eventId = eventData['eventID'];
+        final QuerySnapshot<Map<String, dynamic>> committeeSnapshot =
+            await firestore
+                .collection('committee')
+                .where('eventID', isEqualTo: eventId)
+                .where('position', isEqualTo: 'President')
+                .get();
+        int eventIndex =
+            ongoingEvents.indexWhere((event) => event['eventID'] == eventId);
+        for (var committeeDocSnapshot in committeeSnapshot.docs) {
+          Map<String, dynamic> committeeData = committeeDocSnapshot.data();
 
-            if (eventIndex != -1) {
-              ongoingEvents[eventIndex]['president'] =
-                  committeeData['name'] ?? 'Unassigned';
-            }
-          }
-
-          final QuerySnapshot<Map<String, dynamic>> approvalSnapshot =
-              await firestore
-                  .collection('approval')
-                  .where('eventID', isEqualTo: eventId)
-                  .get();
-          checkName.clear();
-          checkStatus.clear();
-
-          if (approvalSnapshot.docs.isNotEmpty) {
-            Map<String, dynamic> approvalData =
-                approvalSnapshot.docs.first.data();
-            checkName.add('');
-            checkName.add(approvalData['presidentName']);
-            checkName.add(approvalData['advisorName']);
-            checkName.add(approvalData['branchHeadName']);
-            checkStatus.add('Approved');
-            checkStatus.add(approvalData['presidentStatus']);
-            checkStatus.add(approvalData['advisorStatus']);
-            checkStatus.add(approvalData['branchHeadStatus']);
-          }
-
-          if (checkStatus.any((element) => element == 'Rejected')) {
-            ongoingEvents[eventIndex]['eventStatus'] = 'Rejected';
-          } else {
-            ongoingEvents[eventIndex]['eventStatus'] = 'Pending';
-          }
-
-          Query<Map<String, dynamic>> query = firestore
-              .collection('schedule')
-              .where('eventID', isEqualTo: eventId)
-              .orderBy('date');
-
-          QuerySnapshot<Map<String, dynamic>> snapshot =
-              await query.limit(1).get();
-
-          Query<Map<String, dynamic>> query2 = firestore
-              .collection('schedule')
-              .where('eventID', isEqualTo: eventId)
-              .orderBy('date', descending: true);
-
-          QuerySnapshot<Map<String, dynamic>> snapshot2 =
-              await query2.limit(1).get();
-          startDate = null;
-          endDate = null;
-          if (snapshot.docs.isNotEmpty) {
-            DocumentSnapshot<Map<String, dynamic>> earliestDoc =
-                snapshot.docs.first;
-
-            Timestamp date = earliestDoc['date'];
-            startDate = date.toDate();
-          }
-
-          if (snapshot2.docs.isNotEmpty) {
-            DocumentSnapshot<Map<String, dynamic>> latestDoc =
-                snapshot2.docs.first;
-
-            Timestamp date = latestDoc['date'];
-            endDate = date.toDate();
-          }
-          if (startDate != null && endDate != null) {
-            ongoingEvents[eventIndex]['startDate'] =
-                DateFormat('dd/MM/yyyy').format(startDate!);
-            ongoingEvents[eventIndex]['endDate'] =
-                DateFormat('dd/MM/yyyy').format(endDate!);
-          } else {
-            ongoingEvents[eventIndex]['startDate'] = 'Undecided';
-            ongoingEvents[eventIndex]['endDate'] = 'Undecided';
+          if (eventIndex != -1) {
+            ongoingEvents[eventIndex]['president'] =
+                committeeData['name'] ?? 'Unassigned';
           }
         }
-        setState(() {
-          ongoingEvents = ongoingEvents;
-          _isLoading = false;
-        });
+
+        final QuerySnapshot<Map<String, dynamic>> approvalSnapshot =
+            await firestore
+                .collection('approval')
+                .where('eventID', isEqualTo: eventId)
+                .get();
+        checkName.clear();
+        checkStatus.clear();
+
+        if (approvalSnapshot.docs.isNotEmpty) {
+          Map<String, dynamic> approvalData =
+              approvalSnapshot.docs.first.data();
+          checkName.add('');
+          checkName.add(approvalData['presidentName']);
+          checkName.add(approvalData['advisorName']);
+          checkName.add(approvalData['branchHeadName']);
+          checkStatus.add('Approved');
+          checkStatus.add(approvalData['presidentStatus']);
+          checkStatus.add(approvalData['advisorStatus']);
+          checkStatus.add(approvalData['branchHeadStatus']);
+        }
+
+        if (checkStatus.any((element) => element == 'Rejected')) {
+          ongoingEvents[eventIndex]['eventStatus'] = 'Rejected';
+        } else {
+          ongoingEvents[eventIndex]['eventStatus'] = 'Pending';
+        }
+
+        Query<Map<String, dynamic>> query = firestore
+            .collection('schedule')
+            .where('eventID', isEqualTo: eventId)
+            .orderBy('date');
+
+        QuerySnapshot<Map<String, dynamic>> snapshot =
+            await query.limit(1).get();
+
+        Query<Map<String, dynamic>> query2 = firestore
+            .collection('schedule')
+            .where('eventID', isEqualTo: eventId)
+            .orderBy('date', descending: true);
+
+        QuerySnapshot<Map<String, dynamic>> snapshot2 =
+            await query2.limit(1).get();
+        startDate = null;
+        endDate = null;
+        if (snapshot.docs.isNotEmpty) {
+          DocumentSnapshot<Map<String, dynamic>> earliestDoc =
+              snapshot.docs.first;
+
+          Timestamp date = earliestDoc['date'];
+          startDate = date.toDate();
+        }
+
+        if (snapshot2.docs.isNotEmpty) {
+          DocumentSnapshot<Map<String, dynamic>> latestDoc =
+              snapshot2.docs.first;
+
+          Timestamp date = latestDoc['date'];
+          endDate = date.toDate();
+        }
+        if (startDate != null && endDate != null) {
+          ongoingEvents[eventIndex]['startDate'] =
+              DateFormat('dd/MM/yyyy').format(startDate!);
+          ongoingEvents[eventIndex]['endDate'] =
+              DateFormat('dd/MM/yyyy').format(endDate!);
+        } else {
+          ongoingEvents[eventIndex]['startDate'] = 'Undecided';
+          ongoingEvents[eventIndex]['endDate'] = 'Undecided';
+        }
       }
+      setState(() {
+        ongoingEvents = ongoingEvents;
+        _isLoading = false;
+      });
     } catch (error) {
       setState(() {
         _isLoading = false;
@@ -215,11 +210,11 @@ class _StudentOngoingEventState extends State<StudentOngoingEvent> {
                                     children: [
                                       TextButton(
                                         onPressed: () {
-                                          Navigator.push(
+                                          Navigator.pushReplacement(
                                             context,
                                             MaterialPageRoute(
                                                 builder: (context) =>
-                                                    const StudentOngoingEvent()),
+                                                    const AllOngoingEvent()),
                                           );
                                         },
                                         style: TextButton.styleFrom(
@@ -237,11 +232,11 @@ class _StudentOngoingEventState extends State<StudentOngoingEvent> {
                                       ),
                                       TextButton(
                                         onPressed: () {
-                                          Navigator.push(
+                                          Navigator.pushReplacement(
                                             context,
                                             MaterialPageRoute(
                                                 builder: (context) =>
-                                                    const StudentOrganisedEvent()),
+                                                    const AllOrganisedEvent()),
                                           );
                                         },
                                         style: TextButton.styleFrom(
@@ -455,6 +450,22 @@ class _EventDataSource extends DataTableSource {
 
   _EventDataSource(this.originalEvent, this.context) {
     _initializeDisplayedEvent();
+    _sortEventsByProgress();
+  }
+
+  void _sortEventsByProgress() {
+    displayedEvent.sort((a, b) {
+      final aValue = a['progress'];
+      final bValue = b['progress'];
+
+      if (aValue == 3 && bValue != 3) {
+        return -1;
+      } else if (bValue == 3 && aValue != 3) {
+        return 1;
+      } else {
+        return 0;
+      }
+    });
   }
 
   void _initializeDisplayedEvent() {
@@ -490,7 +501,7 @@ class _EventDataSource extends DataTableSource {
                   ),
                 );
               },
-              text: 'View',
+              text: event['progress'] == 3 ? 'Approve' : 'View',
               width: 100,
             ),
           ],

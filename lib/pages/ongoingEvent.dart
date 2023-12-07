@@ -38,22 +38,14 @@ class _OngoingEventState extends State<OngoingEvent> {
       final QuerySnapshot<Map<String, dynamic>> eventSnapshot = await firestore
           .collection('event')
           .where('societyID', isEqualTo: widget.selectedSociety)
+          .where('status', isNotEqualTo: 'Completed')
           .get();
-
-        final List<DocumentSnapshot<Map<String, dynamic>>> filteredEvents =
-            eventSnapshot.docs.where((eventDoc) {
-          final status = eventDoc['status'];
-          final progress = eventDoc['progress'];
-
-          return status != 'Closing' || progress != 3;
-        }).toList();
 
       ongoingEvents.clear();
 
-      for (var eventDoc in filteredEvents) {
+      for (var eventDoc in eventSnapshot.docs) {
         Map<String, dynamic>? eventData = eventDoc.data();
 
-        if (eventData != null) {
           String eventId = eventData['eventID'];
 
           final QuerySnapshot<Map<String, dynamic>> committeeSnapshot =
@@ -138,7 +130,7 @@ class _OngoingEventState extends State<OngoingEvent> {
             'endDate': endDateString,
             'eventStatus': eventStatus,
           });
-        }
+        
       }
 
       setState(() {

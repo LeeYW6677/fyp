@@ -9,12 +9,16 @@ class Proposal extends StatefulWidget {
   final String status;
   final int progress;
   final String position;
+  final bool rejected;
+  final bool rejected2;
   const Proposal(
       {super.key,
       required this.selectedEvent,
       required this.status,
       required this.progress,
-      required this.position});
+      required this.position,
+      required this.rejected,
+      required this.rejected2});
 
   @override
   State<Proposal> createState() => _ProposalState();
@@ -33,9 +37,10 @@ class _ProposalState extends State<Proposal> {
       if (!widget.position.startsWith('org') ||
           widget.position.contains('Treasurer') ||
           widget.status != 'Planning' ||
-          widget.progress != 0) {
+          (widget.progress != 0 && !widget.rejected)) {
         enabled = false;
       }
+
       final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
       // Fetch event data
@@ -137,6 +142,8 @@ class _ProposalState extends State<Proposal> {
                                           form: 'Proposal',
                                           status: widget.status,
                                           progress: widget.progress,
+                                          rejected2: widget.rejected2,
+                                          rejected: widget.rejected,
                                           position: widget.position,
                                           children: [
                                             Row(
@@ -250,10 +257,14 @@ class _ProposalState extends State<Proposal> {
                                                                     String>(
                                                                   value: type,
                                                                   child: Text(
-                                                                      type,
-                                                                      overflow:
-                                                                          TextOverflow
-                                                                              .ellipsis, style: TextStyle(color: Colors.black),),
+                                                                    type,
+                                                                    overflow:
+                                                                        TextOverflow
+                                                                            .ellipsis,
+                                                                    style: TextStyle(
+                                                                        color: Colors
+                                                                            .black),
+                                                                  ),
                                                                 );
                                                               }).toList(),
                                                             )),

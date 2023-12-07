@@ -49,8 +49,7 @@ class _StudentOrganisedEventState extends State<StudentOrganisedEvent> {
             await firestore
                 .collection('event')
                 .where('eventID', whereIn: eventIds)
-                .where('status', isEqualTo: 'Closing')
-                .where('progress', isEqualTo: 3)
+                .where('status', isEqualTo: 'Completed')
                 .get();
 
         for (var docSnapshot in eventSnapshot.docs) {
@@ -156,7 +155,7 @@ class _StudentOrganisedEventState extends State<StudentOrganisedEvent> {
                                     children: [
                                       TextButton(
                                         onPressed: () {
-                                          Navigator.push(
+                                          Navigator.pushReplacement(
                                             context,
                                             MaterialPageRoute(
                                                 builder: (context) =>
@@ -178,7 +177,7 @@ class _StudentOrganisedEventState extends State<StudentOrganisedEvent> {
                                       ),
                                       TextButton(
                                         onPressed: () {
-                                          Navigator.push(
+                                          Navigator.pushReplacement(
                                             context,
                                             MaterialPageRoute(
                                                 builder: (context) =>

@@ -2,25 +2,31 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
+import 'package:fyp/pages/addEvent.dart';
 import 'package:fyp/pages/eventDetails.dart';
-import 'package:fyp/pages/ongoingEvent.dart';
 import 'package:intl/intl.dart';
+import 'package:localstorage/localstorage.dart';
 
-class OrganisedEvent extends StatefulWidget {
-  final String selectedSociety;
-  const OrganisedEvent({super.key, required this.selectedSociety});
+class AdvisorEvent extends StatefulWidget {
+  const AdvisorEvent({super.key});
 
   @override
-  State<OrganisedEvent> createState() => _OrganisedEventState();
+  State<AdvisorEvent> createState() => _AdvisorEventState();
 }
 
-class _OrganisedEventState extends State<OrganisedEvent> {
+class _AdvisorEventState extends State<AdvisorEvent> {
+  final LocalStorage storage = LocalStorage('user');
+  List<Map<String, dynamic>> ongoingEvents = [];
+  bool _isLoading = true;
   DateTime? startDate;
   DateTime? endDate;
+  List<String> checkName = ['', '', '', ''];
+  List<String> checkStatus = ['', '', '', ''];
+  String eventDate = '';
+  String eventStatus = '';
   String startDateString = '';
   String endDateString = '';
-  List<Map<String, dynamic>> completedEvents = [];
-  bool _isLoading = true;
+  String societyID = '';
 
   Future<void> getData() async {
     try {
@@ -29,25 +35,38 @@ class _OrganisedEventState extends State<OrganisedEvent> {
       });
       final FirebaseFirestore firestore = FirebaseFirestore.instance;
       // Fetch event and committee data
+
+      final QuerySnapshot<Map<String, dynamic>> advisorSnapshot =
+          await firestore
+              .collection('advisor')
+              .where('advisorID', isEqualTo: storage.getItem('id'))
+              .get();
+
+      if (advisorSnapshot.docs.isNotEmpty) {
+        Map<String, dynamic> advisorData = advisorSnapshot.docs.first.data();
+        societyID = advisorData['societyID'] ?? '';
+      }
+
       final QuerySnapshot<Map<String, dynamic>> eventSnapshot = await firestore
           .collection('event')
-          .where('societyID', isEqualTo: widget.selectedSociety)
-          .where('status', isEqualTo: 'Completed')
+          .where('societyID', isEqualTo: societyID)
+          .where('status', isNotEqualTo: 'Completed')
           .get();
 
-      completedEvents.clear();
+      ongoingEvents.clear();
 
-      for (var eventDocSnapshot in eventSnapshot.docs) {
-        Map<String, dynamic> eventData = eventDocSnapshot.data();
+      for (var eventDoc in eventSnapshot.docs) {
+        Map<String, dynamic>? eventData = eventDoc.data();
+
         String eventId = eventData['eventID'];
 
-        final QuerySnapshot<Map<String, dynamic>> participantSnapshot =
+        final QuerySnapshot<Map<String, dynamic>> claimSnapshot =
             await firestore
-                .collection('participant')
+                .collection('claim')
                 .where('eventID', isEqualTo: eventId)
+                .where('status', isEqualTo: 'Checked')
                 .get();
-
-        int participantCount = participantSnapshot.size;
+        int claim = claimSnapshot.size;
 
         final QuerySnapshot<Map<String, dynamic>> committeeSnapshot =
             await firestore
@@ -55,64 +74,87 @@ class _OrganisedEventState extends State<OrganisedEvent> {
                 .where('eventID', isEqualTo: eventId)
                 .where('position', isEqualTo: 'President')
                 .get();
+
         String presidentName = 'Unassigned';
+
         if (committeeSnapshot.docs.isNotEmpty) {
           Map<String, dynamic> committeeData =
               committeeSnapshot.docs.first.data();
           presidentName = committeeData['name'] ?? 'Unassigned';
         }
-        Query<Map<String, dynamic>> query = firestore
+
+        final QuerySnapshot<Map<String, dynamic>> approvalSnapshot =
+            await firestore
+                .collection('approval')
+                .where('eventID', isEqualTo: eventId)
+                .get();
+
+        checkName.clear();
+        checkStatus.clear();
+
+        if (approvalSnapshot.docs.isNotEmpty) {
+          Map<String, dynamic> approvalData =
+              approvalSnapshot.docs.first.data();
+          checkName.addAll([
+            '',
+            approvalData['presidentName'],
+            approvalData['advisorName'],
+            approvalData['branchHeadName']
+          ]);
+          checkStatus.addAll([
+            'Approved',
+            approvalData['presidentStatus'],
+            approvalData['advisorStatus'],
+            approvalData['branchHeadStatus']
+          ]);
+        }
+
+        eventStatus = checkStatus.any((element) => element == 'Rejected')
+            ? 'Rejected'
+            : 'Pending';
+
+        final Query<Map<String, dynamic>> query = firestore
             .collection('schedule')
             .where('eventID', isEqualTo: eventId)
             .orderBy('date');
 
-        QuerySnapshot<Map<String, dynamic>> snapshot =
+        final QuerySnapshot<Map<String, dynamic>> snapshot =
             await query.limit(1).get();
 
-        Query<Map<String, dynamic>> query2 = firestore
+        final Query<Map<String, dynamic>> query2 = firestore
             .collection('schedule')
             .where('eventID', isEqualTo: eventId)
             .orderBy('date', descending: true);
 
-        QuerySnapshot<Map<String, dynamic>> snapshot2 =
+        final QuerySnapshot<Map<String, dynamic>> snapshot2 =
             await query2.limit(1).get();
 
-        startDate = null;
-        endDate = null;
-        if (snapshot.docs.isNotEmpty) {
-          DocumentSnapshot<Map<String, dynamic>> earliestDoc =
-              snapshot.docs.first;
+        startDate = snapshot.docs.isNotEmpty
+            ? (snapshot.docs.first['date'] as Timestamp).toDate()
+            : null;
+        endDate = snapshot2.docs.isNotEmpty
+            ? (snapshot2.docs.first['date'] as Timestamp).toDate()
+            : null;
 
-          Timestamp date = earliestDoc['date'];
-          startDate = date.toDate();
-        }
+        startDateString = startDate != null
+            ? DateFormat('dd/MM/yyyy').format(startDate!)
+            : 'Undecided';
+        endDateString = endDate != null
+            ? DateFormat('dd/MM/yyyy').format(endDate!)
+            : 'Undecided';
 
-        if (snapshot2.docs.isNotEmpty) {
-          DocumentSnapshot<Map<String, dynamic>> latestDoc =
-              snapshot2.docs.first;
-
-          Timestamp date = latestDoc['date'];
-          endDate = date.toDate();
-        }
-        if (startDate != null && endDate != null) {
-          startDateString = DateFormat('dd/MM/yyyy').format(startDate!);
-          endDateString = DateFormat('dd/MM/yyyy').format(endDate!);
-        } else {
-          startDateString = 'Undecided';
-          endDateString = 'Undecided';
-        }
-
-        completedEvents.add({
+        ongoingEvents.add({
           ...eventData,
           'president': presidentName,
           'startDate': startDateString,
           'endDate': endDateString,
-          'participant': participantCount
+          'eventStatus': eventStatus,
+          'claim': claim,
         });
       }
 
       setState(() {
-        completedEvents = List.from(completedEvents);
+        ongoingEvents = List.from(ongoingEvents);
         _isLoading = false;
       });
     } catch (error) {
@@ -133,6 +175,7 @@ class _OrganisedEventState extends State<OrganisedEvent> {
   @override
   void initState() {
     super.initState();
+
     getData();
   }
 
@@ -182,104 +225,67 @@ class _OrganisedEventState extends State<OrganisedEvent> {
                                     color: Colors.black,
                                   ),
                                   Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.pushReplacement(
-                                            context,
-                                            MaterialPageRoute(
-                                                builder: (context) =>
-                                                    OngoingEvent(
-                                                        selectedSociety: widget
-                                                            .selectedSociety)),
-                                          );
-                                        },
-                                        style: TextButton.styleFrom(
-                                          padding: const EdgeInsets.all(24.0),
-                                          backgroundColor: Colors.grey[200],
-                                          foregroundColor: Colors.black,
-                                          side: const BorderSide(
-                                              color: Colors.grey, width: 1.0),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(0.0),
-                                          ),
-                                        ),
-                                        child: const Text('Ongoing'),
-                                      ),
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.pushReplacement(
-                                            context,
-                                            MaterialPageRoute(
-                                                builder: (context) =>
-                                                    OrganisedEvent(
-                                                      selectedSociety: widget
-                                                          .selectedSociety,
-                                                    )),
-                                          );
-                                        },
-                                        style: TextButton.styleFrom(
-                                          padding: const EdgeInsets.all(24.0),
-                                          backgroundColor: Colors.white,
-                                          foregroundColor: Colors.black,
-                                          side: const BorderSide(
-                                              color: Colors.grey, width: 1.0),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(0.0),
-                                          ),
-                                        ),
-                                        child: const Text('Organised'),
-                                      ),
-                                    ],
-                                  ),
-                                  Row(
                                     children: [
                                       Expanded(
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            border: Border.all(
-                                                width: 1.0, color: Colors.grey),
-                                          ),
-                                          child: Padding(
-                                            padding: const EdgeInsets.all(16.0),
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.end,
-                                              children: [
-                                                CustomDataTable2(
-                                                  columns: const [
-                                                    DataColumn(
-                                                        label: Text('Name')),
-                                                    DataColumn(
-                                                        label:
-                                                            Text('President')),
-                                                    DataColumn(
-                                                        label:
-                                                            Text('Start Date')),
-                                                    DataColumn(
-                                                        label:
-                                                            Text('End Date')),
-                                                    DataColumn(
-                                                        label: Text(
-                                                            'Participant')),
-                                                    DataColumn(
-                                                        label: Text('Action')),
-                                                  ],
-                                                  source: _EventDataSource2(
-                                                      completedEvents, context),
-                                                  refresh: getData,
-                                                  context: context,
-                                                ),
-                                                const SizedBox(
-                                                  height: 15,
-                                                ),
-                                              ],
-                                            ),
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(16.0),
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.end,
+                                            children: [
+                                              CustomDataTable(
+                                                columns: const [
+                                                  DataColumn(
+                                                      label: Text('Name')),
+                                                  DataColumn(
+                                                      label: Text('President')),
+                                                  DataColumn(
+                                                      label:
+                                                          Text('Start Date')),
+                                                  DataColumn(
+                                                      label: Text('End Date')),
+                                                  DataColumn(
+                                                      label: Text('Phase')),
+                                                  DataColumn(
+                                                      label: Text('Progress')),
+                                                  DataColumn(
+                                                      label: Text('Status')),
+                                                  DataColumn(
+                                                      label: Text(
+                                                          'Claim Pending')),
+                                                  DataColumn(label: Text('')),
+                                                ],
+                                                source: _EventDataSource(
+                                                    ongoingEvents,
+                                                    context,
+                                                    societyID),
+                                                refresh: getData,
+                                                context: context,
+                                              ),
+                                              const SizedBox(
+                                                height: 15,
+                                              ),
+                                              CustomButton(
+                                                onPressed: () {
+                                                  Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (context) =>
+                                                          AddEvent(
+                                                        selectedSociety:
+                                                            societyID,
+                                                      ),
+                                                    ),
+                                                  );
+                                                },
+                                                buttonColor: Colors.green,
+                                                text: 'Add Event',
+                                                width: 150,
+                                              ),
+                                              const SizedBox(
+                                                height: 15,
+                                              ),
+                                            ],
                                           ),
                                         ),
                                       ),
@@ -297,13 +303,13 @@ class _OrganisedEventState extends State<OrganisedEvent> {
   }
 }
 
-class CustomDataTable2 extends StatefulWidget {
+class CustomDataTable extends StatefulWidget {
   final List<DataColumn> columns;
-  final _EventDataSource2 source;
+  final _EventDataSource source;
   final VoidCallback refresh;
   final BuildContext context;
 
-  const CustomDataTable2({
+  const CustomDataTable({
     Key? key,
     required this.columns,
     required this.source,
@@ -312,10 +318,10 @@ class CustomDataTable2 extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _CustomDataTable2State createState() => _CustomDataTable2State();
+  _CustomDataTableState createState() => _CustomDataTableState();
 }
 
-class _CustomDataTable2State extends State<CustomDataTable2> {
+class _CustomDataTableState extends State<CustomDataTable> {
   int selectedRowsPerPage = 10;
   int? _sortColumnIndex;
   bool _sortAscending = true;
@@ -389,7 +395,13 @@ class _CustomDataTable2State extends State<CustomDataTable2> {
                         case 3:
                           return member['endDate'];
                         case 4:
-                          return member['participant'];
+                          return member['status'];
+                        case 5:
+                          return member['progress'];
+                        case 6:
+                          return member['eventStatus'];
+                        case 7:
+                          return member['claim'];
                         default:
                           return '';
                       }
@@ -413,14 +425,16 @@ class _CustomDataTable2State extends State<CustomDataTable2> {
   }
 }
 
-class _EventDataSource2 extends DataTableSource {
+class _EventDataSource extends DataTableSource {
+  final LocalStorage storage = LocalStorage('user');
   final List<Map<String, dynamic>> originalEvent;
   List<Map<String, dynamic>> displayedEvent = [];
   final Set<int> selectedRows = {};
   final BuildContext context;
+  final String selectedSociety;
   int rowsPerPage = 10;
 
-  _EventDataSource2(this.originalEvent, this.context) {
+  _EventDataSource(this.originalEvent, this.context, this.selectedSociety) {
     _initializeDisplayedEvent();
   }
 
@@ -437,10 +451,15 @@ class _EventDataSource2 extends DataTableSource {
     return DataRow(
       cells: [
         DataCell(Text(event['eventName'].toString())),
-        DataCell(Text(event['president'].toString())),
+        DataCell(Text(event['president'] != null
+            ? event['president'].toString()
+            : 'Not decided')),
         DataCell(Text(event['startDate'].toString())),
         DataCell(Text(event['endDate'].toString())),
-        DataCell(Text(event['participant'].toString())),
+        DataCell(Text(event['status'].toString())),
+        DataCell(Text('${event['progress']}/3')),
+        DataCell(Text(event['eventStatus'].toString())),
+        DataCell(Text(event['claim'].toString())),
         DataCell(Row(
           children: [
             CustomButton(
@@ -453,7 +472,7 @@ class _EventDataSource2 extends DataTableSource {
                   ),
                 );
               },
-              text: 'View',
+              text: event['progress'] == 2 ? 'Approve' : 'View',
               width: 100,
             ),
           ],

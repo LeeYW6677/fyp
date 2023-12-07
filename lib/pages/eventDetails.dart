@@ -44,6 +44,8 @@ class _EventDetailsState extends State<EventDetails> {
   String comment2 = '';
   String position = '';
   String societyID = '';
+  bool rejected = false;
+  bool rejected2 = false;
   int progress2 = 0;
 
   Future<void> getData() async {
@@ -88,6 +90,7 @@ class _EventDetailsState extends State<EventDetails> {
       } else {
         progress2 = progress;
       }
+
       final QuerySnapshot<Map<String, dynamic>> approvalSnapshot =
           await firestore
               .collection('approval')
@@ -127,6 +130,13 @@ class _EventDetailsState extends State<EventDetails> {
         checkStatus2.add(completionData['presidentStatus']);
         checkStatus2.add(completionData['advisorStatus']);
         checkStatus2.add(completionData['branchHeadStatus']);
+      }
+
+      if (checkStatus.any((element) => element == 'Rejected')) {
+        rejected = true;
+      }
+      if (checkStatus2.any((element) => element == 'Rejected')) {
+        rejected2 = true;
       }
 
       if (status == 'Planning') {
@@ -291,12 +301,19 @@ class _EventDetailsState extends State<EventDetails> {
                                   children: [
                                     if (position == 'top' ||
                                         position == 'org President' &&
-                                            (status != 'Closing' ||
-                                                progress != 3))
+                                            status != 'Completed')
                                       CustomButton(
                                           width: 150,
                                           buttonColor: Colors.red,
-                                          onPressed: () {},
+                                          onPressed: () {
+                                            showDialog(
+                                                context: context,
+                                                builder: (_) {
+                                                  return DeleteDialog(
+                                                      eventID:
+                                                          widget.selectedEvent);
+                                                });
+                                          },
                                           text: 'Cancel Event'),
                                   ],
                                 ),
@@ -529,23 +546,19 @@ class _EventDetailsState extends State<EventDetails> {
                                 const SizedBox(
                                   height: 15,
                                 ),
-                                if (status == 'Closing')
+                                if (status != 'Planning')
                                   const Center(
                                       child: Text(
                                     'Closing Phase',
                                     style: TextStyle(fontSize: 16),
                                   )),
-                                if (status == 'Closing')
+                                if (status != 'Planning')
                                   CustomTimeline(
-                                    status: status,
+                                    status: 'Closing',
                                     progress: progress,
                                     eventID: widget.selectedEvent,
                                     checkName: checkName2,
                                     checkStatus: checkStatus2,
-                                  ),
-                                if (status == 'Closing')
-                                  const SizedBox(
-                                    height: 15,
                                   ),
                                 const SizedBox(
                                   height: 15,
@@ -553,7 +566,7 @@ class _EventDetailsState extends State<EventDetails> {
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
-                                    if (status == 'Closing' &&
+                                    if (status != 'Planning' &&
                                         position != 'member')
                                       CustomButton(
                                           width: 150,
@@ -575,6 +588,8 @@ class _EventDetailsState extends State<EventDetails> {
                                                   position: position,
                                                   status: status,
                                                   progress: progress,
+                                                  rejected: rejected,
+                                                  rejected2: rejected2,
                                                 ),
                                               ),
                                             );
@@ -589,7 +604,9 @@ class _EventDetailsState extends State<EventDetails> {
                                   mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
                                     if (status == 'Closing' &&
-                                        position == 'member' || position.startsWith('org') && progress == 0)
+                                            position == 'member' ||
+                                        position.startsWith('org') &&
+                                            progress == 0)
                                       CustomButton(
                                           width: 150,
                                           onPressed: () {},
@@ -1042,6 +1059,88 @@ class _ConfirmDialog2State extends State<ConfirmDialog2> {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('Event documents unsubmitted'),
+                width: 200.0,
+                behavior: SnackBarBehavior.floating,
+                duration: Duration(seconds: 3),
+              ),
+            );
+          },
+          child: const Text('OK'),
+        ),
+      ],
+    );
+  }
+}
+
+class DeleteDialog extends StatefulWidget {
+  final String eventID;
+
+  const DeleteDialog({
+    super.key,
+    required this.eventID,
+  });
+  @override
+  _DeleteDialogState createState() => _DeleteDialogState();
+}
+
+class _DeleteDialogState extends State<DeleteDialog> {
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Cancel Event'),
+      content: const Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [Text('Are you sure you want to cancel this event?')],
+      ),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () async {
+            final FirebaseFirestore firestore = FirebaseFirestore.instance;
+            // Create a batch
+            WriteBatch batch = firestore.batch();
+
+            // Collections to delete data from
+            List<String> collectionsToDelete = [
+              'event',
+              'approval',
+              'completion',
+              'budget',
+              'claim',
+              'schedule',
+              'evaluation',
+              'participant',
+              'committee',
+              'account',
+              'claimApproval',
+            ];
+
+            for (String collectionName in collectionsToDelete) {
+              CollectionReference<Map<String, dynamic>> collectionReference =
+                  firestore.collection(collectionName);
+
+              QuerySnapshot<Map<String, dynamic>> documentsToDelete =
+                  await collectionReference
+                      .where('eventID', isEqualTo: widget.eventID)
+                      .get();
+
+              for (QueryDocumentSnapshot<Map<String, dynamic>> document
+                  in documentsToDelete.docs) {
+                batch.delete(collectionReference.doc(document.id));
+              }
+            }
+
+            // Commit the batch
+            await batch.commit();
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Event cancelled'),
                 width: 200.0,
                 behavior: SnackBarBehavior.floating,
                 duration: Duration(seconds: 3),
