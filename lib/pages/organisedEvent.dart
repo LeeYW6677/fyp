@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
 import 'package:fyp/pages/eventDetails.dart';
+import 'package:fyp/pages/eventReport.dart';
 import 'package:fyp/pages/ongoingEvent.dart';
 import 'package:intl/intl.dart';
 
@@ -240,48 +241,87 @@ class _OrganisedEventState extends State<OrganisedEvent> {
                                     children: [
                                       Expanded(
                                         child: Container(
-                                          decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            border: Border.all(
-                                                width: 1.0, color: Colors.grey),
-                                          ),
-                                          child: Padding(
-                                            padding: const EdgeInsets.all(16.0),
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.end,
-                                              children: [
-                                                CustomDataTable2(
-                                                  columns: const [
-                                                    DataColumn(
-                                                        label: Text('Name')),
-                                                    DataColumn(
-                                                        label:
-                                                            Text('President')),
-                                                    DataColumn(
-                                                        label:
-                                                            Text('Start Date')),
-                                                    DataColumn(
-                                                        label:
-                                                            Text('End Date')),
-                                                    DataColumn(
-                                                        label: Text(
-                                                            'Participant')),
-                                                    DataColumn(
-                                                        label: Text('Action')),
-                                                  ],
-                                                  source: _EventDataSource2(
-                                                      completedEvents, context),
-                                                  refresh: getData,
-                                                  context: context,
-                                                ),
-                                                const SizedBox(
-                                                  height: 15,
-                                                ),
-                                              ],
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              border: Border.all(
+                                                  width: 1.0,
+                                                  color: Colors.grey),
                                             ),
-                                          ),
-                                        ),
+                                            child: Column(
+                                              children: [
+                                                if (completedEvents.isNotEmpty)
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            16.0),
+                                                    child: Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .end,
+                                                      children: [
+                                                        CustomDataTable2(
+                                                          columns: const [
+                                                            DataColumn(
+                                                                label: Text(
+                                                                    'Name')),
+                                                            DataColumn(
+                                                                label: Text(
+                                                                    'President')),
+                                                            DataColumn(
+                                                                label: Text(
+                                                                    'Start Date')),
+                                                            DataColumn(
+                                                                label: Text(
+                                                                    'End Date')),
+                                                            DataColumn(
+                                                                label: Text(
+                                                                    'Participant')),
+                                                            DataColumn(
+                                                                label: Text(
+                                                                    'Action')),
+                                                          ],
+                                                          source:
+                                                              _EventDataSource2(
+                                                                  completedEvents,
+                                                                  context),
+                                                          refresh: getData,
+                                                          context: context,
+                                                        ),
+                                                        const SizedBox(
+                                                          height: 15,
+                                                        ),
+                                                        CustomButton(
+                                                          onPressed: () {
+                                                            Navigator.push(
+                                                              context,
+                                                              MaterialPageRoute(
+                                                                builder:
+                                                                    (context) =>
+                                                                        EventReport(
+                                                                  selectedSociety:
+                                                                      widget
+                                                                          .selectedSociety,
+                                                                ),
+                                                              ),
+                                                            );
+                                                          },
+                                                          text: 'Event Report',
+                                                          width: 150,
+                                                        ),
+                                                        const SizedBox(
+                                                          height: 15,
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                if (completedEvents.isEmpty)
+                                                  const SizedBox(
+                                                      height: 500,
+                                                      child: Center(
+                                                          child: Text(
+                                                              'This society has not organised any event.'))),
+                                              ],
+                                            )),
                                       ),
                                     ],
                                   )

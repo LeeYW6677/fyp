@@ -30,18 +30,22 @@ class _RegisterAdvisorState extends State<RegisterAdvisor> {
     final DocumentSnapshot advisorIdSnapshot = await advisorIdRef.get();
 
     if (advisorIdSnapshot.exists) {
-      idErrorText = 'Advisor ID ${id.text} already exits';
+      setState(() {
+        idErrorText = 'Advisor ID ${id.text} already exits';
+      });
     } else {
-      idErrorText = null;
-      emailErrorText = null;
+      setState(() {
+        idErrorText = null;
+        emailErrorText = null;
+      });
       try {
         final newAdvisor =
             FirebaseFirestore.instance.collection('user').doc(id.text);
         FirebaseApp app = await Firebase.initializeApp(
             name: 'Default', options: Firebase.app().options);
-          UserCredential userCredential = await FirebaseAuth.instanceFor(
-                  app: app)
-              .createUserWithEmailAndPassword(email: email.text, password: 'tarumt12345');
+        UserCredential userCredential = await FirebaseAuth.instanceFor(app: app)
+            .createUserWithEmailAndPassword(
+                email: email.text, password: 'tarumt12345');
 
         await app.delete();
         final user = userCredential.user;

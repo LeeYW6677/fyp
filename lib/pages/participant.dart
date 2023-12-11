@@ -8,16 +8,12 @@ class Participant extends StatefulWidget {
   final String status;
   final int progress;
   final String position;
-  final bool rejected;
-  final bool rejected2;
   const Participant(
       {super.key,
       required this.selectedEvent,
       required this.status,
       required this.progress,
-      required this.position,
-      required this.rejected,
-      required this.rejected2});
+      required this.position,});
 
   @override
   State<Participant> createState() => _ParticipantState();
@@ -50,7 +46,7 @@ class _ParticipantState extends State<Participant> {
       if (!widget.position.startsWith('org') ||
           widget.position.contains('Treasurer') ||
           widget.status != 'Closing' ||
-          (widget.progress != 0 && !widget.rejected2)) {
+          (widget.progress != 0)) {
         enabled = false;
       }
 
@@ -185,8 +181,6 @@ class _ParticipantState extends State<Participant> {
                                           status: widget.status,
                                           position: widget.position,
                                           progress: widget.progress,
-                                          rejected2: widget.rejected2,
-                                          rejected: widget.rejected,
                                           children: [
                                             if (enabled)
                                               Column(

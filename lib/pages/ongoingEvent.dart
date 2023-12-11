@@ -274,6 +274,7 @@ class _OngoingEventState extends State<OngoingEvent> {
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.end,
                                               children: [
+                                                if(ongoingEvents.isNotEmpty)
                                                 CustomDataTable(
                                                   columns: const [
                                                     DataColumn(
@@ -306,6 +307,12 @@ class _OngoingEventState extends State<OngoingEvent> {
                                                 const SizedBox(
                                                   height: 15,
                                                 ),
+                                                if(ongoingEvents.isEmpty)
+                                                const SizedBox(
+                                                  height: 500,
+                                                  child: Center(
+                                                      child: Text(
+                                                          'This society has no ongoing event.'))),
                                                 CustomButton(
                                                   onPressed: () {
                                                     Navigator.push(

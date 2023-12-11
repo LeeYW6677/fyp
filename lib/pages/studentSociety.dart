@@ -17,6 +17,7 @@ class StudentSociety extends StatefulWidget {
 }
 
 class _StudentSocietyState extends State<StudentSociety> {
+  bool enabled = true;
   final society = TextEditingController();
   final LocalStorage storage = LocalStorage('user');
   String selectedSociety = '';
@@ -59,6 +60,10 @@ class _StudentSocietyState extends State<StudentSociety> {
               .toSet()
               .toList();
         } else {
+          enabled = false;
+          setState(() {
+            _isLoading = false;
+          });
           return;
         }
       } else {
@@ -71,16 +76,23 @@ class _StudentSocietyState extends State<StudentSociety> {
           societyIDs.add(documentSnapshot.get('societyID'));
         }
       }
+
       selectedSociety = societyIDs[0];
       // Fetch society names
-      final QuerySnapshot societyNamesSnapshot = await firestore
-          .collection('society')
-          .where('societyID', whereIn: societyIDs)
-          .get();
+      for (String societyID in societyIDs) {
+        final QuerySnapshot societySnapshot = await firestore
+            .collection('society')
+            .where('societyID', isEqualTo: societyID)
+            .limit(1)
+            .get();
 
-      societyNames = societyNamesSnapshot.docs
-          .map((doc) => doc['societyName'].toString())
-          .toList();
+        if (societySnapshot.docs.isNotEmpty) {
+          String societyName =
+              societySnapshot.docs[0]['societyName'].toString();
+          societyNames.add(societyName);
+        }
+      }
+
       fetchSocietyDetails();
       setState(() {
         _isLoading = false;
@@ -90,8 +102,8 @@ class _StudentSocietyState extends State<StudentSociety> {
         _isLoading = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to fetch data. Please try again.'),
+        SnackBar(
+          content: Text(error.toString()),
           width: 225.0,
           behavior: SnackBarBehavior.floating,
           duration: Duration(seconds: 3),
@@ -277,30 +289,31 @@ class _StudentSocietyState extends State<StudentSociety> {
                                           ))
                                     ],
                                   ),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    children: [
-                                      CustomButton(
-                                        onPressed: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  OngoingEvent(
-                                                selectedSociety:
-                                                    selectedSociety,
+                                  if (enabled)
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        CustomButton(
+                                          onPressed: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    OngoingEvent(
+                                                  selectedSociety:
+                                                      selectedSociety,
+                                                ),
                                               ),
-                                            ),
-                                          );
-                                        },
-                                        text: 'View Event',
-                                        width: 100,
-                                      ),
-                                      const SizedBox(
-                                        width: 15,
-                                      ),
-                                    ],
-                                  ),
+                                            );
+                                          },
+                                          text: 'View Event',
+                                          width: 100,
+                                        ),
+                                        const SizedBox(
+                                          width: 15,
+                                        ),
+                                      ],
+                                    ),
                                   Padding(
                                     padding: const EdgeInsets.symmetric(
                                         vertical: 20.0),

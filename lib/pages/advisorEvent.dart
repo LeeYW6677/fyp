@@ -38,13 +38,14 @@ class _AdvisorEventState extends State<AdvisorEvent> {
 
       final QuerySnapshot<Map<String, dynamic>> advisorSnapshot =
           await firestore
-              .collection('advisor')
-              .where('advisorID', isEqualTo: storage.getItem('id'))
+              .collection('user')
+              .where('id', isEqualTo: storage.getItem('id'))
               .get();
 
       if (advisorSnapshot.docs.isNotEmpty) {
         Map<String, dynamic> advisorData = advisorSnapshot.docs.first.data();
         societyID = advisorData['societyID'] ?? '';
+        print('hi');
       }
 
       final QuerySnapshot<Map<String, dynamic>> eventSnapshot = await firestore
@@ -64,7 +65,7 @@ class _AdvisorEventState extends State<AdvisorEvent> {
             await firestore
                 .collection('claim')
                 .where('eventID', isEqualTo: eventId)
-                .where('status', isEqualTo: 'Checked')
+                .where('advisorName', isEqualTo: '')
                 .get();
         int claim = claimSnapshot.size;
 
@@ -185,7 +186,7 @@ class _AdvisorEventState extends State<AdvisorEvent> {
       appBar: const Header(),
       drawer: !Responsive.isDesktop(context)
           ? const CustomDrawer(
-              index: 2,
+              index: 3,
               page: 'Society',
             )
           : null,
@@ -200,7 +201,7 @@ class _AdvisorEventState extends State<AdvisorEvent> {
                   if (Responsive.isDesktop(context))
                     const Expanded(
                       child: CustomDrawer(
-                        index: 2,
+                        index: 3,
                         page: 'Society',
                       ),
                     ),
@@ -262,29 +263,7 @@ class _AdvisorEventState extends State<AdvisorEvent> {
                                                 refresh: getData,
                                                 context: context,
                                               ),
-                                              const SizedBox(
-                                                height: 15,
-                                              ),
-                                              CustomButton(
-                                                onPressed: () {
-                                                  Navigator.push(
-                                                    context,
-                                                    MaterialPageRoute(
-                                                      builder: (context) =>
-                                                          AddEvent(
-                                                        selectedSociety:
-                                                            societyID,
-                                                      ),
-                                                    ),
-                                                  );
-                                                },
-                                                buttonColor: Colors.green,
-                                                text: 'Add Event',
-                                                width: 150,
-                                              ),
-                                              const SizedBox(
-                                                height: 15,
-                                              ),
+                                              
                                             ],
                                           ),
                                         ),

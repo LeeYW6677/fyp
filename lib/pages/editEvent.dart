@@ -922,7 +922,7 @@ class _EditEventState extends State<EditEvent> {
                                                   contactNo =
                                                       await getContactNo(
                                                           vtreasurerID.text);
-                                                  updateCommittee(
+                                                  await updateCommittee(
                                                       widget.selectedEvent,
                                                       vtreasurerID.text,
                                                       'Vice Treasurer',

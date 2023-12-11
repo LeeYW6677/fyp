@@ -12,16 +12,13 @@ class Evaluation extends StatefulWidget {
   final String status;
   final int progress;
   final String position;
-  final bool rejected;
-  final bool rejected2;
-  const Evaluation(
-      {super.key,
-      required this.selectedEvent,
-      required this.status,
-      required this.progress,
-      required this.position,
-      required this.rejected,
-      required this.rejected2});
+  const Evaluation({
+    super.key,
+    required this.selectedEvent,
+    required this.status,
+    required this.progress,
+    required this.position,
+  });
 
   @override
   State<Evaluation> createState() => _EvaluationState();
@@ -35,19 +32,20 @@ class _EvaluationState extends State<Evaluation> {
   final improvement = TextEditingController();
   final conclusion = TextEditingController();
   List<XFile?> _imageFiles = List.generate(3, (index) => null);
-  List<String> savedUrl = [];
+  List<String> savedUrl = ['', '', ''];
   List<bool> valid = [false, false, false];
   final double containerSize = 200.0;
   final double imageSize = 200.0;
   bool enabled = true;
 
   Future<void> _pickImage(int index) async {
-    valid[index] = true;
+    valid[index] = false;
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
 
     setState(() {
       if (pickedFile != null) {
+        valid[index] = true;
         _imageFiles[index] = XFile(pickedFile.path);
       }
     });
@@ -62,7 +60,7 @@ class _EvaluationState extends State<Evaluation> {
       if (!widget.position.startsWith('org') ||
           widget.position.contains('Treasurer') ||
           widget.status != 'Closing' ||
-          (widget.progress != 0 && !widget.rejected2)) {
+          (widget.progress != 0)) {
         enabled = false;
       }
 
@@ -81,6 +79,7 @@ class _EvaluationState extends State<Evaluation> {
         improvement.text = evaluationData['improvement'] ?? '';
         conclusion.text = evaluationData['conclusion'] ?? '';
         savedUrl = List.from(evaluationData['imageUrls']);
+        valid.fillRange(0, valid.length, true);
       }
       setState(() {
         savedUrl = savedUrl;
@@ -159,8 +158,6 @@ class _EvaluationState extends State<Evaluation> {
                                           status: widget.status,
                                           position: widget.position,
                                           progress: widget.progress,
-                                          rejected2: widget.rejected2,
-                                          rejected: widget.rejected,
                                           children: [
                                             Row(
                                               children: [
@@ -744,10 +741,13 @@ class _EvaluationState extends State<Evaluation> {
                                                   onPressed: () async {
                                                     if (_formKey.currentState!
                                                         .validate()) {
-                                                      if (_imageFiles.every(
+                                                      if ((_imageFiles.every(
                                                               (image) =>
                                                                   image !=
-                                                                  null) &&
+                                                                  null) || savedUrl.every(
+                                                              (url) =>
+                                                                  url !=
+                                                                  '')) &&
                                                           valid.every(
                                                               (element) =>
                                                                   element ==

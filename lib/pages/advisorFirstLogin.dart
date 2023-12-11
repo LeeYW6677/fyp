@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
-import 'package:fyp/pages/home.dart';
+import 'package:fyp/pages/login.dart';
 import 'package:intl/intl.dart';
 
 class AdvisorFirstLogin extends StatefulWidget {
@@ -30,7 +30,6 @@ class _AdvisorFirstLoginState extends State<AdvisorFirstLogin> {
     'Faculty of Applied Science',
     'Faculty of Accountancy, Finance and Business'
   ];
-  String? idErrorText;
   String? icErrorText;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _isLoading = true;
@@ -53,78 +52,73 @@ class _AdvisorFirstLoginState extends State<AdvisorFirstLogin> {
   }
 
   Future<void> signUp() async {
-    final DocumentReference advisorRef =
-        FirebaseFirestore.instance.collection('user').doc(id.text);
-
-    final DocumentSnapshot advisorSnapshot = await advisorRef.get();
-    idErrorText = null;
     icErrorText = null;
-    if (advisorSnapshot.exists) {
-      idErrorText = 'Advisor ID ${id.text} already exits';
-    } else {
-      final QuerySnapshot icQuery = await FirebaseFirestore.instance
-          .collection('user')
-          .where('ic', isEqualTo: ic.text)
-          .get();
 
-      if (icQuery.docs.isNotEmpty) {
+    final QuerySnapshot icQuery = await FirebaseFirestore.instance
+        .collection('user')
+        .where('ic', isEqualTo: ic.text)
+        .get();
+
+    if (icQuery.docs.isNotEmpty) {
+      setState(() {
         icErrorText = 'IC No. ${ic.text} already exits';
-      } else {
-        try {
-          CollectionReference users =
-              FirebaseFirestore.instance.collection('user');
+      });
+    } else {
+      try {
+        CollectionReference users =
+            FirebaseFirestore.instance.collection('user');
 
-          QuerySnapshot userQuery =
-              await users.where('email', isEqualTo: widget.userEmail).get();
+        QuerySnapshot userQuery =
+            await users.where('email', isEqualTo: widget.userEmail).get();
 
-          if (userQuery.docs.isNotEmpty) {
-            DocumentReference userDocRef = userQuery.docs.first.reference;
-            UserCredential userCredential =
-                await FirebaseAuth.instance.signInWithEmailAndPassword(
-              email: widget.userEmail,
-              password: 'tarumt12345',
-            );
-
-            await userCredential.user!.updatePassword(password.text);
-
-            await userDocRef.set(
-              {
-                'name': name.text,
-                'id': id.text,
-                'gender': selectedGender,
-                'department': selectedDepartment,
-                'dob': Timestamp.fromDate(
-                    DateFormat('dd-MM-yyyy').parse(dob.text)),
-                'ic': ic.text,
-                'contact': contact.text,
-              },
-              SetOptions(merge: true),
-            );
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const Home(),
-              ),
-            ).then((_) => ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Your personal details has been registered.'),
-                    width: 225.0,
-                    behavior: SnackBarBehavior.floating,
-                    duration: Duration(seconds: 3),
-                  ),
-                ));
-          }
-        } catch (error) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                  'Failed to register your personal details. Please try again later'),
-              width: 225.0,
-              behavior: SnackBarBehavior.floating,
-              duration: Duration(seconds: 3),
-            ),
+        if (userQuery.docs.isNotEmpty) {
+          DocumentReference userDocRef = userQuery.docs.first.reference;
+          UserCredential userCredential =
+              await FirebaseAuth.instance.signInWithEmailAndPassword(
+            email: widget.userEmail,
+            password: 'tarumt12345',
           );
+
+          await userCredential.user!.updatePassword(password.text);
+
+          await userDocRef.update(
+            {
+              'name': name.text,
+              'id': id.text,
+              'gender': selectedGender,
+              'department': selectedDepartment,
+              'dob':
+                  Timestamp.fromDate(DateFormat('dd-MM-yyyy').parse(dob.text)),
+              'ic': ic.text,
+              'contact': contact.text,
+              'position': '',
+              'societyID': '',
+            },
+          );
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const Login(),
+            ),
+          ).then((_) => ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Your personal details has been registered.'),
+                  width: 225.0,
+                  behavior: SnackBarBehavior.floating,
+                  duration: Duration(seconds: 3),
+                ),
+              ));
         }
+      } catch (error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+                'Failed to register your personal details. Please try again later'),
+            width: 225.0,
+            behavior: SnackBarBehavior.floating,
+            duration: Duration(seconds: 3),
+          ),
+        );
       }
     }
   }
@@ -236,9 +230,9 @@ class _AdvisorFirstLoginState extends State<AdvisorFirstLogin> {
                                         ),
                                         Expanded(
                                           child: CustomTextField(
+                                            enabled: false,
                                             controller: id,
                                             hintText: 'Enter your advisor ID',
-                                            errorText: idErrorText,
                                             validator: (value) {
                                               if (value!.isEmpty) {
                                                 return 'Please enter your advisor ID';
@@ -269,6 +263,9 @@ class _AdvisorFirstLoginState extends State<AdvisorFirstLogin> {
                                         Expanded(
                                           child: CustomTextField(
                                             controller: password,
+                                            onChanged: (value) {
+                                              setState(() {});
+                                            },
                                             hintText: 'Enter your password',
                                             hiding: true,
                                             validator: (value) {
@@ -286,6 +283,23 @@ class _AdvisorFirstLoginState extends State<AdvisorFirstLogin> {
                                       ],
                                     ),
                                   ),
+                                  Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 12.0, vertical: 8.0),
+                                      child: Container(
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            border: Border.all(
+                                              color: Colors.grey,
+                                              width: 1.0,
+                                            ),
+                                          ),
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: PasswordStrengthIndicator(
+                                              password: password.text,
+                                            ),
+                                          ))),
                                   Padding(
                                     padding: const EdgeInsets.all(12.0),
                                     child: Row(

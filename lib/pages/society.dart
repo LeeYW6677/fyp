@@ -1004,36 +1004,39 @@ class _AddDialogState extends State<AddDialog> {
             setState(() {
               errorMessage = null;
             });
-
-            if (_formKey.currentState!.validate() && found) {
-              QuerySnapshot<Map<String, dynamic>> existingMembers =
+            try {
+              if (_formKey.currentState!.validate() && found) {
+                QuerySnapshot<Map<String, dynamic>> existingMembers =
+                    await FirebaseFirestore.instance
+                        .collection('member')
+                        .where('studentID', isEqualTo: id.text)
+                        .where('societyID', isEqualTo: widget.selectedSociety)
+                        .get();
+                if (existingMembers.docs.isEmpty) {
                   await FirebaseFirestore.instance
                       .collection('member')
-                      .where('studentID', isEqualTo: id.text)
-                      .where('societyID', isEqualTo: widget.selectedSociety)
-                      .get();
-              if (existingMembers.docs.isEmpty) {
-                await FirebaseFirestore.instance
-                    .collection('member')
-                    .doc(widget.selectedSociety + '/' + id.text)
-                    .set({
-                  'studentID': id.text,
-                  'societyID': widget.selectedSociety,
-                  'position': 'Member'
-                });
-                if (widget.function != null) {
-                  widget.function!();
+                      .doc()
+                      .set({
+                    'studentID': id.text,
+                    'societyID': widget.selectedSociety,
+                    'position': 'Member'
+                  });
+                  if (widget.function != null) {
+                    widget.function!();
+                  }
+                  Navigator.of(context).pop();
+                } else {
+                  setState(() {
+                    errorMessage = 'Student already registered';
+                  });
                 }
-                Navigator.of(context).pop();
               } else {
                 setState(() {
-                  errorMessage = 'Student already registered';
+                  errorMessage = 'Student not found';
                 });
               }
-            } else {
-              setState(() {
-                errorMessage = 'Student not found';
-              });
+            } catch (error) {
+              print("Error fetching student data: $error");
             }
           },
           child: const Text('OK'),
@@ -1261,6 +1264,9 @@ class _DeleteDialogState extends State<DeleteDialog> {
                 }
               });
             }
+            if (widget.function != null) {
+              widget.function!();
+            }
             Navigator.pop(context);
           },
           child: const Text('OK'),
@@ -1365,6 +1371,7 @@ class _ChangeDialogState extends State<ChangeDialog> {
                   );
                 }).toList(),
                 onChanged: (value) {
+                  selectedID = value;
                   int index = widget.original
                       .indexWhere((advisor) => advisor['id'] == id2.text);
                   name2.text = widget.original[index]['name'].toString();
@@ -1401,36 +1408,45 @@ class _ChangeDialogState extends State<ChangeDialog> {
             });
 
             if (_formKey.currentState!.validate() && found) {
-              DocumentReference<Map<String, dynamic>> newAdvisorRef =
-                  FirebaseFirestore.instance.collection('user').doc(id1.text);
+              try {
+                DocumentReference<Map<String, dynamic>> newAdvisorRef =
+                    FirebaseFirestore.instance.collection('user').doc(id1.text);
 
-              DocumentReference<Map<String, dynamic>> currentAdvisorRef =
-                  FirebaseFirestore.instance.collection('user').doc(selectedID);
+                DocumentReference<Map<String, dynamic>> currentAdvisorRef =
+                    FirebaseFirestore.instance
+                        .collection('user')
+                        .doc(selectedID);
 
-              DocumentSnapshot<Map<String, dynamic>> newAdvisorSnapshot =
-                  await newAdvisorRef.get();
+                DocumentSnapshot<Map<String, dynamic>> newAdvisorSnapshot =
+                    await newAdvisorRef.get();
 
-              Map<String, dynamic> newAdvisorData = newAdvisorSnapshot.data()!;
+                DocumentSnapshot<Map<String, dynamic>> currentAdvisorSnapshot =
+                    await currentAdvisorRef.get();
 
-              if (newAdvisorData['societyID'] == '' &&
-                  newAdvisorData['position'] == '') {
-                await newAdvisorRef.update({
-                  'societyID': widget.selectedSociety,
-                  'position': position.text,
-                });
+                Map<String, dynamic> newAdvisorData =
+                    newAdvisorSnapshot.data()!;
+                if (newAdvisorData['societyID'] == '' &&
+                    newAdvisorData['position'] == '') {
+                  await newAdvisorRef.update({
+                    'societyID': widget.selectedSociety,
+                    'position': currentAdvisorSnapshot['position'],
+                  });
 
-                await currentAdvisorRef.update({
-                  'societyID': '',
-                  'position': '',
-                });
-                if (widget.function != null) {
-                  widget.function!();
+                  await currentAdvisorRef.update({
+                    'societyID': '',
+                    'position': '',
+                  });
+                  if (widget.function != null) {
+                    widget.function!();
+                  }
+                  Navigator.pop(context);
+                } else {
+                  setState(() {
+                    errorMessage = 'This advisor is unavailable';
+                  });
                 }
-                Navigator.pop(context);
-              } else {
-                setState(() {
-                  errorMessage = 'This advisor is unavailable';
-                });
+              } catch (e) {
+                print(e.toString());
               }
             } else {
               setState(() {

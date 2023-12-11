@@ -16,53 +16,105 @@ class AllOrganisedEvent extends StatefulWidget {
 
 class _AllOrganisedEventState extends State<AllOrganisedEvent> {
   final LocalStorage storage = LocalStorage('user');
+  DateTime? startDate;
+  DateTime? endDate;
   bool _isLoading = true;
   List<Map<String, dynamic>> completedEvents = [];
-  
+
   Future<void> getData() async {
     try {
       setState(() {
         _isLoading = true;
       });
       final FirebaseFirestore firestore = FirebaseFirestore.instance;
-        final QuerySnapshot<Map<String, dynamic>> eventSnapshot =
+      final QuerySnapshot<Map<String, dynamic>> eventSnapshot = await firestore
+          .collection('event')
+          .where('status', isEqualTo: 'Completed')
+          .get();
+
+      for (var docSnapshot in eventSnapshot.docs) {
+        Map<String, dynamic> eventData = docSnapshot.data();
+        String societyID = eventData['societyID'];
+        final DocumentSnapshot<Map<String, dynamic>> societySnapshot =
+            await firestore.collection('society').doc(societyID).get();
+
+        Map<String, dynamic>? societyData = societySnapshot.data();
+        eventData['society'] = societyData!['societyName'];
+        completedEvents.add(eventData);
+      }
+
+      for (var eventData in completedEvents) {
+        String eventId = eventData['eventID'];
+        final QuerySnapshot<Map<String, dynamic>> committeeSnapshot =
             await firestore
-                .collection('event')
-                .where('status', isEqualTo: 'Closing')
-                .where('progress', isEqualTo: 3)
+                .collection('committee')
+                .where('eventID', isEqualTo: eventId)
+                .where('position', isEqualTo: 'President')
                 .get();
+        int eventIndex =
+            completedEvents.indexWhere((event) => event['eventID'] == eventId);
+        for (var committeeDocSnapshot in committeeSnapshot.docs) {
+          Map<String, dynamic> committeeData = committeeDocSnapshot.data();
 
-        for (var docSnapshot in eventSnapshot.docs) {
-          Map<String, dynamic> eventData = docSnapshot.data();
-
-          completedEvents.add(eventData);
+          if (eventIndex != -1) {
+            completedEvents[eventIndex]['president'] =
+                committeeData['name'] ?? 'Unassigned';
+          }
         }
 
-        for (var eventData in completedEvents) {
-          String eventId = eventData['eventID'];
-          final QuerySnapshot<Map<String, dynamic>> committeeSnapshot =
-              await firestore
-                  .collection('committee')
-                  .where('eventID', isEqualTo: eventId)
-                  .where('position', isEqualTo: 'President')
-                  .get();
+        final QuerySnapshot<Map<String, dynamic>> participantSnapshot =
+            await firestore
+                .collection('participant')
+                .where('eventID', isEqualTo: eventId)
+                .get();
 
-          for (var committeeDocSnapshot in committeeSnapshot.docs) {
-            Map<String, dynamic> committeeData = committeeDocSnapshot.data();
-            int eventIndex = completedEvents
-                .indexWhere((event) => event['eventID'] == eventId);
+        int participantCount = participantSnapshot.size;
+        completedEvents[eventIndex]['participant'] = participantCount;
 
-            if (eventIndex != -1) {
-              completedEvents[eventIndex]['president'] =
-                  committeeData['name'] ?? 'Unassigned';
-            }
-          }
-        
-        setState(() {
-          completedEvents = completedEvents;
-        });
+        Query<Map<String, dynamic>> query = firestore
+            .collection('schedule')
+            .where('eventID', isEqualTo: eventId)
+            .orderBy('date');
+
+        QuerySnapshot<Map<String, dynamic>> snapshot =
+            await query.limit(1).get();
+
+        Query<Map<String, dynamic>> query2 = firestore
+            .collection('schedule')
+            .where('eventID', isEqualTo: eventId)
+            .orderBy('date', descending: true);
+
+        QuerySnapshot<Map<String, dynamic>> snapshot2 =
+            await query2.limit(1).get();
+        startDate = null;
+        endDate = null;
+        if (snapshot.docs.isNotEmpty) {
+          DocumentSnapshot<Map<String, dynamic>> earliestDoc =
+              snapshot.docs.first;
+
+          Timestamp date = earliestDoc['date'];
+          startDate = date.toDate();
+        }
+
+        if (snapshot2.docs.isNotEmpty) {
+          DocumentSnapshot<Map<String, dynamic>> latestDoc =
+              snapshot2.docs.first;
+
+          Timestamp date = latestDoc['date'];
+          endDate = date.toDate();
+        }
+        if (startDate != null && endDate != null) {
+          completedEvents[eventIndex]['startDate'] =
+              DateFormat('dd/MM/yyyy').format(startDate!);
+          completedEvents[eventIndex]['endDate'] =
+              DateFormat('dd/MM/yyyy').format(endDate!);
+        } else {
+          completedEvents[eventIndex]['startDate'] = 'Undecided';
+          completedEvents[eventIndex]['endDate'] = 'Undecided';
+        }
       }
       setState(() {
+        completedEvents = completedEvents;
         _isLoading = false;
       });
     } catch (error) {
@@ -204,6 +256,9 @@ class _AllOrganisedEventState extends State<AllOrganisedEvent> {
                                                             ),
                                                             DataColumn(
                                                                 label: Text(
+                                                                    'Society')),
+                                                            DataColumn(
+                                                                label: Text(
                                                                     'President')),
                                                             DataColumn(
                                                                 label: Text(
@@ -234,7 +289,7 @@ class _AllOrganisedEventState extends State<AllOrganisedEvent> {
                                                   height: 500,
                                                   child: Center(
                                                       child: Text(
-                                                          'You have not organised any event.'))),
+                                                          'There is no event organised.'))),
                                         ),
                                       ),
                                     ],
@@ -337,12 +392,14 @@ class _CustomDataTable2State extends State<CustomDataTable2> {
                         case 0:
                           return member['name'];
                         case 1:
-                          return member['president'];
+                          return member['society'];
                         case 2:
-                          return member['startDate'];
+                          return member['president'];
                         case 3:
-                          return member['endDate'];
+                          return member['startDate'];
                         case 4:
+                          return member['endDate'];
+                        case 5:
                           return member['participant'];
                         default:
                           return '';
@@ -391,6 +448,7 @@ class _EventDataSource2 extends DataTableSource {
     return DataRow(
       cells: [
         DataCell(Text(event['eventName'].toString())),
+        DataCell(Text(event['society'].toString())),
         DataCell(Text(event['president'].toString())),
         DataCell(Text(event['startDate'].toString())),
         DataCell(Text(event['endDate'].toString())),

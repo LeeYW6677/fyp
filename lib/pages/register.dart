@@ -45,10 +45,14 @@ class _RegisterState extends State<Register> {
         FirebaseFirestore.instance.collection('user').doc(id.text);
 
     final DocumentSnapshot studentSnapshot = await studentRef.get();
-    idErrorText = null;
-    icErrorText = null;
+    setState(() {
+      idErrorText = null;
+      icErrorText = null;
+    });
     if (studentSnapshot.exists) {
-      idErrorText = 'Student ID ${id.text} already exits';
+      setState(() {
+        idErrorText = 'Student ID ${id.text} already exits';
+      });
     } else {
       final QuerySnapshot icQuery = await FirebaseFirestore.instance
           .collection('user')
@@ -56,7 +60,9 @@ class _RegisterState extends State<Register> {
           .get();
 
       if (icQuery.docs.isNotEmpty) {
-        icErrorText = 'IC No. ${ic.text} already exits';
+        setState(() {
+          icErrorText = 'IC No. ${ic.text} already exits';
+        });
       } else {
         try {
           final newStudent =
@@ -75,7 +81,6 @@ class _RegisterState extends State<Register> {
             newStudent.set({
               'name': name.text,
               'email': email.text,
-              'password': password.text,
               'id': id.text,
               'gender': selectedGender,
               'programme': selectedProgramme,
@@ -84,6 +89,7 @@ class _RegisterState extends State<Register> {
                   Timestamp.fromDate(DateFormat('dd-MM-yyyy').parse(dob.text)),
               'ic': ic.text,
               'contact': contact.text,
+              'status': true,
             });
           }
           Navigator.push(
@@ -102,7 +108,7 @@ class _RegisterState extends State<Register> {
           );
         } catch (error) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            SnackBar(
               content: Text(
                   'Failed to register your account. Please try again later'),
               width: 225.0,
@@ -211,6 +217,7 @@ class _RegisterState extends State<Register> {
                                     child: CustomTextField(
                                       controller: id,
                                       hintText: 'Enter your student ID',
+                                      errorText: idErrorText,
                                       validator: (value) {
                                         if (value!.isEmpty) {
                                           return 'Please enter your student ID';
@@ -244,7 +251,6 @@ class _RegisterState extends State<Register> {
                                     child: CustomTextField(
                                       controller: email,
                                       hintText: 'Enter your email',
-                                      errorText: idErrorText,
                                       validator: (value) {
                                         if (value!.isEmpty) {
                                           return 'Please enter your email';
@@ -468,6 +474,7 @@ class _RegisterState extends State<Register> {
                                   Expanded(
                                     child: CustomTextField(
                                       controller: ic,
+                                      errorText: icErrorText,
                                       hintText:
                                           'Enter your IC No. (Format: 123456-12-1234)',
                                       validator: (value) {

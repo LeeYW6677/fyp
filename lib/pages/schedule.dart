@@ -9,16 +9,13 @@ class Schedule extends StatefulWidget {
   final String status;
   final int progress;
   final String position;
-  final bool rejected;
-  final bool rejected2;
-  const Schedule(
-      {super.key,
-      required this.selectedEvent,
-      required this.status,
-      required this.progress,
-      required this.position,
-      required this.rejected,
-      required this.rejected2});
+  const Schedule({
+    super.key,
+    required this.selectedEvent,
+    required this.status,
+    required this.progress,
+    required this.position,
+  });
 
   @override
   State<Schedule> createState() => _ScheduleState();
@@ -39,7 +36,7 @@ class _ScheduleState extends State<Schedule> {
       if (!widget.position.startsWith('org') ||
           widget.position.contains('Treasurer') ||
           widget.status != 'Planning' ||
-          (widget.progress != 0 && !widget.rejected)) {
+          (widget.progress != 0)) {
         enabled = false;
       }
 
@@ -288,15 +285,18 @@ class _ScheduleState extends State<Schedule> {
                                                                 MainAxisAlignment
                                                                     .start,
                                                             children: [
-                                                              const Expanded(
-                                                                flex: 1,
-                                                                child: Text(
-                                                                  'Venue',
-                                                                  style: TextStyle(
-                                                                      fontSize:
-                                                                          16),
+                                                              if (Responsive
+                                                                  .isDesktop(
+                                                                      context))
+                                                                const Expanded(
+                                                                  flex: 1,
+                                                                  child: Text(
+                                                                    'Venue',
+                                                                    style: TextStyle(
+                                                                        fontSize:
+                                                                            16),
+                                                                  ),
                                                                 ),
-                                                              ),
                                                               Expanded(
                                                                 flex: 4,
                                                                 child:
@@ -305,7 +305,7 @@ class _ScheduleState extends State<Schedule> {
                                                                       (value) {
                                                                     if (value!
                                                                         .isEmpty) {
-                                                                      return 'Please enter programme venue';
+                                                                      return 'Please enter venue';
                                                                     }
                                                                     return null;
                                                                   },
@@ -317,7 +317,7 @@ class _ScheduleState extends State<Schedule> {
                                                                   controller:
                                                                       venue,
                                                                   hintText:
-                                                                      'Enter programme venue',
+                                                                      'Enter venue',
                                                                 ),
                                                               ),
                                                             ],
@@ -378,7 +378,7 @@ class _ScheduleState extends State<Schedule> {
                                                                               (value) {
                                                                             final DateFormat
                                                                                 timeFormat =
-                                                                                DateFormat('HH:mm a');
+                                                                                DateFormat('hh:mm a'); // Use 'hh' for 12-hour format
 
                                                                             if (value!.isEmpty) {
                                                                               return 'Enter start time';
@@ -391,12 +391,14 @@ class _ScheduleState extends State<Schedule> {
                                                                                   return 'Must be before End time';
                                                                                 }
                                                                               } catch (e) {
-                                                                                return 'Format: HH:mm AM/PM';
+                                                                                return 'Invalid time format. Use HH:mm AM/PM';
                                                                               }
+
                                                                               final RegExp timeRegex = RegExp(r'^([01]?[0-9]|2[0-3]):[0-5][0-9] (AM|PM)$');
                                                                               if (!timeRegex.hasMatch(value)) {
-                                                                                return 'Format: HH:mm AM/PM';
+                                                                                return 'Invalid time format. Use HH:mm AM/PM';
                                                                               }
+
                                                                               return null;
                                                                             }
                                                                           },
@@ -481,25 +483,27 @@ class _ScheduleState extends State<Schedule> {
                                                                               (value) {
                                                                             final DateFormat
                                                                                 timeFormat =
-                                                                                DateFormat('HH:mm a');
+                                                                                DateFormat('hh:mm a');
 
                                                                             if (value!.isEmpty) {
                                                                               return 'Enter end time';
                                                                             } else {
                                                                               try {
-                                                                                DateTime parsedStartTime = timeFormat.parse(start.text);
+                                                                                final DateTime parsedStartTime = timeFormat.parse(start.text);
                                                                                 final DateTime parsedEndTime = timeFormat.parse(value);
 
-                                                                                if (parsedStartTime.isAfter(parsedEndTime)) {
+                                                                                if (parsedStartTime.isAfter(parsedEndTime) || parsedStartTime.isAtSameMomentAs(parsedEndTime)) {
                                                                                   return 'Must be after Start time';
                                                                                 }
                                                                               } catch (e) {
-                                                                                return 'Format: HH:mm AM/PM';
+                                                                                return 'Invalid time format. Use HH:mm AM/PM';
                                                                               }
+
                                                                               final RegExp timeRegex = RegExp(r'^([01]?[0-9]|2[0-3]):[0-5][0-9] (AM|PM)$');
                                                                               if (!timeRegex.hasMatch(value)) {
-                                                                                return 'Format: HH:mm AM/PM';
+                                                                                return 'Invalid time format. Use HH:mm AM/PM';
                                                                               }
+
                                                                               return null;
                                                                             }
                                                                           },
@@ -697,105 +701,102 @@ class _ScheduleState extends State<Schedule> {
                                                   ),
                                                 ],
                                               ),
-                                            if (programList.isNotEmpty)
-                                              Column(
-                                                children: [
-                                                  Center(
-                                                    child: programList
-                                                            .isNotEmpty
-                                                        ? SingleChildScrollView(
-                                                            scrollDirection:
-                                                                Axis.horizontal,
-                                                            child: DataTable(
-                                                              columns: const [
-                                                                DataColumn(
-                                                                    label: Text(
-                                                                        'Date')),
-                                                                DataColumn(
-                                                                    label: Text(
-                                                                        'Time')),
-                                                                DataColumn(
-                                                                    label: Text(
-                                                                        'Venue')),
-                                                                DataColumn(
-                                                                    label: Text(
-                                                                        'Details')),
-                                                                DataColumn(
-                                                                    label: Text(
-                                                                        '')),
-                                                              ],
-                                                              rows: programList
-                                                                  .asMap()
-                                                                  .entries
-                                                                  .map((entry) {
-                                                                final int
-                                                                    index =
-                                                                    entry.key;
-                                                                final Programme
-                                                                    program =
-                                                                    entry.value;
+                                            Column(
+                                              children: [
+                                                Center(
+                                                    child:
+                                                        SingleChildScrollView(
+                                                  scrollDirection:
+                                                      Axis.horizontal,
+                                                  child: programList.isNotEmpty
+                                                      ? DataTable(
+                                                          columns: const [
+                                                            DataColumn(
+                                                                label: Text(
+                                                                    'Date')),
+                                                            DataColumn(
+                                                                label: Text(
+                                                                    'Time')),
+                                                            DataColumn(
+                                                                label: Text(
+                                                                    'Venue')),
+                                                            DataColumn(
+                                                                label: Text(
+                                                                    'Details')),
+                                                            DataColumn(
+                                                                label:
+                                                                    Text('')),
+                                                          ],
+                                                          rows: programList
+                                                              .asMap()
+                                                              .entries
+                                                              .map((entry) {
+                                                            final int index =
+                                                                entry.key;
+                                                            final Programme
+                                                                program =
+                                                                entry.value;
 
-                                                                return DataRow(
-                                                                  cells: [
-                                                                    DataCell(Text(DateFormat(
-                                                                            'dd-MM-yyyy')
-                                                                        .format(
-                                                                            program.date))),
-                                                                    DataCell(Text(
-                                                                        '${DateFormat('hh:mm a').format(program.startTime)} - ${DateFormat('hh:mm a').format(program.endTime)}')),
-                                                                    DataCell(Text(
-                                                                        program
-                                                                            .venue)),
-                                                                    DataCell(Text(
-                                                                        program
-                                                                            .details)),
-                                                                    DataCell(
-                                                                        Row(
-                                                                      children: [
-                                                                        if (enabled)
-                                                                          IconButton(
-                                                                            icon:
-                                                                                const Icon(Icons.edit),
-                                                                            onPressed:
-                                                                                () {
-                                                                              showDialog(
-                                                                                  context: context,
-                                                                                  builder: (_) {
-                                                                                    return EditDialog(
-                                                                                      program: program,
-                                                                                      index: index,
-                                                                                      programList: programList,
-                                                                                      function: resetTable,
-                                                                                    );
-                                                                                  });
-                                                                            },
-                                                                          ),
-                                                                        if (enabled)
-                                                                          IconButton(
-                                                                            icon:
-                                                                                const Icon(Icons.delete),
-                                                                            onPressed:
-                                                                                () {
-                                                                              setState(() {
-                                                                                programList.removeAt(index);
+                                                            return DataRow(
+                                                              cells: [
+                                                                DataCell(Text(DateFormat(
+                                                                        'dd-MM-yyyy')
+                                                                    .format(program
+                                                                        .date))),
+                                                                DataCell(Text(
+                                                                    '${DateFormat('hh:mm a').format(program.startTime)} - ${DateFormat('hh:mm a').format(program.endTime)}')),
+                                                                DataCell(Text(
+                                                                    program
+                                                                        .venue)),
+                                                                DataCell(Text(
+                                                                    program
+                                                                        .details)),
+                                                                DataCell(Row(
+                                                                  children: [
+                                                                    if (enabled)
+                                                                      IconButton(
+                                                                        icon: const Icon(
+                                                                            Icons.edit),
+                                                                        onPressed:
+                                                                            () {
+                                                                          showDialog(
+                                                                              context: context,
+                                                                              builder: (_) {
+                                                                                return EditDialog(
+                                                                                  program: program,
+                                                                                  index: index,
+                                                                                  programList: programList,
+                                                                                  function: resetTable,
+                                                                                );
                                                                               });
-                                                                            },
-                                                                          ),
-                                                                      ],
-                                                                    )),
+                                                                        },
+                                                                      ),
+                                                                    if (enabled)
+                                                                      IconButton(
+                                                                        icon: const Icon(
+                                                                            Icons.delete),
+                                                                        onPressed:
+                                                                            () {
+                                                                          setState(
+                                                                              () {
+                                                                            programList.removeAt(index);
+                                                                          });
+                                                                        },
+                                                                      ),
                                                                   ],
-                                                                );
-                                                              }).toList(),
-                                                            ),
-                                                          )
-                                                        : const SizedBox(
-                                                            height: 500,
-                                                            child: Center(
-                                                                child: Text(
-                                                                    'There is no programme registered.'))),
-                                                  ),
-                                                ],
-                                              ),
+                                                                )),
+                                                              ],
+                                                            );
+                                                          }).toList(),
+                                                        )
+                                                      : const SizedBox(
+                                                          height: 500,
+                                                          child: Center(
+                                                              child: Text(
+                                                                  'There is no programme registered.'))),
+                                                )),
+                                              ],
+                                            ),
                                             if (enabled)
                                               CustomButton(
                                                   width: 150,
@@ -853,21 +854,21 @@ class _ScheduleState extends State<Schedule> {
                                                           'details':
                                                               program.details,
                                                         });
-                                                        ScaffoldMessenger.of(
-                                                                context)
-                                                            .showSnackBar(
-                                                          const SnackBar(
-                                                            content: Text(
-                                                                'Schedule saved.'),
-                                                            width: 150.0,
-                                                            behavior:
-                                                                SnackBarBehavior
-                                                                    .floating,
-                                                            duration: Duration(
-                                                                seconds: 3),
-                                                          ),
-                                                        );
                                                       }
+                                                      ScaffoldMessenger.of(
+                                                              context)
+                                                          .showSnackBar(
+                                                        const SnackBar(
+                                                          content: Text(
+                                                              'Schedule saved.'),
+                                                          width: 150.0,
+                                                          behavior:
+                                                              SnackBarBehavior
+                                                                  .floating,
+                                                          duration: Duration(
+                                                              seconds: 3),
+                                                        ),
+                                                      );
                                                     } else {
                                                       ScaffoldMessenger.of(
                                                               context)
@@ -948,8 +949,8 @@ class _EditDialogState extends State<EditDialog> {
   void initState() {
     super.initState();
     date.text = DateFormat('dd-MM-yyyy').format(widget.program.date);
-    start.text = DateFormat('HH:mm a').format(widget.program.startTime);
-    end.text = DateFormat('HH:mm a').format(widget.program.endTime);
+    start.text = DateFormat('hh:mm a').format(widget.program.startTime);
+    end.text = DateFormat('hh:mm a').format(widget.program.endTime);
     venue.text = widget.program.venue;
     detail.text = widget.program.details;
   }
@@ -1041,7 +1042,8 @@ class _EditDialogState extends State<EditDialog> {
                   child: CustomTextField(
                     screen: true,
                     validator: (value) {
-                      final DateFormat timeFormat = DateFormat('HH:mm a');
+                      final DateFormat timeFormat =
+                          DateFormat('hh:mm a'); // Use 'hh' for 12-hour format
 
                       if (value!.isEmpty) {
                         return 'Enter start time';
@@ -1055,13 +1057,15 @@ class _EditDialogState extends State<EditDialog> {
                             return 'Must be before End time';
                           }
                         } catch (e) {
-                          return 'Format: HH:mm AM/PM';
+                          return 'Invalid time format. Use HH:mm AM/PM';
                         }
+
                         final RegExp timeRegex =
                             RegExp(r'^([01]?[0-9]|2[0-3]):[0-5][0-9] (AM|PM)$');
                         if (!timeRegex.hasMatch(value)) {
-                          return 'Format: HH:mm AM/PM';
+                          return 'Invalid time format. Use HH:mm AM/PM';
                         }
+
                         return null;
                       }
                     },
@@ -1114,28 +1118,32 @@ class _EditDialogState extends State<EditDialog> {
                     screen: true,
                     labelText: 'End Time',
                     validator: (value) {
-                      final DateFormat timeFormat = DateFormat('HH:mm a');
+                      final DateFormat timeFormat =
+                          DateFormat('hh:mm a'); // Use 'hh' for 12-hour format
 
                       if (value!.isEmpty) {
                         return 'Enter end time';
                       } else {
                         try {
-                          DateTime parsedStartTime =
+                          final DateTime parsedStartTime =
                               timeFormat.parse(start.text);
                           final DateTime parsedEndTime =
                               timeFormat.parse(value);
 
-                          if (parsedStartTime.isAfter(parsedEndTime)) {
+                          if (parsedStartTime.isAfter(parsedEndTime) ||
+                              parsedStartTime.isAtSameMomentAs(parsedEndTime)) {
                             return 'Must be after Start time';
                           }
                         } catch (e) {
-                          return 'Format: HH:mm AM/PM';
+                          return 'Invalid time format. Use HH:mm AM/PM';
                         }
+
                         final RegExp timeRegex =
                             RegExp(r'^([01]?[0-9]|2[0-3]):[0-5][0-9] (AM|PM)$');
                         if (!timeRegex.hasMatch(value)) {
-                          return 'Format: HH:mm AM/PM';
+                          return 'Invalid time format. Use HH:mm AM/PM';
                         }
+
                         return null;
                       }
                     },

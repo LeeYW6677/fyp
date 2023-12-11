@@ -8,13 +8,13 @@ import 'package:fyp/pages/allOngoingEvent.dart';
 import 'package:fyp/pages/budget.dart';
 import 'package:fyp/pages/committee.dart';
 import 'package:fyp/pages/evaluation.dart';
-import 'package:fyp/pages/home.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:fyp/pages/participant.dart';
 import 'package:fyp/pages/proposal.dart';
 import 'package:fyp/pages/schedule.dart';
 import 'package:fyp/pages/society.dart';
 import 'package:fyp/pages/student.dart';
+import 'package:fyp/pages/studentClaim.dart';
 import 'package:fyp/pages/studentOngoingEvent.dart';
 import 'package:fyp/pages/studentSociety.dart';
 import 'package:localstorage/localstorage.dart';
@@ -125,7 +125,7 @@ class _CustomDDLState<T> extends State<CustomDDL<T>> {
   }
 }
 
-class CustomDrawer extends StatelessWidget {
+class CustomDrawer extends StatefulWidget {
   final int index;
   final String page;
 
@@ -135,252 +135,196 @@ class CustomDrawer extends StatelessWidget {
     this.page = '',
   }) : super(key: key);
 
-  Future<String> getData() async {
-    User? user = FirebaseAuth.instance.currentUser;
-    String? userEmail = user?.email;
+  @override
+  _CustomDrawerState createState() => _CustomDrawerState();
+}
 
-    FirebaseFirestore firestore = FirebaseFirestore.instance;
-    QuerySnapshot data = await firestore
-        .collection('user')
-        .where('email', isEqualTo: userEmail)
-        .limit(1)
-        .get();
-    if (data.docs.isNotEmpty) {
-      QueryDocumentSnapshot documentSnapshot = data.docs.first;
-
-      String docId = documentSnapshot.id;
-      if (docId.startsWith('B')) {
-        return 'branch head';
-      }
-    }
-    return '';
-  }
+class _CustomDrawerState<T> extends State<CustomDrawer> {
+  final LocalStorage storage = LocalStorage('user');
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<String>(
-        future: getData(),
-        builder: (context, snapshot) {
-          String role = snapshot.data ?? '';
-          return Drawer(
-            child: Column(
-              children: [
-                ListTile(
-                    leading: Icon(
-                      Icons.dashboard,
-                      color: index == 1 ? Colors.white : Colors.black,
+    return Drawer(
+      child: Column(
+        children: [
+          if (storage.getItem('role') != 'branch head')
+            ListTile(
+                leading: Icon(
+                  Icons.people,
+                  color: widget.index == 2 ? Colors.white : Colors.black,
+                ),
+                title: Text(
+                  'Society',
+                  style: TextStyle(
+                    color: widget.index == 2 ? Colors.white : Colors.black,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const StudentSociety(),
                     ),
+                  );
+                },
+                tileColor: widget.index == 2 ? Colors.blue : Colors.white,
+                shape: const Border(
+                  bottom: BorderSide(
+                    color: Color.fromARGB(255, 219, 219, 219),
+                  ),
+                )),
+          if (storage.getItem('role') == 'branch head')
+            ExpansionTile(
+              collapsedBackgroundColor: widget.index == 2 ? Colors.blue : null,
+              backgroundColor: widget.index == 2 ? Colors.blue : null,
+              iconColor: widget.index == 2 ? Colors.white : Colors.black,
+              collapsedIconColor:
+                  widget.index == 2 ? Colors.white : Colors.black,
+              leading: Icon(
+                Icons.people,
+                color: widget.index == 2 ? Colors.white : Colors.black,
+              ),
+              title: Text(
+                'Users',
+                style: TextStyle(
+                  color: widget.index == 2 ? Colors.white : Colors.black,
+                ),
+              ),
+              shape: const Border(
+                bottom: BorderSide(
+                  color: Color.fromARGB(255, 219, 219, 219),
+                ),
+              ),
+              children: <Widget>[
+                Container(
+                  color: Colors.grey[300],
+                  child: ListTile(
+                    tileColor: Colors.white,
                     title: Text(
-                      'Dashboard',
+                      'Student',
                       style: TextStyle(
-                        color: index == 1 ? Colors.white : Colors.black,
-                      ),
+                          color: widget.page == 'Student' ? Colors.blue : null),
                     ),
                     onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const Home(),
+                          builder: (context) => const Student(),
                         ),
                       );
                     },
-                    tileColor: index == 1 ? Colors.blue : null,
-                    shape: const Border(
-                      bottom: BorderSide(
-                        color: Color.fromARGB(255, 219, 219, 219),
-                      ),
-                    )),
-                if (role != 'branch head')
-                  ListTile(
-                      leading: Icon(
-                        Icons.people,
-                        color: index == 2 ? Colors.white : Colors.black,
-                      ),
-                      title: Text(
-                        'Society',
-                        style: TextStyle(
-                          color: index == 2 ? Colors.white : Colors.black,
-                        ),
-                      ),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const StudentSociety(),
-                          ),
-                        );
-                      },
-                      tileColor: index == 2 ? Colors.blue : Colors.white,
-                      shape: const Border(
-                        bottom: BorderSide(
-                          color: Color.fromARGB(255, 219, 219, 219),
-                        ),
-                      )),
-                if (role == 'branch head')
-                  ExpansionTile(
-                    collapsedBackgroundColor: index == 2 ? Colors.blue : null,
-                    backgroundColor: index == 2 ? Colors.blue : null,
-                    iconColor: index == 2 ? Colors.white : Colors.black,
-                    collapsedIconColor:
-                        index == 2 ? Colors.white : Colors.black,
-                    leading: Icon(
-                      Icons.people,
-                      color: index == 2 ? Colors.white : Colors.black,
-                    ),
-                    title: Text(
-                      'Users',
-                      style: TextStyle(
-                        color: index == 2 ? Colors.white : Colors.black,
-                      ),
-                    ),
-                    shape: const Border(
-                      bottom: BorderSide(
-                        color: Color.fromARGB(255, 219, 219, 219),
-                      ),
-                    ),
-                    children: <Widget>[
-                      Container(
-                        color: Colors.grey[300],
-                        child: ListTile(
-                          tileColor: Colors.white,
-                          title: Text(
-                            'Student',
-                            style: TextStyle(
-                                color: page == 'Student' ? Colors.blue : null),
-                          ),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const Student(),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      Container(
-                        color: Colors.grey[300],
-                        child: ListTile(
-                          tileColor: Colors.white,
-                          title: Text(
-                            'Advisor',
-                            style: TextStyle(
-                                color: page == 'Advisor' ? Colors.blue : null),
-                          ),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const Advisor(),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      Container(
-                        color: Colors.grey[300],
-                        child: ListTile(
-                          tileColor: Colors.white,
-                          title: Text(
-                            'Society',
-                            style: TextStyle(
-                                color: page == 'Society' ? Colors.blue : null),
-                          ),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const Society(),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
                   ),
-                ListTile(
-                    leading: Icon(
-                      Icons.event,
-                      color: index == 3 ? Colors.white : Colors.black,
-                    ),
+                ),
+                Container(
+                  color: Colors.grey[300],
+                  child: ListTile(
+                    tileColor: Colors.white,
                     title: Text(
-                      'Event',
+                      'Advisor',
                       style: TextStyle(
-                        color: index == 3 ? Colors.white : Colors.black,
-                      ),
+                          color: widget.page == 'Advisor' ? Colors.blue : null),
                     ),
                     onTap: () {
-                      if (role == 'student') {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const StudentOngoingEvent(),
-                          ),
-                        );
-                      } else if (role == 'advisor') {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const AdvisorEvent(),
-                          ),
-                        );
-                      }else if (role =='branch head'){
-                         Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const AllOngoingEvent(),
-                          ),
-                        );
-                      }
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const Advisor(),
+                        ),
+                      );
                     },
-                    tileColor: index == 3 ? Colors.blue : null,
-                    shape: const Border(
-                      bottom: BorderSide(
-                        color: Color.fromARGB(255, 219, 219, 219),
-                      ),
-                    )),
-                if (role == 'student')
-                  ListTile(
-                      leading: Icon(
-                        Icons.money,
-                        color: index == 4 ? Colors.white : Colors.black,
-                      ),
-                      title: Text(
-                        'Approval',
-                        style: TextStyle(
-                          color: index == 4 ? Colors.white : Colors.black,
+                  ),
+                ),
+                Container(
+                  color: Colors.grey[300],
+                  child: ListTile(
+                    tileColor: Colors.white,
+                    title: Text(
+                      'Society',
+                      style: TextStyle(
+                          color: widget.page == 'Society' ? Colors.blue : null),
+                    ),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const Society(),
                         ),
-                      ),
-                      onTap: () {},
-                      tileColor: index == 4 ? Colors.blue : null,
-                      shape: const Border(
-                        bottom: BorderSide(
-                          color: Color.fromARGB(255, 219, 219, 219),
-                        ),
-                      )),    
-                if (role == 'student')
-                  ListTile(
-                      leading: Icon(
-                        Icons.money,
-                        color: index == 5 ? Colors.white : Colors.black,
-                      ),
-                      title: Text(
-                        'Claim',
-                        style: TextStyle(
-                          color: index == 5 ? Colors.white : Colors.black,
-                        ),
-                      ),
-                      onTap: () {},
-                      tileColor: index == 5 ? Colors.blue : null,
-                      shape: const Border(
-                        bottom: BorderSide(
-                          color: Color.fromARGB(255, 219, 219, 219),
-                        ),
-                      )),
+                      );
+                    },
+                  ),
+                ),
               ],
             ),
-          );
-        });
+          ListTile(
+              leading: Icon(
+                Icons.event,
+                color: widget.index == 3 ? Colors.white : Colors.black,
+              ),
+              title: Text(
+                'Event',
+                style: TextStyle(
+                  color: widget.index == 3 ? Colors.white : Colors.black,
+                ),
+              ),
+              onTap: () {
+                if (storage.getItem('role') == 'student') {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const StudentOngoingEvent(),
+                    ),
+                  );
+                } else if (storage.getItem('role') == 'advisor') {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const AdvisorEvent(),
+                    ),
+                  );
+                } else if (storage.getItem('role') == 'branch head') {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const AllOngoingEvent(),
+                    ),
+                  );
+                }
+              },
+              tileColor: widget.index == 3 ? Colors.blue : null,
+              shape: const Border(
+                bottom: BorderSide(
+                  color: Color.fromARGB(255, 219, 219, 219),
+                ),
+              )),
+          if (storage.getItem('role') == 'student')
+            ListTile(
+                leading: Icon(
+                  Icons.money,
+                  color: widget.index == 4 ? Colors.white : Colors.black,
+                ),
+                title: Text(
+                  'Claim',
+                  style: TextStyle(
+                    color: widget.index == 4 ? Colors.white : Colors.black,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const StudentClaim(),
+                    ),
+                  );
+                },
+                tileColor: widget.index == 4 ? Colors.blue : null,
+                shape: const Border(
+                  bottom: BorderSide(
+                    color: Color.fromARGB(255, 219, 219, 219),
+                  ),
+                )),
+        ],
+      ),
+    );
   }
 }
 
@@ -760,9 +704,6 @@ class TabContainer extends StatelessWidget {
   final String status;
   final int progress;
   final String position;
-  final bool rejected;
-  final bool rejected2;
-
   const TabContainer({
     super.key,
     required this.children,
@@ -772,8 +713,6 @@ class TabContainer extends StatelessWidget {
     required this.status,
     required this.progress,
     required this.position,
-    required this.rejected,
-    required this.rejected2,
   });
 
   @override
@@ -793,8 +732,6 @@ class TabContainer extends StatelessWidget {
                       position: position,
                       status: status,
                       progress: progress,
-                      rejected2: rejected2,
-                      rejected: rejected,
                     ),
                   ),
                 );
@@ -810,15 +747,13 @@ class TabContainer extends StatelessWidget {
               ),
               child: const Text('Pre Event'),
             ),
-            if (status == 'Closing')
+            if (status != 'Planning')
               TextButton(
                 onPressed: () {
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
                       builder: (context) => Evaluation(
-                        rejected2: rejected2,
-                        rejected: rejected,
                         selectedEvent: selectedEvent,
                         position: position,
                         status: status,
@@ -868,8 +803,6 @@ class TabContainer extends StatelessWidget {
                                       position: position,
                                       status: status,
                                       progress: progress,
-                                      rejected2: rejected2,
-                                      rejected: rejected,
                                     ),
                                   ),
                                 );
@@ -899,8 +832,6 @@ class TabContainer extends StatelessWidget {
                                       position: position,
                                       status: status,
                                       progress: progress,
-                                      rejected2: rejected2,
-                                      rejected: rejected,
                                     ),
                                   ),
                                 );
@@ -930,8 +861,6 @@ class TabContainer extends StatelessWidget {
                                       position: position,
                                       status: status,
                                       progress: progress,
-                                      rejected2: rejected2,
-                                      rejected: rejected,
                                     ),
                                   ),
                                 );
@@ -957,8 +886,6 @@ class TabContainer extends StatelessWidget {
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => Budget(
-                                      rejected2: rejected2,
-                                      rejected: rejected,
                                       selectedEvent: selectedEvent,
                                       position: position,
                                       status: status,
@@ -988,8 +915,6 @@ class TabContainer extends StatelessWidget {
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => Evaluation(
-                                      rejected2: rejected2,
-                                      rejected: rejected,
                                       selectedEvent: selectedEvent,
                                       position: position,
                                       status: status,
@@ -1019,8 +944,6 @@ class TabContainer extends StatelessWidget {
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => Participant(
-                                      rejected2: rejected2,
-                                      rejected: rejected,
                                       selectedEvent: selectedEvent,
                                       position: position,
                                       status: status,
@@ -1050,8 +973,6 @@ class TabContainer extends StatelessWidget {
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => Account(
-                                      rejected2: rejected2,
-                                      rejected: rejected,
                                       selectedEvent: selectedEvent,
                                       position: position,
                                       status: status,
@@ -1175,15 +1096,110 @@ class _CustomTimelineState extends State<CustomTimeline> {
                 );
               },
               indicatorBuilder: (_, index) {
-                Color color;
-                if (index <= widget.progress) {
-                  color = widget.checkStatus[index] == 'Approved'
+                return widget.checkStatus[index] == 'Approved' ||
+                        widget.checkStatus[index] == 'Rejected'
+                    ? DotIndicator(
+                        size: 20.0,
+                        color: widget.checkStatus[index] == 'Approved'
+                            ? Colors.green
+                            : widget.checkStatus[index] == 'Rejected'
+                                ? Colors.red
+                                : Colors.grey,
+                      )
+                    : OutlinedDotIndicator(
+                        borderWidth: 4.0,
+                        color: widget.checkStatus[index] == 'Approved'
+                            ? Colors.green
+                            : widget.checkStatus[index] == 'Rejected'
+                                ? Colors.red
+                                : Colors.grey,
+                      );
+              },
+              connectorBuilder: (_, index, type) {
+                if (index > 0) {
+                  Color color = widget.checkStatus[index] == 'Approved'
                       ? Colors.green
                       : widget.checkStatus[index] == 'Rejected'
                           ? Colors.red
                           : Colors.grey;
+                  return SolidLineConnector(
+                    color: color,
+                  );
+                } else {
+                  return null;
                 }
+              },
+            ),
+          ),
+        ),
+        const SizedBox(
+          height: 15,
+        ),
+      ],
+    );
+  }
+}
 
+class CustomTimeline2 extends StatefulWidget {
+  final String status;
+  final List<String> checkName;
+  final List<String> checkStatus;
+
+  CustomTimeline2({
+    super.key,
+    required this.status,
+    required this.checkName,
+    required this.checkStatus,
+  });
+  @override
+  _CustomTimeline2State createState() => _CustomTimeline2State();
+}
+
+class _CustomTimeline2State extends State<CustomTimeline2> {
+  List<String> preProgress = ['Submitted', 'Checked', 'Accepted'];
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        SizedBox(
+          height: 100,
+          child: Timeline.tileBuilder(
+            shrinkWrap: true,
+            padding: EdgeInsets.zero,
+            theme: TimelineThemeData(
+              direction: Axis.horizontal,
+              connectorTheme:
+                  const ConnectorThemeData(space: 8.0, thickness: 2.0),
+            ),
+            builder: TimelineTileBuilder.connected(
+              connectionDirection: ConnectionDirection.before,
+              itemCount: 3,
+              itemExtentBuilder: (_, __) {
+                return (MediaQuery.of(context).size.width) / 5.0;
+              },
+              oppositeContentsBuilder: (context, index) {
+                return Container();
+              },
+              contentsBuilder: (context, index) {
+                return Column(
+                  children: [
+                    Text(preProgress[index]),
+                    const SizedBox(height: 10),
+                    Text(
+                      widget.checkName[index],
+                      style:
+                          const TextStyle(fontSize: 12.0, color: Colors.black),
+                    ),
+                  ],
+                );
+              },
+              indicatorBuilder: (_, index) {
                 return widget.checkStatus[index] == 'Approved' ||
                         widget.checkStatus[index] == 'Rejected'
                     ? DotIndicator(

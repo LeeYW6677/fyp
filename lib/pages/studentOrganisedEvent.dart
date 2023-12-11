@@ -28,6 +28,8 @@ class _StudentOrganisedEventState extends State<StudentOrganisedEvent> {
     'Vice Treasurer',
     'Member',
   ];
+  DateTime? startDate;
+  DateTime? endDate;
 
   Future<void> getData() async {
     try {
@@ -55,6 +57,12 @@ class _StudentOrganisedEventState extends State<StudentOrganisedEvent> {
         for (var docSnapshot in eventSnapshot.docs) {
           Map<String, dynamic> eventData = docSnapshot.data();
 
+          String societyID = eventData['societyID'];
+          final DocumentSnapshot<Map<String, dynamic>> societySnapshot =
+              await firestore.collection('society').doc(societyID).get();
+
+          Map<String, dynamic>? societyData = societySnapshot.data();
+          eventData['society'] = societyData!['societyName'];
           completedEvents.add(eventData);
         }
 
@@ -66,23 +74,70 @@ class _StudentOrganisedEventState extends State<StudentOrganisedEvent> {
                   .where('eventID', isEqualTo: eventId)
                   .where('position', isEqualTo: 'President')
                   .get();
-
+          int eventIndex = completedEvents
+              .indexWhere((event) => event['eventID'] == eventId);
           for (var committeeDocSnapshot in committeeSnapshot.docs) {
             Map<String, dynamic> committeeData = committeeDocSnapshot.data();
-            int eventIndex = completedEvents
-                .indexWhere((event) => event['eventID'] == eventId);
 
             if (eventIndex != -1) {
               completedEvents[eventIndex]['president'] =
                   committeeData['name'] ?? 'Unassigned';
             }
           }
+          final QuerySnapshot<Map<String, dynamic>> participantSnapshot =
+              await firestore
+                  .collection('participant')
+                  .where('eventID', isEqualTo: eventId)
+                  .get();
+
+          int participantCount = participantSnapshot.size;
+          completedEvents[eventIndex]['participant'] = participantCount;
+
+          Query<Map<String, dynamic>> query = firestore
+              .collection('schedule')
+              .where('eventID', isEqualTo: eventId)
+              .orderBy('date');
+
+          QuerySnapshot<Map<String, dynamic>> snapshot =
+              await query.limit(1).get();
+
+          Query<Map<String, dynamic>> query2 = firestore
+              .collection('schedule')
+              .where('eventID', isEqualTo: eventId)
+              .orderBy('date', descending: true);
+
+          QuerySnapshot<Map<String, dynamic>> snapshot2 =
+              await query2.limit(1).get();
+          startDate = null;
+          endDate = null;
+          if (snapshot.docs.isNotEmpty) {
+            DocumentSnapshot<Map<String, dynamic>> earliestDoc =
+                snapshot.docs.first;
+
+            Timestamp date = earliestDoc['date'];
+            startDate = date.toDate();
+          }
+
+          if (snapshot2.docs.isNotEmpty) {
+            DocumentSnapshot<Map<String, dynamic>> latestDoc =
+                snapshot2.docs.first;
+
+            Timestamp date = latestDoc['date'];
+            endDate = date.toDate();
+          }
+          if (startDate != null && endDate != null) {
+            completedEvents[eventIndex]['startDate'] =
+                DateFormat('dd/MM/yyyy').format(startDate!);
+            completedEvents[eventIndex]['endDate'] =
+                DateFormat('dd/MM/yyyy').format(endDate!);
+          } else {
+            completedEvents[eventIndex]['startDate'] = 'Undecided';
+            completedEvents[eventIndex]['endDate'] = 'Undecided';
+          }
         }
-        setState(() {
-          completedEvents = completedEvents;
-        });
       }
       setState(() {
+        completedEvents = completedEvents;
         _isLoading = false;
       });
     } catch (error) {
@@ -224,6 +279,9 @@ class _StudentOrganisedEventState extends State<StudentOrganisedEvent> {
                                                             ),
                                                             DataColumn(
                                                                 label: Text(
+                                                                    'Society')),
+                                                            DataColumn(
+                                                                label: Text(
                                                                     'President')),
                                                             DataColumn(
                                                                 label: Text(
@@ -357,12 +415,14 @@ class _CustomDataTable2State extends State<CustomDataTable2> {
                         case 0:
                           return member['name'];
                         case 1:
-                          return member['president'];
+                          return member['society'];
                         case 2:
-                          return member['startDate'];
+                          return member['president'];
                         case 3:
-                          return member['endDate'];
+                          return member['startDate'];
                         case 4:
+                          return member['endDate'];
+                        case 5:
                           return member['participant'];
                         default:
                           return '';
@@ -411,6 +471,7 @@ class _EventDataSource2 extends DataTableSource {
     return DataRow(
       cells: [
         DataCell(Text(event['eventName'].toString())),
+        DataCell(Text(event['society'].toString())),
         DataCell(Text(event['president'].toString())),
         DataCell(Text(event['startDate'].toString())),
         DataCell(Text(event['endDate'].toString())),
@@ -468,7 +529,7 @@ class _EventDataSource2 extends DataTableSource {
       final aValue = getField(a);
       final bValue = getField(b);
 
-      if (columnIndex == 2 || columnIndex == 3) {
+      if (columnIndex == 3 || columnIndex == 4) {
         if (aValue.toString().toLowerCase() == 'undecided') {
           return bValue.toString().toLowerCase() == 'undecided' ? 0 : 1;
         } else if (bValue.toString().toLowerCase() == 'undecided') {

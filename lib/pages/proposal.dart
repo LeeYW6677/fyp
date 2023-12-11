@@ -9,16 +9,12 @@ class Proposal extends StatefulWidget {
   final String status;
   final int progress;
   final String position;
-  final bool rejected;
-  final bool rejected2;
   const Proposal(
       {super.key,
       required this.selectedEvent,
       required this.status,
       required this.progress,
-      required this.position,
-      required this.rejected,
-      required this.rejected2});
+      required this.position,});
 
   @override
   State<Proposal> createState() => _ProposalState();
@@ -37,7 +33,7 @@ class _ProposalState extends State<Proposal> {
       if (!widget.position.startsWith('org') ||
           widget.position.contains('Treasurer') ||
           widget.status != 'Planning' ||
-          (widget.progress != 0 && !widget.rejected)) {
+          (widget.progress != 0)) {
         enabled = false;
       }
 
@@ -142,8 +138,6 @@ class _ProposalState extends State<Proposal> {
                                           form: 'Proposal',
                                           status: widget.status,
                                           progress: widget.progress,
-                                          rejected2: widget.rejected2,
-                                          rejected: widget.rejected,
                                           position: widget.position,
                                           children: [
                                             Row(
@@ -541,9 +535,9 @@ class _ProposalState extends State<Proposal> {
                                                     widget.progress == 0)
                                                   CustomButton(
                                                     onPressed: () async {
-                                                      if (member.text != '0' &&
+                                                      if (member.text != '0' ||
                                                           nonMember.text !=
-                                                              '0' &&
+                                                              '0' ||
                                                           guest.text != '0') {
                                                         if (_formKey
                                                             .currentState!

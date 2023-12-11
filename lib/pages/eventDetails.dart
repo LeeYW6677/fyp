@@ -3,7 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
 import 'package:fyp/pages/editEvent.dart';
+import 'package:fyp/pages/pendingClaim.dart';
 import 'package:fyp/pages/proposal.dart';
+import 'package:fyp/pages/society.dart';
+import 'package:fyp/pages/studentSociety.dart';
+import 'package:fyp/pages/viewClaim.dart';
 import 'package:intl/intl.dart';
 import 'package:localstorage/localstorage.dart';
 
@@ -47,12 +51,14 @@ class _EventDetailsState extends State<EventDetails> {
   bool rejected = false;
   bool rejected2 = false;
   int progress2 = 0;
+  int access = 0;
 
   Future<void> getData() async {
     try {
       setState(() {
         _isLoading = true;
       });
+      access = 0;
       final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
       // Fetch event and committee data
@@ -180,30 +186,41 @@ class _EventDetailsState extends State<EventDetails> {
           .where('studentID', isEqualTo: storage.getItem('id'))
           .get();
 
+      position = 'member';
+
       if (memberSnapshot.docs.isNotEmpty) {
         Map<String, dynamic> memberData = memberSnapshot.docs.first.data();
         String memberPosition = memberData['position'];
         if (memberPosition.contains('President')) {
           position = 'top';
+          if (progress == 1) {
+            access = 1;
+          }
         } else {
           position = 'viewer';
         }
       }
-      if (storage.getItem('role') == 'advisor' ||
-          storage.getItem('role') == 'branch head') {
-        position = 'top';
-      } else {
-        position = 'member';
-        for (var doc in committeeSnapshot.docs) {
-          String studentIDInCommittee = doc['studentID'];
 
-          if (studentIDInCommittee == storage.getItem('id')) {
-            position = 'org ' + doc['position'];
-            break;
-          }
+      for (var doc in committeeSnapshot.docs) {
+        String studentIDInCommittee = doc['studentID'];
+
+        if (studentIDInCommittee == storage.getItem('id')) {
+          position = 'org ' + doc['position'];
+          break;
         }
       }
 
+      if (storage.getItem('role') == 'advisor') {
+        position = 'top';
+        if (progress == 2) {
+          access = 2;
+        }
+      } else if (storage.getItem('role') == 'branch head') {
+        position = 'top';
+        if (progress == 3 && status != 'Completed') {
+          access = 3;
+        }
+      }
       setState(() {
         checkName = checkName;
         checkStatus = checkStatus;
@@ -299,9 +316,9 @@ class _EventDetailsState extends State<EventDetails> {
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
-                                    if (position == 'top' ||
-                                        position == 'org President' &&
-                                            status != 'Completed')
+                                    if ((position == 'top' ||
+                                            position == 'org President') &&
+                                        status != 'Completed')
                                       CustomButton(
                                           width: 150,
                                           buttonColor: Colors.red,
@@ -499,8 +516,9 @@ class _EventDetailsState extends State<EventDetails> {
                                     ],
                                   ),
                                 ),
-                                if (position == 'top' ||
-                                    position == 'org President')
+                                if ((position == 'top' ||
+                                        position == 'org President') &&
+                                    status == 'Planning')
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.end,
                                     children: [
@@ -570,7 +588,18 @@ class _EventDetailsState extends State<EventDetails> {
                                         position != 'member')
                                       CustomButton(
                                           width: 150,
-                                          onPressed: () {},
+                                          onPressed: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    PendingClaim(
+                                                  selectedEvent:
+                                                      widget.selectedEvent,
+                                                ),
+                                              ),
+                                            );
+                                          },
                                           text: 'View Claim'),
                                     const SizedBox(
                                       width: 15,
@@ -588,13 +617,11 @@ class _EventDetailsState extends State<EventDetails> {
                                                   position: position,
                                                   status: status,
                                                   progress: progress,
-                                                  rejected: rejected,
-                                                  rejected2: rejected2,
                                                 ),
                                               ),
                                             );
                                           },
-                                          text: 'View Documents'),
+                                          text: 'View Forms'),
                                   ],
                                 ),
                                 const SizedBox(
@@ -604,18 +631,35 @@ class _EventDetailsState extends State<EventDetails> {
                                   mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
                                     if (status == 'Closing' &&
-                                            position == 'member' ||
-                                        position.startsWith('org') &&
-                                            progress == 0)
+                                        (position == 'member' ||
+                                            position.startsWith('org')) &&
+                                        progress == 0)
                                       CustomButton(
                                           width: 150,
-                                          onPressed: () {},
+                                          onPressed: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) => ViewClaim(
+                                                  selectedEvent:
+                                                      widget.selectedEvent,
+                                                  selectedClaim: '',
+                                                ),
+                                              ),
+                                            );
+                                          },
                                           text: 'Submit Claim'),
                                     const SizedBox(
                                       width: 15,
                                     ),
-                                    if (status == 'Planning' && progress != 3)
+                                    if (status == 'Planning' &&
+                                        progress != 3 &&
+                                        position.startsWith('org') &&
+                                        position.contains('President'))
                                       CustomButton(
+                                          buttonColor: progress == 0
+                                              ? Colors.blue
+                                              : Colors.red,
                                           width: 150,
                                           onPressed: status == 'Planning' &&
                                                   progress == 0
@@ -668,7 +712,7 @@ class _EventDetailsState extends State<EventDetails> {
                                                         .showSnackBar(
                                                       const SnackBar(
                                                         content: Text(
-                                                            'Please save the required document before submitting.'),
+                                                            'Please save the required forms before submitting.'),
                                                         width: 200.0,
                                                         behavior:
                                                             SnackBarBehavior
@@ -678,11 +722,11 @@ class _EventDetailsState extends State<EventDetails> {
                                                       ),
                                                     );
                                                   } else {
-                                                    if (startDate?.isBefore(
+                                                    if (startDate?.isAfter(
                                                             DateTime.now().add(
                                                                 const Duration(
                                                                     days:
-                                                                        -7))) ??
+                                                                        6))) ??
                                                         false) {
                                                       await firestore
                                                           .collection('event')
@@ -692,12 +736,13 @@ class _EventDetailsState extends State<EventDetails> {
                                                         'status': 'Planning',
                                                         'progress': 1,
                                                       });
+                                                      getData();
                                                       ScaffoldMessenger.of(
                                                               context)
                                                           .showSnackBar(
                                                         const SnackBar(
                                                           content: Text(
-                                                              'Event document submitted for approval.'),
+                                                              'Event forms submitted for approval.'),
                                                           width: 200.0,
                                                           behavior:
                                                               SnackBarBehavior
@@ -729,14 +774,18 @@ class _EventDetailsState extends State<EventDetails> {
                                                       context: context,
                                                       builder: (_) {
                                                         return ConfirmDialog(
+                                                            function: getData,
                                                             eventID: widget
                                                                 .selectedEvent);
                                                       });
                                                 },
                                           text: progress == 0
-                                              ? 'Submit documents'
-                                              : 'Unsubmit documents'),
-                                    if (status == 'Closing' && progress != 3)
+                                              ? 'Submit Form'
+                                              : 'Unsubmit Form'),
+                                    if (status == 'Closing' &&
+                                        progress != 3 &&
+                                        position.startsWith('org') &&
+                                        position.contains('President'))
                                       CustomButton(
                                           width: 150,
                                           onPressed: status == 'Closing' &&
@@ -747,7 +796,7 @@ class _EventDetailsState extends State<EventDetails> {
                                                       FirebaseFirestore
                                                           .instance;
 
-                                                  if (endDate?.isAfter(
+                                                  if (endDate?.isBefore(
                                                           DateTime.now()) ??
                                                       false) {
                                                     final QuerySnapshot<
@@ -803,7 +852,7 @@ class _EventDetailsState extends State<EventDetails> {
                                                           .showSnackBar(
                                                         const SnackBar(
                                                           content: Text(
-                                                              'Please save the required document before submitting.'),
+                                                              'Please save the required forms before submitting.'),
                                                           width: 200.0,
                                                           behavior:
                                                               SnackBarBehavior
@@ -836,13 +885,13 @@ class _EventDetailsState extends State<EventDetails> {
                                                         'status': 'Closing',
                                                         'progress': 1,
                                                       });
-
+                                                      getData();
                                                       ScaffoldMessenger.of(
                                                               context)
                                                           .showSnackBar(
                                                         const SnackBar(
                                                           content: Text(
-                                                              'Event document submitted for approval.'),
+                                                              'Event forms submitted for approval.'),
                                                           width: 200.0,
                                                           behavior:
                                                               SnackBarBehavior
@@ -858,7 +907,7 @@ class _EventDetailsState extends State<EventDetails> {
                                                         .showSnackBar(
                                                       const SnackBar(
                                                         content: Text(
-                                                            'Event closing document can only be submittted after the event date.'),
+                                                            'Event closing forms can only be submittted after the event date.'),
                                                         width: 200.0,
                                                         behavior:
                                                             SnackBarBehavior
@@ -874,16 +923,63 @@ class _EventDetailsState extends State<EventDetails> {
                                                       context: context,
                                                       builder: (_) {
                                                         return ConfirmDialog2(
+                                                            function: getData,
                                                             eventID: widget
                                                                 .selectedEvent);
                                                       });
                                                   getData();
                                                 },
+                                          buttonColor: progress == 0
+                                              ? Colors.blue
+                                              : Colors.red,
                                           text: progress == 0
-                                              ? 'Submit documents'
-                                              : 'Unsubmit documents'),
+                                              ? 'Submit Form'
+                                              : 'Unsubmit Form'),
                                   ],
                                 ),
+                                const SizedBox(
+                                  height: 15,
+                                ),
+                                if (access >= 1)
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      CustomButton(
+                                          width: 150,
+                                          onPressed: () async {
+                                            showDialog(
+                                                context: context,
+                                                builder: (_) {
+                                                  return ApproveDialog(
+                                                      function: getData,
+                                                      status: status,
+                                                      access: access,
+                                                      eventID:
+                                                          widget.selectedEvent);
+                                                });
+                                          },
+                                          text: 'Approve'),
+                                      const SizedBox(
+                                        width: 15,
+                                      ),
+                                      CustomButton(
+                                          buttonColor: Colors.red,
+                                          width: 150,
+                                          onPressed: () async {
+                                            showDialog(
+                                                context: context,
+                                                builder: (_) {
+                                                  return RejectDialog(
+                                                      status: status,
+                                                      function: getData,
+                                                      access: access,
+                                                      eventID:
+                                                          widget.selectedEvent);
+                                                });
+                                          },
+                                          text: 'Reject'),
+                                    ],
+                                  ),
                                 const SizedBox(
                                   height: 15,
                                 ),
@@ -935,10 +1031,12 @@ class _EventDetailsState extends State<EventDetails> {
 }
 
 class ConfirmDialog extends StatefulWidget {
+  final VoidCallback? function;
   final String eventID;
 
   const ConfirmDialog({
     super.key,
+    required this.function,
     required this.eventID,
   });
   @override
@@ -949,10 +1047,10 @@ class _ConfirmDialogState extends State<ConfirmDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Unsubmit Documents'),
+      title: const Text('Unsubmit Forms'),
       content: const Column(
         mainAxisSize: MainAxisSize.min,
-        children: [Text('Are you sure you want to unsubmit the doucment?')],
+        children: [Text('Are you sure you want to unsubmit the forms?')],
       ),
       actions: <Widget>[
         TextButton(
@@ -987,6 +1085,8 @@ class _ConfirmDialogState extends State<ConfirmDialog> {
               'status': 'Planning',
               'progress': 0,
             });
+            widget.function!();
+            Navigator.of(context).pop();
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('Event documents unsubmitted'),
@@ -1004,10 +1104,12 @@ class _ConfirmDialogState extends State<ConfirmDialog> {
 }
 
 class ConfirmDialog2 extends StatefulWidget {
+  final VoidCallback function;
   final String eventID;
 
   const ConfirmDialog2({
     super.key,
+    required this.function,
     required this.eventID,
   });
   @override
@@ -1018,10 +1120,10 @@ class _ConfirmDialog2State extends State<ConfirmDialog2> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Unsubmit Documents'),
+      title: const Text('Unsubmit Forms'),
       content: const Column(
         mainAxisSize: MainAxisSize.min,
-        children: [Text('Are you sure you want to unsubmit the doucment?')],
+        children: [Text('Are you sure you want to unsubmit the forms?')],
       ),
       actions: <Widget>[
         TextButton(
@@ -1056,9 +1158,11 @@ class _ConfirmDialog2State extends State<ConfirmDialog2> {
               'status': 'Closing',
               'progress': 0,
             });
+            widget.function!();
+            Navigator.of(context).pop();
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('Event documents unsubmitted'),
+                content: Text('Event forms unsubmitted'),
                 width: 200.0,
                 behavior: SnackBarBehavior.floating,
                 duration: Duration(seconds: 3),
@@ -1084,6 +1188,7 @@ class DeleteDialog extends StatefulWidget {
 }
 
 class _DeleteDialogState extends State<DeleteDialog> {
+  final LocalStorage storage = LocalStorage('user');
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -1135,8 +1240,23 @@ class _DeleteDialogState extends State<DeleteDialog> {
               }
             }
 
-            // Commit the batch
             await batch.commit();
+            Navigator.of(context).pop();
+            if (storage.getItem('role') == 'branch head') {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => Society(),
+                ),
+              );
+            } else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => StudentSociety(),
+                ),
+              );
+            }
 
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
@@ -1146,6 +1266,248 @@ class _DeleteDialogState extends State<DeleteDialog> {
                 duration: Duration(seconds: 3),
               ),
             );
+          },
+          child: const Text('OK'),
+        ),
+      ],
+    );
+  }
+}
+
+class ApproveDialog extends StatefulWidget {
+  final String eventID;
+  final int access;
+  final String status;
+  final VoidCallback? function;
+
+  const ApproveDialog({
+    super.key,
+    required this.eventID,
+    required this.access,
+    required this.status,
+    required this.function,
+  });
+  @override
+  _ApproveDialogState createState() => _ApproveDialogState();
+}
+
+class _ApproveDialogState extends State<ApproveDialog> {
+  String presidentName = '';
+  String advisorName = '';
+  String branchHeadName = '';
+  String presidentStatus = '';
+  String advisorStatus = '';
+  String branchHeadStatus = '';
+  String eventStatus = '';
+  int progress = 0;
+
+  final LocalStorage storage = LocalStorage('user');
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Approve Event'),
+      content: const Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [Text('Are you sure you want to approve this event?')],
+      ),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () async {
+            final FirebaseFirestore firestore = FirebaseFirestore.instance;
+            eventStatus = widget.status;
+            if (widget.access == 1) {
+              presidentName = storage.getItem('name');
+              presidentStatus = 'Approved';
+              progress = 2;
+            } else if (widget.access == 2) {
+              advisorName = storage.getItem('name');
+              advisorStatus = 'Approved';
+              progress = 3;
+            } else if (widget.access == 3) {
+              branchHeadName = storage.getItem('name');
+              branchHeadStatus = 'Approved';
+              if (widget.status == 'Planning') {
+                eventStatus = 'Closing';
+                progress = 0;
+              } else {
+                eventStatus = 'Completed';
+                progress = 3;
+              }
+            }
+
+            if (widget.status == 'Planning') {
+              await firestore
+                  .collection('approval')
+                  .doc(widget.eventID)
+                  .update({
+                if (presidentName.isNotEmpty) 'presidentName': presidentName,
+                if (presidentStatus.isNotEmpty)
+                  'presidentStatus': presidentStatus,
+                if (advisorName.isNotEmpty) 'advisorName': advisorName,
+                if (advisorStatus.isNotEmpty) 'advisorStatus': advisorStatus,
+                if (branchHeadName.isNotEmpty) 'branchHeadName': branchHeadName,
+                if (branchHeadStatus.isNotEmpty)
+                  'branchHeadStatus': branchHeadStatus,
+                'comment': '',
+              });
+            } else {
+              await firestore
+                  .collection('completion')
+                  .doc(widget.eventID)
+                  .update({
+                if (presidentName.isNotEmpty) 'presidentName': presidentName,
+                if (presidentStatus.isNotEmpty)
+                  'presidentStatus': presidentStatus,
+                if (advisorName.isNotEmpty) 'advisorName': advisorName,
+                if (advisorStatus.isNotEmpty) 'advisorStatus': advisorStatus,
+                if (branchHeadName.isNotEmpty) 'branchHeadName': branchHeadName,
+                if (branchHeadStatus.isNotEmpty)
+                  'branchHeadStatus': branchHeadStatus,
+                'comment': '',
+              });
+            }
+            await firestore.collection('event').doc(widget.eventID).update({
+              'status': eventStatus,
+              'progress': progress,
+            });
+
+            widget.function!();
+            Navigator.of(context).pop();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Event Approved.'),
+                width: 200.0,
+                behavior: SnackBarBehavior.floating,
+                duration: Duration(seconds: 3),
+              ),
+            );
+          },
+          child: const Text('OK'),
+        ),
+      ],
+    );
+  }
+}
+
+class RejectDialog extends StatefulWidget {
+  final String status;
+  final String eventID;
+  final int access;
+  final VoidCallback? function;
+
+  const RejectDialog({
+    super.key,
+    required this.status,
+    required this.eventID,
+    required this.access,
+    required this.function,
+  });
+  @override
+  _RejectDialogState createState() => _RejectDialogState();
+}
+
+class _RejectDialogState extends State<RejectDialog> {
+  String presidentName = '';
+  String advisorName = '';
+  String branchHeadName = '';
+  String presidentStatus = '';
+  String advisorStatus = '';
+  String branchHeadStatus = '';
+  String eventStatus = '';
+  int progress = 0;
+  final comment = TextEditingController();
+  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+
+  final LocalStorage storage = LocalStorage('user');
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Reject Event'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Form(
+            key: formKey,
+            child: CustomTextField(
+              controller: comment,
+              labelText: 'Reason',
+              screen: true,
+              hintText: 'Enter reason for rejection',
+              maxLine: 5,
+              maxLength: 200,
+              validator: (value) {
+                if (value!.isEmpty) {
+                  return 'Please enter reason';
+                }
+                return null;
+              },
+            ),
+          ),
+        ],
+      ),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () async {
+            if (formKey.currentState!.validate()) {
+              final FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+              if (widget.status == 'Planning') {
+                await firestore
+                    .collection('approval')
+                    .doc(widget.eventID)
+                    .update({
+                  if (widget.access == 1)
+                    'presidentName': storage.getItem('name'),
+                  if (widget.access == 1) 'presidentStatus': 'Rejected',
+                  if (widget.access == 2)
+                    'advisorName': storage.getItem('name'),
+                  if (widget.access == 2) 'advisorStatus': 'Rejected',
+                  if (widget.access == 3)
+                    'branchHeadName': storage.getItem('name'),
+                  if (widget.access == 3) 'branchHeadStatus': 'Rejected',
+                  'comment': comment.text,
+                });
+              } else {
+                await firestore
+                    .collection('completion')
+                    .doc(widget.eventID)
+                    .update({
+                  if (widget.access == 1)
+                    'presidentName': storage.getItem('name'),
+                  if (widget.access == 1) 'presidentStatus': 'Rejected',
+                  if (widget.access == 2)
+                    'advisorName': storage.getItem('name'),
+                  if (widget.access == 2) 'advisorStatus': 'Rejected',
+                  if (widget.access == 3)
+                    'branchHeadName': storage.getItem('name'),
+                  if (widget.access == 3) 'branchHeadStatus': 'Rejected',
+                  'comment': comment.text,
+                });
+              }
+
+              widget.function!();
+              Navigator.of(context).pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Event Rejected'),
+                  width: 200.0,
+                  behavior: SnackBarBehavior.floating,
+                  duration: Duration(seconds: 3),
+                ),
+              );
+            }
           },
           child: const Text('OK'),
         ),

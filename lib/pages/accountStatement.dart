@@ -3,22 +3,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
+import 'package:fyp/pages/viewClaim.dart';
 
 class Account extends StatefulWidget {
   final String selectedEvent;
   final String status;
   final int progress;
   final String position;
-  final bool rejected;
-  final bool rejected2;
   const Account(
       {super.key,
       required this.selectedEvent,
       required this.status,
       required this.progress,
-      required this.position,
-      required this.rejected,
-      required this.rejected2});
+      required this.position});
 
   @override
   State<Account> createState() => _AccountState();
@@ -59,7 +56,7 @@ class _AccountState extends State<Account> {
       if (!widget.position.startsWith('org') ||
           widget.position.contains('Secretary') ||
           widget.status != 'Closing' ||
-          (widget.progress != 0 && !widget.rejected2)) {
+          (widget.progress != 0)) {
         enabled = false;
       }
 
@@ -76,6 +73,7 @@ class _AccountState extends State<Account> {
         AccountStatement budgetItem = AccountStatement(
           name: doc.data()['description'],
           price: doc.data()['amount'],
+          reference: doc.data()['reference'],
           type: itemType,
         );
 
@@ -164,8 +162,6 @@ class _AccountState extends State<Account> {
                                           status: widget.status,
                                           position: widget.position,
                                           progress: widget.progress,
-                                          rejected2: widget.rejected2,
-                                          rejected: widget.rejected,
                                           children: [
                                             if (enabled)
                                               Column(
@@ -393,7 +389,7 @@ class _AccountState extends State<Account> {
                                                                       .text)
                                                                   .toStringAsFixed(
                                                                       2)),
-                                                          type: type.text,
+                                                          type: selectedType,
                                                         );
 
                                                         if (selectedType ==
@@ -481,6 +477,7 @@ class _AccountState extends State<Account> {
                                                                         DataCell(
                                                                           Row(
                                                                             children: [
+                                                                              if (enabled)
                                                                               IconButton(
                                                                                 icon: const Icon(Icons.edit),
                                                                                 onPressed: () {
@@ -498,6 +495,7 @@ class _AccountState extends State<Account> {
                                                                                   );
                                                                                 },
                                                                               ),
+                                                                              if (enabled)
                                                                               IconButton(
                                                                                 icon: const Icon(Icons.delete),
                                                                                 onPressed: () {
@@ -572,9 +570,21 @@ class _AccountState extends State<Account> {
                                                                       cells: [
                                                                         DataCell(
                                                                             Text(statement.name)),
-                                                                        const DataCell(
-                                                                          Text(
-                                                                            '',
+                                                                        DataCell(
+                                                                          TextButton(
+                                                                            onPressed:
+                                                                                () {
+                                                                              Navigator.push(
+                                                                                context,
+                                                                                MaterialPageRoute(
+                                                                                  builder: (context) => ViewClaim(selectedEvent: widget.selectedEvent, selectedClaim: statement.reference,),
+                                                                                ),
+                                                                              );
+                                                                            },
+                                                                            child:
+                                                                                Text(
+                                                                              statement.reference,
+                                                                            ),
                                                                           ),
                                                                         ),
                                                                         DataCell(
@@ -698,7 +708,7 @@ class _AccountState extends State<Account> {
                                                       'description':
                                                           statement.name,
                                                       'amount': statement.price,
-                                                      'reference': null,
+                                                      'reference': '',
                                                       'recordType':
                                                           statement.type,
                                                     });
@@ -716,7 +726,7 @@ class _AccountState extends State<Account> {
                                                       'description':
                                                           statement.name,
                                                       'amount': statement.price,
-                                                      'reference': null,
+                                                      'reference': '',
                                                       'recordType':
                                                           statement.type,
                                                     });
@@ -757,9 +767,13 @@ class AccountStatement {
   String name;
   double price;
   String type;
+  String reference;
 
   AccountStatement(
-      {required this.name, required this.price, required this.type});
+      {required this.name,
+      required this.price,
+      required this.type,
+      this.reference = ''});
 }
 
 class EditDialog extends StatefulWidget {

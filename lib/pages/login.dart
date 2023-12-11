@@ -5,8 +5,9 @@ import 'package:fyp/functions/customWidget.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:fyp/pages/advisorFirstLogin.dart';
 import 'package:fyp/pages/forgotPassword1.dart';
-import 'package:fyp/pages/home.dart';
 import 'package:fyp/pages/register.dart';
+import 'package:fyp/pages/society.dart';
+import 'package:fyp/pages/studentSociety.dart';
 import 'package:localstorage/localstorage.dart';
 
 class Login extends StatefulWidget {
@@ -35,49 +36,69 @@ class _LoginState extends State<Login> {
       },
     );
     try {
-      errorMessage = null;
+      setState(() {
+        errorMessage = null;
+      });
       QuerySnapshot userQuery = await FirebaseFirestore.instance
           .collection('user')
           .where('email', isEqualTo: email.text)
-          .limit(1)
           .get();
-      if (userQuery.docs.first['status']) {
-        await FirebaseAuth.instance.signInWithEmailAndPassword(
-          email: email.text,
-          password: password.text,
-        );
-        if (userQuery.docs.first.id.startsWith('A')) {
-          role = 'advisor';
-          if (userQuery.docs.first['ic'] == '') {
-            Navigator.push(
+      if (userQuery.docs.isNotEmpty) {
+        if (userQuery.docs.first['status']) {
+          await FirebaseAuth.instance.signInWithEmailAndPassword(
+            email: email.text,
+            password: password.text,
+          );
+          if (userQuery.docs.first.id.startsWith('A')) {
+            role = 'advisor';
+            if (userQuery.docs.first['ic'] == '') {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      AdvisorFirstLogin(userEmail: email.text),
+                ),
+              );
+              return;
+            }
+          } else if (userQuery.docs.first.id.startsWith('B')) {
+            role = 'branch head';
+          } else {
+            role = 'student';
+          }
+
+          Navigator.pop(context);
+          storage.setItem('name', userQuery.docs.first['name']);
+          storage.setItem('id', userQuery.docs.first.id);
+          storage.setItem('role', role);
+          if (role == 'branch head') {
+            Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(
-                builder: (context) => AdvisorFirstLogin(userEmail: email.text),
+                builder: (context) => const Society(),
               ),
+              (route) => false,
+            );
+          } else {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const StudentSociety(),
+              ),
+              (route) => false,
             );
           }
-        } else if (userQuery.docs.first.id.startsWith('B')) {
-          role = 'branch head';
         } else {
-          role = 'student';
+          Navigator.pop(context);
+          setState(() {
+            errorMessage = 'Your account has been disabled.';
+          });
         }
-
-        Navigator.pop(context);
-        storage.setItem('name', userQuery.docs.first['name']);
-        storage.setItem('id', userQuery.docs.first.id);
-        storage.setItem('role', role);
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const Home(),
-          ),
-          (route) => false,
-        );
-      } else {
+      }else{
         Navigator.pop(context);
         setState(() {
-          errorMessage = 'Your account has been disabled.';
-        });
+            errorMessage = 'Invalid login credentials';
+          });
       }
     } on FirebaseAuthException catch (e) {
       Navigator.pop(context);

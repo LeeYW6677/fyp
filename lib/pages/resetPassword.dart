@@ -20,7 +20,10 @@ class _ResetPasswordState extends State<ResetPassword> {
   void changePassword() async {
     try {
       User? user = FirebaseAuth.instance.currentUser;
-      errorMessage = null;
+      setState(() {
+        errorMessage = null;
+      });
+    
       if (user != null) {
         AuthCredential credential = EmailAuthProvider.credential(
           email: user.email!,

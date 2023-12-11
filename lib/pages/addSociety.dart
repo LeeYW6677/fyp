@@ -96,8 +96,8 @@ class _AddSocietyState extends State<AddSociety> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to register society. Please try again.'),
+        SnackBar(
+          content: Text(e.toString()),
           width: 225.0,
           behavior: SnackBarBehavior.floating,
           duration: Duration(seconds: 3),
@@ -130,8 +130,8 @@ class _AddSocietyState extends State<AddSociety> {
       return societyID;
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to register society. Please try again.'),
+        SnackBar(
+          content: Text(e.toString()),
           width: 225.0,
           behavior: SnackBarBehavior.floating,
           duration: Duration(seconds: 3),
@@ -154,8 +154,8 @@ class _AddSocietyState extends State<AddSociety> {
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to register society. Please try again.'),
+        SnackBar(
+          content: Text(e.toString()),
           width: 225.0,
           behavior: SnackBarBehavior.floating,
           duration: Duration(seconds: 3),
@@ -1221,76 +1221,92 @@ class _AddSocietyState extends State<AddSociety> {
                                                             .get();
 
                                                     if (userSnapshot[
-                                                                'position'] ==
+                                                                'position'] !=
                                                             '' ||
                                                         userSnapshot[
-                                                                'societyID'] ==
+                                                                'societyID'] !=
                                                             '') {
                                                       available = false;
-                                                    }
-                                                    if (available) {
-                                                      String societyID =
-                                                          await createSociety(
-                                                              name.text);
-                                                      updateAdvisor(
-                                                          advisorID.text,
-                                                          'Advisor',
-                                                          societyID);
-                                                      updateAdvisor(
-                                                          coAdvisorID1.text,
-                                                          'Co-advisor',
-                                                          societyID);
-                                                      updateAdvisor(
-                                                          coAdvisorID2.text,
-                                                          'Co-advisor',
-                                                          societyID);
-                                                      addMember(
-                                                          societyID,
-                                                          presidentID.text,
-                                                          'President');
-                                                      addMember(
-                                                          societyID,
-                                                          vpresidentID.text,
-                                                          'Vice President');
-                                                      addMember(
-                                                          societyID,
-                                                          secretaryID.text,
-                                                          'Secretary');
-                                                      addMember(
-                                                          societyID,
-                                                          vsecretaryID.text,
-                                                          'Vice Secretary');
-                                                      addMember(
-                                                          societyID,
-                                                          treasurerID.text,
-                                                          'Treasurer');
-                                                      addMember(
-                                                          societyID,
-                                                          vtreasurerID.text,
-                                                          'Vice Treasurer');
-                                                      Navigator.push(
-                                                        context,
-                                                        MaterialPageRoute(
-                                                          builder: (context) =>
-                                                              const Society(),
-                                                        ),
-                                                      );
                                                       ScaffoldMessenger.of(
                                                               context)
                                                           .showSnackBar(
                                                         SnackBar(
                                                           content: Text(
-                                                              '${name.text} has been registered.'),
+                                                              userSnapshot[
+                                                                      'name'] +
+                                                                  ' is already assigned as an advisor.'),
                                                           width: 225.0,
                                                           behavior:
                                                               SnackBarBehavior
                                                                   .floating,
-                                                          duration:
-                                                              const Duration(
-                                                                  seconds: 3),
+                                                          duration: Duration(
+                                                              seconds: 3),
                                                         ),
                                                       );
                                                     }
+                                                  }
+                                                  if (available) {
+                                                    String societyID =
+                                                        await createSociety(
+                                                            name.text);
+                                                    updateAdvisor(
+                                                        advisorID.text,
+                                                        'Advisor',
+                                                        societyID);
+                                                    updateAdvisor(
+                                                        coAdvisorID1.text,
+                                                        'Co-advisor',
+                                                        societyID);
+                                                    updateAdvisor(
+                                                        coAdvisorID2.text,
+                                                        'Co-advisor',
+                                                        societyID);
+                                                    addMember(
+                                                        societyID,
+                                                        presidentID.text,
+                                                        'President');
+                                                    addMember(
+                                                        societyID,
+                                                        vpresidentID.text,
+                                                        'Vice President');
+                                                    addMember(
+                                                        societyID,
+                                                        secretaryID.text,
+                                                        'Secretary');
+                                                    addMember(
+                                                        societyID,
+                                                        vsecretaryID.text,
+                                                        'Vice Secretary');
+                                                    addMember(
+                                                        societyID,
+                                                        treasurerID.text,
+                                                        'Treasurer');
+                                                    addMember(
+                                                        societyID,
+                                                        vtreasurerID.text,
+                                                        'Vice Treasurer');
+                                                    Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                        builder: (context) =>
+                                                            const Society(),
+                                                      ),
+                                                    );
+                                                    ScaffoldMessenger.of(
+                                                            context)
+                                                        .showSnackBar(
+                                                      SnackBar(
+                                                        content: Text(
+                                                            '${name.text} has been registered.'),
+                                                        width: 225.0,
+                                                        behavior:
+                                                            SnackBarBehavior
+                                                                .floating,
+                                                        duration:
+                                                            const Duration(
+                                                                seconds: 3),
+                                                      ),
+                                                    );
                                                   }
                                                 } catch (e) {
                                                   ScaffoldMessenger.of(context)

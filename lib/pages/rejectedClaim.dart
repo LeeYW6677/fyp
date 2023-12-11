@@ -2,26 +2,22 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
-import 'package:fyp/pages/eventDetails.dart';
-import 'package:fyp/pages/studentOrganisedEvent.dart';
+import 'package:fyp/pages/approvedClaim.dart';
+import 'package:fyp/pages/pendingClaim.dart';
+import 'package:fyp/pages/viewClaim.dart';
 import 'package:intl/intl.dart';
-import 'package:localstorage/localstorage.dart';
 
-class StudentOngoingEvent extends StatefulWidget {
-  const StudentOngoingEvent({super.key});
+class RejectedClaim extends StatefulWidget {
+  final String selectedEvent;
+  const RejectedClaim({super.key, required this.selectedEvent});
 
   @override
-  State<StudentOngoingEvent> createState() => _StudentOngoingEventState();
+  State<RejectedClaim> createState() => _RejectedClaimState();
 }
 
-class _StudentOngoingEventState extends State<StudentOngoingEvent> {
-  final LocalStorage storage = LocalStorage('user');
+class _RejectedClaimState extends State<RejectedClaim> {
   bool _isLoading = true;
-  DateTime? startDate;
-  DateTime? endDate;
-  List<Map<String, dynamic>> ongoingEvents = [];
-  List<String> checkName = ['', '', '', ''];
-  List<String> checkStatus = ['', '', '', ''];
+  List<Map<String, dynamic>> approvedClaim = [];
 
   Future<void> getData() async {
     try {
@@ -29,127 +25,26 @@ class _StudentOngoingEventState extends State<StudentOngoingEvent> {
         _isLoading = true;
       });
       final FirebaseFirestore firestore = FirebaseFirestore.instance;
-      // Fetch event data
 
-      final QuerySnapshot<Map<String, dynamic>> relatedEvent = await firestore
-          .collection('committee')
-          .where('studentID', isEqualTo: storage.getItem('id'))
+      final QuerySnapshot<Map<String, dynamic>> relatedClaim = await firestore
+          .collection('claim')
+          .where('eventID', isEqualTo: widget.selectedEvent)
+          .where('status', isEqualTo: 'Rejected')
           .get();
 
-      if (relatedEvent.docs.isNotEmpty) {
-        List<String> eventIds =
-            relatedEvent.docs.map((doc) => doc['eventID'] as String).toList();
+      for (var claim in relatedClaim.docs) {
+        Map<String, dynamic>? claimData = claim.data();
 
-        final QuerySnapshot<Map<String, dynamic>> eventSnapshot =
-            await firestore
-                .collection('event')
-                .where('eventID', whereIn: eventIds)
-                .where('status', isNotEqualTo: 'Completed')
-                .get();
+        String claimantID = claimData['claimantID'];
+        final DocumentSnapshot<Map<String, dynamic>> claimantSnapshot =
+            await firestore.collection('user').doc(claimantID).get();
 
-        for (var docSnapshot in eventSnapshot.docs) {
-          Map<String, dynamic>? eventData = docSnapshot.data();
+        Map<String, dynamic>? claimantData = claimantSnapshot.data();
+        claimData['claimant'] = claimantData?['name'];
 
-          String societyID = eventData['societyID'];
-          final DocumentSnapshot<Map<String, dynamic>> societySnapshot =
-              await firestore.collection('society').doc(societyID).get();
-
-          Map<String, dynamic>? societyData = societySnapshot.data();
-          eventData['society'] = societyData!['societyName'];
-
-          ongoingEvents.add(eventData);
-        }
-        for (var eventData in ongoingEvents) {
-          String eventId = eventData['eventID'];
-          final QuerySnapshot<Map<String, dynamic>> committeeSnapshot =
-              await firestore
-                  .collection('committee')
-                  .where('eventID', isEqualTo: eventId)
-                  .where('position', isEqualTo: 'President')
-                  .get();
-          int eventIndex =
-              ongoingEvents.indexWhere((event) => event['eventID'] == eventId);
-          for (var committeeDocSnapshot in committeeSnapshot.docs) {
-            Map<String, dynamic> committeeData = committeeDocSnapshot.data();
-
-            if (eventIndex != -1) {
-              ongoingEvents[eventIndex]['president'] =
-                  committeeData['name'] ?? 'Unassigned';
-            }
-          }
-
-          final QuerySnapshot<Map<String, dynamic>> approvalSnapshot =
-              await firestore
-                  .collection('approval')
-                  .where('eventID', isEqualTo: eventId)
-                  .get();
-          checkName.clear();
-          checkStatus.clear();
-
-          if (approvalSnapshot.docs.isNotEmpty) {
-            Map<String, dynamic> approvalData =
-                approvalSnapshot.docs.first.data();
-            checkName.add('');
-            checkName.add(approvalData['presidentName']);
-            checkName.add(approvalData['advisorName']);
-            checkName.add(approvalData['branchHeadName']);
-            checkStatus.add('Approved');
-            checkStatus.add(approvalData['presidentStatus']);
-            checkStatus.add(approvalData['advisorStatus']);
-            checkStatus.add(approvalData['branchHeadStatus']);
-          }
-
-          if (checkStatus.any((element) => element == 'Rejected')) {
-            ongoingEvents[eventIndex]['eventStatus'] = 'Rejected';
-          } else {
-            ongoingEvents[eventIndex]['eventStatus'] = 'Pending';
-          }
-
-          Query<Map<String, dynamic>> query = firestore
-              .collection('schedule')
-              .where('eventID', isEqualTo: eventId)
-              .orderBy('date');
-
-          QuerySnapshot<Map<String, dynamic>> snapshot =
-              await query.limit(1).get();
-
-          Query<Map<String, dynamic>> query2 = firestore
-              .collection('schedule')
-              .where('eventID', isEqualTo: eventId)
-              .orderBy('date', descending: true);
-
-          QuerySnapshot<Map<String, dynamic>> snapshot2 =
-              await query2.limit(1).get();
-          startDate = null;
-          endDate = null;
-          if (snapshot.docs.isNotEmpty) {
-            DocumentSnapshot<Map<String, dynamic>> earliestDoc =
-                snapshot.docs.first;
-
-            Timestamp date = earliestDoc['date'];
-            startDate = date.toDate();
-          }
-
-          if (snapshot2.docs.isNotEmpty) {
-            DocumentSnapshot<Map<String, dynamic>> latestDoc =
-                snapshot2.docs.first;
-
-            Timestamp date = latestDoc['date'];
-            endDate = date.toDate();
-          }
-          if (startDate != null && endDate != null) {
-            ongoingEvents[eventIndex]['startDate'] =
-                DateFormat('dd/MM/yyyy').format(startDate!);
-            ongoingEvents[eventIndex]['endDate'] =
-                DateFormat('dd/MM/yyyy').format(endDate!);
-          } else {
-            ongoingEvents[eventIndex]['startDate'] = 'Undecided';
-            ongoingEvents[eventIndex]['endDate'] = 'Undecided';
-          }
-        }
+        approvedClaim.add(claimData);
       }
       setState(() {
-        ongoingEvents = ongoingEvents;
         _isLoading = false;
       });
     } catch (error) {
@@ -157,7 +52,7 @@ class _StudentOngoingEventState extends State<StudentOngoingEvent> {
         _isLoading = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text('Failed to fetch data. Please try again later'),
           width: 225.0,
           behavior: SnackBarBehavior.floating,
@@ -206,7 +101,7 @@ class _StudentOngoingEventState extends State<StudentOngoingEvent> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   const Text(
-                                    'Event',
+                                    'Claim',
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 20,
@@ -226,29 +121,10 @@ class _StudentOngoingEventState extends State<StudentOngoingEvent> {
                                             context,
                                             MaterialPageRoute(
                                                 builder: (context) =>
-                                                    const StudentOngoingEvent()),
-                                          );
-                                        },
-                                        style: TextButton.styleFrom(
-                                          padding: const EdgeInsets.all(24.0),
-                                          backgroundColor: Colors.white,
-                                          foregroundColor: Colors.black,
-                                          side: const BorderSide(
-                                              color: Colors.grey, width: 1.0),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(0.0),
-                                          ),
-                                        ),
-                                        child: const Text('Ongoing'),
-                                      ),
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.pushReplacement(
-                                            context,
-                                            MaterialPageRoute(
-                                                builder: (context) =>
-                                                    const StudentOrganisedEvent()),
+                                                    PendingClaim(
+                                                      selectedEvent:
+                                                          widget.selectedEvent,
+                                                    )),
                                           );
                                         },
                                         style: TextButton.styleFrom(
@@ -262,7 +138,57 @@ class _StudentOngoingEventState extends State<StudentOngoingEvent> {
                                                 BorderRadius.circular(0.0),
                                           ),
                                         ),
-                                        child: const Text('Organised'),
+                                        child: const Text('Pending'),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.pushReplacement(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    ApprovedClaim(
+                                                      selectedEvent:
+                                                          widget.selectedEvent,
+                                                    )),
+                                          );
+                                        },
+                                        style: TextButton.styleFrom(
+                                          padding: const EdgeInsets.all(24.0),
+                                          backgroundColor: Colors.grey[200],
+                                          foregroundColor: Colors.black,
+                                          side: const BorderSide(
+                                              color: Colors.grey, width: 1.0),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(0.0),
+                                          ),
+                                        ),
+                                        child: const Text('Approved'),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.pushReplacement(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    RejectedClaim(
+                                                      selectedEvent:
+                                                          widget.selectedEvent,
+                                                    )),
+                                          );
+                                        },
+                                        style: TextButton.styleFrom(
+                                          padding: const EdgeInsets.all(24.0),
+                                          backgroundColor: Colors.white,
+                                          foregroundColor: Colors.black,
+                                          side: const BorderSide(
+                                              color: Colors.grey, width: 1.0),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(0.0),
+                                          ),
+                                        ),
+                                        child: const Text('Rejected'),
                                       ),
                                     ],
                                   ),
@@ -275,7 +201,7 @@ class _StudentOngoingEventState extends State<StudentOngoingEvent> {
                                             border: Border.all(
                                                 width: 1.0, color: Colors.grey),
                                           ),
-                                          child: ongoingEvents.isNotEmpty
+                                          child: approvedClaim.isNotEmpty
                                               ? Padding(
                                                   padding: const EdgeInsets.all(
                                                       16.0),
@@ -287,37 +213,25 @@ class _StudentOngoingEventState extends State<StudentOngoingEvent> {
                                                           columns: const [
                                                             DataColumn(
                                                               label:
-                                                                  Text('Name'),
+                                                                  Text('Title'),
                                                             ),
                                                             DataColumn(
                                                                 label: Text(
-                                                                    'Society')),
+                                                                    'Claimant')),
                                                             DataColumn(
                                                                 label: Text(
-                                                                    'President')),
+                                                                    'Submission Date')),
                                                             DataColumn(
                                                                 label: Text(
-                                                                    'StartDate')),
-                                                            DataColumn(
-                                                                label: Text(
-                                                                    'End Date')),
-                                                            DataColumn(
-                                                                label: Text(
-                                                                    'Phase')),
-                                                            DataColumn(
-                                                                label: Text(
-                                                                    'Progress')),
-                                                            DataColumn(
-                                                                label: Text(
-                                                                    'Status')),
+                                                                    'Amount')),
                                                             DataColumn(
                                                                 label:
                                                                     Text('')),
                                                           ],
                                                           source:
-                                                              _EventDataSource(
-                                                                  ongoingEvents,
-                                                                  context),
+                                                              _ClaimDataSource(
+                                                                  approvedClaim,
+                                                                  context, widget.selectedEvent),
                                                           refresh: getData,
                                                           context: context),
                                                       const SizedBox(
@@ -330,7 +244,7 @@ class _StudentOngoingEventState extends State<StudentOngoingEvent> {
                                                   height: 500,
                                                   child: Center(
                                                       child: Text(
-                                                          'You have no event ongoing.'))),
+                                                          'There is no claim rejected.'))),
                                         ),
                                       ),
                                     ],
@@ -349,7 +263,7 @@ class _StudentOngoingEventState extends State<StudentOngoingEvent> {
 
 class CustomDataTable extends StatefulWidget {
   final List<DataColumn> columns;
-  final _EventDataSource source;
+  final _ClaimDataSource source;
   final VoidCallback refresh;
   final BuildContext context;
 
@@ -431,21 +345,13 @@ class _CustomDataTableState extends State<CustomDataTable> {
                     (Map<String, dynamic> member) {
                       switch (columnIndex) {
                         case 0:
-                          return member['eventName'];
+                          return member['title'];
                         case 1:
-                          return member['society'];
+                          return member['claimant'];
                         case 2:
-                          return member['president'];
+                          return member['submissionDate'];
                         case 3:
-                          return member['startDate'];
-                        case 4:
-                          return member['endDate'];
-                        case 5:
-                          return member['status'];
-                        case 6:
-                          return member['progress'];
-                        case 7:
-                          return member['eventStatus'];
+                          return member['amount'];
                         default:
                           return '';
                       }
@@ -469,40 +375,35 @@ class _CustomDataTableState extends State<CustomDataTable> {
   }
 }
 
-class _EventDataSource extends DataTableSource {
-  final LocalStorage storage = LocalStorage('user');
-  final List<Map<String, dynamic>> originalEvent;
-  List<Map<String, dynamic>> displayedEvent = [];
+class _ClaimDataSource extends DataTableSource {
+  final String selectedEvent;
+  final List<Map<String, dynamic>> originalClaim;
+  List<Map<String, dynamic>> displayedClaim = [];
   final Set<int> selectedRows = {};
   final BuildContext context;
   int rowsPerPage = 10;
 
-  _EventDataSource(this.originalEvent, this.context) {
-    _initializeDisplayedEvent();
+  _ClaimDataSource(this.originalClaim, this.context, this.selectedEvent) {
+    _initializeDisplayedClaim();
   }
 
-  void _initializeDisplayedEvent() {
-    displayedEvent.addAll(originalEvent);
+  void _initializeDisplayedClaim() {
+    displayedClaim.addAll(originalClaim);
   }
 
   @override
   DataRow? getRow(int index) {
-    if (index >= displayedEvent.length) {
+    if (index >= displayedClaim.length) {
       return null;
     }
-    final event = displayedEvent[index];
+    final claim = displayedClaim[index];
     return DataRow(
       cells: [
-        DataCell(Text(event['eventName'].toString())),
-        DataCell(Text(event['society'].toString())),
-        DataCell(Text(event['president'] != null
-            ? event['president'].toString()
-            : 'Not decided')),
-        DataCell(Text(event['startDate'].toString())),
-        DataCell(Text(event['endDate'].toString())),
-        DataCell(Text(event['status'].toString())),
-        DataCell(Text('${event['progress']}/3')),
-        DataCell(Text(event['eventStatus'].toString())),
+        DataCell(Text(claim['title'].toString())),
+        DataCell(Text(claim['claimant'].toString())),
+        DataCell(Text(
+            DateFormat('dd/MM/yyyy').format(claim['submissionDate'].toDate()))),
+        DataCell(Text('RM ' + claim['amount'].toStringAsFixed(2))),
         DataCell(Row(
           children: [
             CustomButton(
@@ -510,8 +411,8 @@ class _EventDataSource extends DataTableSource {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => EventDetails(
-                        selectedEvent: event['eventID'].toString()),
+                    builder: (context) =>
+                        ViewClaim(selectedClaim: claim['claimID'].toString(), selectedEvent: selectedEvent,),
                   ),
                 );
               },
@@ -528,14 +429,14 @@ class _EventDataSource extends DataTableSource {
   bool get isRowCountApproximate => false;
 
   @override
-  int get rowCount => displayedEvent.length;
+  int get rowCount => displayedClaim.length;
 
   @override
   int get selectedRowCount => 0;
 
   void filter(String query) {
-    displayedEvent.clear();
-    displayedEvent.addAll(originalEvent.where((event) {
+    displayedClaim.clear();
+    displayedClaim.addAll(originalClaim.where((event) {
       return event.values.any((value) {
         return value.toString().toLowerCase().contains(query.toLowerCase());
       });
@@ -548,20 +449,14 @@ class _EventDataSource extends DataTableSource {
     int columnIndex,
     bool ascending,
   ) {
-    displayedEvent.sort((a, b) {
+    displayedClaim.sort((a, b) {
       final aValue = getField(a);
       final bValue = getField(b);
 
-      if (columnIndex == 3 || columnIndex == 4) {
-        if (aValue.toString().toLowerCase() == 'undecided') {
-          return bValue.toString().toLowerCase() == 'undecided' ? 0 : 1;
-        } else if (bValue.toString().toLowerCase() == 'undecided') {
-          return -1;
-        } else {
-          final aDate = DateFormat('dd/MM/yyyy').parse(aValue.toString());
-          final bDate = DateFormat('dd/MM/yyyy').parse(bValue.toString());
-          return ascending ? aDate.compareTo(bDate) : bDate.compareTo(aDate);
-        }
+      if (columnIndex == 2) {
+        final aDate = DateFormat('dd/MM/yyyy').parse(aValue.toString());
+        final bDate = DateFormat('dd/MM/yyyy').parse(bValue.toString());
+        return ascending ? aDate.compareTo(bDate) : bDate.compareTo(aDate);
       } else {
         return ascending
             ? Comparable.compare(aValue, bValue)

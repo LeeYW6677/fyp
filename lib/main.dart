@@ -3,12 +3,12 @@ import 'dart:ui';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:fyp/pages/budget.dart';
-import 'package:fyp/pages/committee.dart';
-import 'package:fyp/pages/eventDetails.dart';
 import 'package:fyp/pages/login.dart';
 import 'package:fyp/functions/firebase_options.dart';
-import 'package:fyp/pages/studentOngoingEvent.dart';
+import 'package:fyp/pages/society.dart';
+import 'package:fyp/pages/studentSociety.dart';
+import 'package:fyp/pages/test2.dart';
+import 'package:localstorage/localstorage.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,6 +28,7 @@ class SocietyManagementSystem extends StatefulWidget {
 
 class _SocietyManagementSystemState extends State<SocietyManagementSystem> {
   User? user;
+  final LocalStorage storage = LocalStorage('user');
 
   @override
   void initState() {
@@ -46,7 +47,7 @@ class _SocietyManagementSystemState extends State<SocietyManagementSystem> {
           thumbVisibility: MaterialStateProperty.all<bool>(true),
         ),
       ),
-      home: user != null ? EventDetails(selectedEvent: 'E001',) : const Login(),
+      home: user == null ? const Login() : storage.getItem('role') == 'branch head' ? const Society() : const StudentSociety(),
     );
   }
 }

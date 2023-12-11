@@ -9,16 +9,12 @@ class Budget extends StatefulWidget {
   final String status;
   final int progress;
   final String position;
-  final bool rejected;
-  final bool rejected2;
   const Budget(
       {super.key,
       required this.selectedEvent,
       required this.status,
       required this.progress,
-      required this.position,
-      required this.rejected,
-      required this.rejected2});
+      required this.position});
 
   @override
   State<Budget> createState() => _BudgetState();
@@ -52,7 +48,7 @@ class _BudgetState extends State<Budget> {
       if (!widget.position.startsWith('org') ||
           widget.position.contains('Secretary') ||
           widget.status != 'Planning' ||
-          (widget.progress != 0 && !widget.rejected)) {
+          (widget.progress != 0)) {
         enabled = false;
       }
 
@@ -166,8 +162,6 @@ class _BudgetState extends State<Budget> {
                                           status: widget.status,
                                           progress: widget.progress,
                                           position: widget.position,
-                                          rejected2: widget.rejected2,
-                                          rejected: widget.rejected,
                                           children: [
                                             if (enabled)
                                               Column(
@@ -539,31 +533,33 @@ class _BudgetState extends State<Budget> {
                                                                         DataCell(
                                                                           Row(
                                                                             children: [
-                                                                              IconButton(
-                                                                                icon: const Icon(Icons.edit),
-                                                                                onPressed: () {
-                                                                                  showDialog(
-                                                                                    context: context,
-                                                                                    builder: (_) {
-                                                                                      return EditDialog(
-                                                                                        item: item,
-                                                                                        index: index,
-                                                                                        income: income,
-                                                                                        expense: expense,
-                                                                                        function: resetTable,
-                                                                                      );
-                                                                                    },
-                                                                                  );
-                                                                                },
-                                                                              ),
-                                                                              IconButton(
-                                                                                icon: const Icon(Icons.delete),
-                                                                                onPressed: () {
-                                                                                  setState(() {
-                                                                                    income.removeAt(index);
-                                                                                  });
-                                                                                },
-                                                                              ),
+                                                                              if (enabled)
+                                                                                IconButton(
+                                                                                  icon: const Icon(Icons.edit),
+                                                                                  onPressed: () {
+                                                                                    showDialog(
+                                                                                      context: context,
+                                                                                      builder: (_) {
+                                                                                        return EditDialog(
+                                                                                          item: item,
+                                                                                          index: index,
+                                                                                          income: income,
+                                                                                          expense: expense,
+                                                                                          function: resetTable,
+                                                                                        );
+                                                                                      },
+                                                                                    );
+                                                                                  },
+                                                                                ),
+                                                                              if (enabled)
+                                                                                IconButton(
+                                                                                  icon: const Icon(Icons.delete),
+                                                                                  onPressed: () {
+                                                                                    setState(() {
+                                                                                      income.removeAt(index);
+                                                                                    });
+                                                                                  },
+                                                                                ),
                                                                             ],
                                                                           ),
                                                                         ),
@@ -722,12 +718,14 @@ class _BudgetState extends State<Budget> {
                                             const SizedBox(
                                               height: 15,
                                             ),
-                                            Text(
-                                              'Profit/Loss : ${((calculateTotal(income) - calculateTotal(expense)) < 0 ? '-' : '')}RM${(calculateTotal(income) - calculateTotal(expense)).abs().toStringAsFixed(2)}',
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.bold,
+                                            if (income.isNotEmpty ||
+                                                expense.isNotEmpty)
+                                              Text(
+                                                'Profit/Loss : ${((calculateTotal(income) - calculateTotal(expense)) < 0 ? '-' : '')}RM${(calculateTotal(income) - calculateTotal(expense)).abs().toStringAsFixed(2)}',
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                ),
                                               ),
-                                            ),
                                             const SizedBox(
                                               height: 15,
                                             ),

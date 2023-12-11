@@ -31,22 +31,20 @@ class _AllOngoingEventState extends State<AllOngoingEvent> {
       final FirebaseFirestore firestore = FirebaseFirestore.instance;
       // Fetch event data
 
-      final QuerySnapshot<Map<String, dynamic>> eventSnapshot =
-          await firestore.collection('event').get();
-      final List<DocumentSnapshot<Map<String, dynamic>>> filteredEvents =
-          eventSnapshot.docs.where((eventDoc) {
-        final status = eventDoc['status'];
-        final progress = eventDoc['progress'];
-
-        return status != 'Closing' || progress != 3;
-      }).toList();
-
-      for (var docSnapshot in filteredEvents) {
+      final QuerySnapshot<Map<String, dynamic>> eventSnapshot = await firestore
+          .collection('event')
+          .where('status', isNotEqualTo: 'Completed')
+          .get();
+      for (var docSnapshot in eventSnapshot.docs) {
         Map<String, dynamic>? eventData = docSnapshot.data();
 
-        if (eventData != null) {
-          ongoingEvents.add(eventData);
-        }
+        String societyID = eventData['societyID'];
+        final DocumentSnapshot<Map<String, dynamic>> societySnapshot =
+            await firestore.collection('society').doc(societyID).get();
+
+        Map<String, dynamic>? societyData = societySnapshot.data();
+        eventData['society'] = societyData!['societyName'];
+        ongoingEvents.add(eventData);
       }
       for (var eventData in ongoingEvents) {
         String eventId = eventData['eventID'];
@@ -93,7 +91,7 @@ class _AllOngoingEventState extends State<AllOngoingEvent> {
         } else {
           ongoingEvents[eventIndex]['eventStatus'] = 'Pending';
         }
-
+              
         Query<Map<String, dynamic>> query = firestore
             .collection('schedule')
             .where('eventID', isEqualTo: eventId)
@@ -263,7 +261,7 @@ class _AllOngoingEventState extends State<AllOngoingEvent> {
                                             border: Border.all(
                                                 width: 1.0, color: Colors.grey),
                                           ),
-                                          child: Padding(
+                                          child: ongoingEvents.isNotEmpty ? Padding(
                                             padding: const EdgeInsets.all(16.0),
                                             child: Column(
                                               crossAxisAlignment:
@@ -273,6 +271,9 @@ class _AllOngoingEventState extends State<AllOngoingEvent> {
                                                     columns: const [
                                                       DataColumn(
                                                         label: Text('Name'),
+                                                      ),
+                                                      DataColumn(
+                                                        label: Text('Society'),
                                                       ),
                                                       DataColumn(
                                                           label: Text(
@@ -303,7 +304,11 @@ class _AllOngoingEventState extends State<AllOngoingEvent> {
                                                 ),
                                               ],
                                             ),
-                                          ),
+                                          ) : const SizedBox(
+                                                  height: 500,
+                                                  child: Center(
+                                                      child: Text(
+                                                          'There is currently no ongoing event.'))),
                                         ),
                                       ),
                                     ],
@@ -406,16 +411,18 @@ class _CustomDataTableState extends State<CustomDataTable> {
                         case 0:
                           return member['eventName'];
                         case 1:
-                          return member['president'];
+                          return member['society'];
                         case 2:
-                          return member['startDate'];
+                          return member['president'];
                         case 3:
-                          return member['endDate'];
+                          return member['startDate'];
                         case 4:
-                          return member['status'];
+                          return member['endDate'];
                         case 5:
-                          return member['progress'];
+                          return member['status'];
                         case 6:
+                          return member['progress'];
+                        case 7:
                           return member['eventStatus'];
                         default:
                           return '';
@@ -481,6 +488,7 @@ class _EventDataSource extends DataTableSource {
     return DataRow(
       cells: [
         DataCell(Text(event['eventName'].toString())),
+        DataCell(Text(event['society'].toString())),
         DataCell(Text(event['president'] != null
             ? event['president'].toString()
             : 'Not decided')),
