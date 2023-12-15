@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
 import 'package:fyp/pages/approvedClaim.dart';
+import 'package:fyp/pages/claimReport.dart';
 import 'package:fyp/pages/rejectedClaim.dart';
 import 'package:fyp/pages/viewClaim.dart';
 import 'package:intl/intl.dart';
@@ -45,7 +46,7 @@ class _PendingClaimState extends State<PendingClaim> {
 
         approvedClaim.add(claimData);
       }
-            setState(() {
+      setState(() {
         _isLoading = false;
       });
     } catch (error) {
@@ -197,56 +198,95 @@ class _PendingClaimState extends State<PendingClaim> {
                                     children: [
                                       Expanded(
                                         child: Container(
-                                          decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            border: Border.all(
-                                                width: 1.0, color: Colors.grey),
-                                          ),
-                                          child: approvedClaim.isNotEmpty
-                                              ? Padding(
-                                                  padding: const EdgeInsets.all(
-                                                      16.0),
-                                                  child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment.end,
-                                                    children: [
-                                                      CustomDataTable(
-                                                          columns: const [
-                                                            DataColumn(
-                                                              label:
-                                                                  Text('Title'),
-                                                            ),
-                                                            DataColumn(
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              border: Border.all(
+                                                  width: 1.0,
+                                                  color: Colors.grey),
+                                            ),
+                                            child: Column(
+                                              children: [
+                                                if (approvedClaim.isNotEmpty)
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            16.0),
+                                                    child: Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .end,
+                                                      children: [
+                                                        CustomDataTable(
+                                                            columns: const [
+                                                              DataColumn(
                                                                 label: Text(
-                                                                    'Claimant')),
-                                                            DataColumn(
-                                                                label: Text(
-                                                                    'Submission Date')),
-                                                            DataColumn(
-                                                                label: Text(
-                                                                    'Amount')),
-                                                            DataColumn(
-                                                                label:
-                                                                    Text('')),
-                                                          ],
-                                                          source:
-                                                              _ClaimDataSource(
-                                                                  approvedClaim,
-                                                                  context, widget.selectedEvent),
-                                                          refresh: getData,
-                                                          context: context),
-                                                      const SizedBox(
-                                                        height: 15,
-                                                      ),
-                                                    ],
+                                                                    'Title'),
+                                                              ),
+                                                              DataColumn(
+                                                                  label: Text(
+                                                                      'Claimant')),
+                                                              DataColumn(
+                                                                  label: Text(
+                                                                      'Submission Date')),
+                                                              DataColumn(
+                                                                  label: Text(
+                                                                      'Amount')),
+                                                              DataColumn(
+                                                                  label:
+                                                                      Text('')),
+                                                            ],
+                                                            source: _ClaimDataSource(
+                                                                approvedClaim,
+                                                                context,
+                                                                widget
+                                                                    .selectedEvent),
+                                                            refresh: getData,
+                                                            context: context),
+                                                        const SizedBox(
+                                                          height: 15,
+                                                        ),
+                                                      ],
+                                                    ),
                                                   ),
-                                                )
-                                              : const SizedBox(
-                                                  height: 500,
-                                                  child: Center(
-                                                      child: Text(
-                                                          'There is no claim pending.'))),
-                                        ),
+                                                if (approvedClaim.isEmpty)
+                                                  const SizedBox(
+                                                      height: 500,
+                                                      child: Center(
+                                                          child: Text(
+                                                              'There is no claim pending.'))),
+                                                const SizedBox(
+                                                  height: 15,
+                                                ),
+                                                Row(
+                                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                                  mainAxisAlignment: MainAxisAlignment.end,
+                                                  children: [
+                                                    Padding(
+                                                      padding: const EdgeInsets.all(8.0),
+                                                      child: CustomButton(
+                                                        onPressed: () {
+                                                          Navigator.push(
+                                                            context,
+                                                            MaterialPageRoute(
+                                                              builder: (context) =>
+                                                                  ClaimReport(
+                                                                selectedEvent: widget
+                                                                    .selectedEvent,
+                                                              ),
+                                                            ),
+                                                          );
+                                                        },
+                                                        text: 'Claim Report',
+                                                        width: 150,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(
+                                                      height: 15,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
+                                            )),
                                       ),
                                     ],
                                   )
@@ -412,8 +452,10 @@ class _ClaimDataSource extends DataTableSource {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) =>
-                        ViewClaim(selectedClaim: claim['claimID'].toString(), selectedEvent: selectedEvent,),
+                    builder: (context) => ViewClaim(
+                      selectedClaim: claim['claimID'].toString(),
+                      selectedEvent: selectedEvent,
+                    ),
                   ),
                 );
               },
