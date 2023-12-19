@@ -119,7 +119,6 @@ class _ViewClaimState extends State<ViewClaim> {
 
         if (treasurerDocuments.isNotEmpty) {
           treasurerDocuments.forEach((doc) {
-            print(doc['position']);
             if (storage.getItem('id') == doc['studentID'] &&
                 approvalData['treasurerName'] == '') {
               access = 1;

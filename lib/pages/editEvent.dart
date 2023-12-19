@@ -6,8 +6,7 @@ import 'package:fyp/pages/eventDetails.dart';
 
 class EditEvent extends StatefulWidget {
   final String selectedEvent;
-  const EditEvent(
-      {super.key, required this.selectedEvent});
+  const EditEvent({super.key, required this.selectedEvent});
 
   @override
   State<EditEvent> createState() => _EditEventState();
@@ -15,6 +14,12 @@ class EditEvent extends StatefulWidget {
 
 class _EditEventState extends State<EditEvent> {
   final name = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
+  final FocusNode _focusNode2 = FocusNode();
+  final FocusNode _focusNode3 = FocusNode();
+  final FocusNode _focusNode4 = FocusNode();
+  final FocusNode _focusNode5 = FocusNode();
+  final FocusNode _focusNode6 = FocusNode();
   final presidentName = TextEditingController();
   final presidentID = TextEditingController();
   final secretaryName = TextEditingController();
@@ -27,7 +32,8 @@ class _EditEventState extends State<EditEvent> {
   final vsecretaryID = TextEditingController();
   final vtreasurerName = TextEditingController();
   final vtreasurerID = TextEditingController();
-   bool _isLoading = true;
+  List<Map<String, dynamic>> userList = [];
+  bool _isLoading = true;
   List<String> restrictedPositions = [
     'President',
     'Vice President',
@@ -37,7 +43,6 @@ class _EditEventState extends State<EditEvent> {
     'Vice Treasurer',
   ];
   final GlobalKey<FormState> _formKey1 = GlobalKey<FormState>();
-  
 
   Future<void> getData() async {
     try {
@@ -118,25 +123,20 @@ class _EditEventState extends State<EditEvent> {
 
   Future<void> onTextChanged(
       String value, TextEditingController controller) async {
-    if (RegExp(r'^\d{2}[A-Z]{3}\d{5}$').hasMatch(value)) {
-      DocumentSnapshot<Map<String, dynamic>> student =
-          await FirebaseFirestore.instance.collection('user').doc(value).get();
+    bool hasMatch = false;
+    String studentName = '';
 
-      if (student.exists) {
-        Map<String, dynamic> studentData = student.data()!;
-        setState(() {
-          controller.text = studentData['name'];
-        });
-      } else {
-        setState(() {
-          controller.text = '';
-        });
+    for (Map<String, dynamic> user in userList) {
+      if (user['id'] == value) {
+        hasMatch = true;
+        studentName = user['name'];
+        break;
       }
-    } else {
-      setState(() {
-        controller.text = '';
-      });
     }
+
+    setState(() {
+      controller.text = hasMatch ? studentName : '';
+    });
   }
 
   bool hasDuplicateTextValues() {
@@ -173,6 +173,12 @@ class _EditEventState extends State<EditEvent> {
   ) async {
     try {
       FirebaseFirestore firestore = FirebaseFirestore.instance;
+      QuerySnapshot querySnapshot2 =
+          await firestore.collection('user').where('id', isLessThan: 'A').get();
+
+      querySnapshot2.docs.forEach((DocumentSnapshot document) {
+        userList.add(document.data() as Map<String, dynamic>);
+      });
 
       CollectionReference committee = firestore.collection('committee');
 
@@ -354,26 +360,157 @@ class _EditEventState extends State<EditEvent> {
                                                 ),
                                               Expanded(
                                                 flex: 4,
-                                                child: CustomTextField(
-                                                  screen: !Responsive.isDesktop(
-                                                      context),
-                                                  labelText: 'Student ID',
-                                                  onChanged: (value) =>
-                                                      onTextChanged(
-                                                          value, presidentName),
-                                                  validator: (value) {
-                                                    if (value!.isEmpty) {
-                                                      return 'Please enter student ID';
-                                                    } else if (!RegExp(
-                                                            r'^\d{2}[A-Z]{3}\d{5}$')
-                                                        .hasMatch(value)) {
-                                                      return 'Invalid student ID';
-                                                    }
-                                                    return null;
-                                                  },
-                                                  controller: presidentID,
-                                                  hintText: 'Enter student ID',
-                                                ),
+                                                child: RawAutocomplete<
+                                                          String>(
+                                                        focusNode: _focusNode2,
+                                                        textEditingController:
+                                                            presidentID,
+                                                        optionsBuilder:
+                                                            (TextEditingValue
+                                                                textEditingValue) {
+                                                          return userList
+                                                              .map<String>(
+                                                                  (user) => user[
+                                                                          'id']
+                                                                      .toString())
+                                                              .where((id) =>
+                                                                  id.contains(
+                                                                      textEditingValue
+                                                                          .text))
+                                                              .toList();
+                                                        },
+                                                        onSelected:
+                                                            (String value) {
+                                                          onTextChanged(value,
+                                                              presidentName);
+                                                        },
+                                                        fieldViewBuilder: (BuildContext
+                                                                context,
+                                                            TextEditingController
+                                                                controller,
+                                                            FocusNode focusNode,
+                                                            VoidCallback
+                                                                onFieldSubmitted) {
+                                                          return TextFormField(
+                                                            validator: (value) {
+                                                              if (value!
+                                                                  .isEmpty) {
+                                                                return 'Please enter student ID';
+                                                              } else if (!RegExp(
+                                                                      r'^\d{2}[A-Z]{3}\d{5}$')
+                                                                  .hasMatch(
+                                                                      value)) {
+                                                                return 'Invalid student ID';
+                                                              }
+                                                              return null;
+                                                            },
+                                                            controller:
+                                                                controller,
+                                                            focusNode:
+                                                                focusNode,
+                                                            onChanged: (value) {
+                                                              onTextChanged(
+                                                                  value,
+                                                                  presidentName);
+                                                            },
+                                                            decoration:
+                                                                const InputDecoration(
+                                                              enabledBorder:
+                                                                  OutlineInputBorder(
+                                                                borderSide: BorderSide(
+                                                                    width: 1,
+                                                                    color: Colors
+                                                                        .grey),
+                                                              ),
+                                                              focusedBorder:
+                                                                  OutlineInputBorder(
+                                                                borderSide: BorderSide(
+                                                                    width: 1,
+                                                                    color: Colors
+                                                                        .blue),
+                                                              ),
+                                                              errorBorder:
+                                                                  OutlineInputBorder(
+                                                                borderSide:
+                                                                    BorderSide(
+                                                                        width:
+                                                                            1,
+                                                                        color: Colors
+                                                                            .red),
+                                                              ),
+                                                              focusedErrorBorder:
+                                                                  OutlineInputBorder(
+                                                                borderSide:
+                                                                    BorderSide(
+                                                                        width:
+                                                                            1,
+                                                                        color: Colors
+                                                                            .red),
+                                                              ),
+                                                              labelText:
+                                                                  'Student ID',
+                                                              hintText:
+                                                                  'Enter student ID',
+                                                            ),
+                                                          );
+                                                        },
+                                                        optionsViewBuilder:
+                                                            (BuildContext
+                                                                    context,
+                                                                AutocompleteOnSelected<
+                                                                        String>
+                                                                    onSelected,
+                                                                Iterable<String>
+                                                                    options) {
+                                                          return Align(
+                                                            alignment: Alignment
+                                                                .topLeft,
+                                                            child: Material(
+                                                              elevation: 4.0,
+                                                              child:
+                                                                  ConstrainedBox(
+                                                                constraints:
+                                                                    BoxConstraints(
+                                                                  maxWidth: 300,
+                                                                  maxHeight:
+                                                                      250,
+                                                                ),
+                                                                child: ListView
+                                                                    .builder(
+                                                                  padding:
+                                                                      EdgeInsets
+                                                                          .all(
+                                                                              8.0),
+                                                                  itemCount:
+                                                                      options
+                                                                          .length,
+                                                                  itemBuilder:
+                                                                      (BuildContext
+                                                                              context,
+                                                                          int index) {
+                                                                    final String
+                                                                        user =
+                                                                        options.elementAt(
+                                                                            index);
+                                                                    return GestureDetector(
+                                                                      onTap:
+                                                                          () {
+                                                                        onSelected(
+                                                                            user);
+                                                                      },
+                                                                      child:
+                                                                          ListTile(
+                                                                        title: Text(
+                                                                            user),
+                                                                      ),
+                                                                    );
+                                                                  },
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          );
+                                                        },
+                                                      ),
                                               ),
                                             ],
                                           ),
@@ -397,26 +534,157 @@ class _EditEventState extends State<EditEvent> {
                                                 ),
                                               Expanded(
                                                 flex: 4,
-                                                child: CustomTextField(
-                                                  screen: !Responsive.isDesktop(
-                                                      context),
-                                                  labelText: 'Student ID',
-                                                  onChanged: (value) =>
-                                                      onTextChanged(
-                                                          value, secretaryName),
-                                                  validator: (value) {
-                                                    if (value!.isEmpty) {
-                                                      return 'Please enter student ID';
-                                                    } else if (!RegExp(
-                                                            r'^\d{2}[A-Z]{3}\d{5}$')
-                                                        .hasMatch(value)) {
-                                                      return 'Invalid student ID';
-                                                    }
-                                                    return null;
-                                                  },
-                                                  controller: secretaryID,
-                                                  hintText: 'Enter student ID',
-                                                ),
+                                                child: RawAutocomplete<
+                                                          String>(
+                                                        focusNode: _focusNode,
+                                                        textEditingController:
+                                                            secretaryID,
+                                                        optionsBuilder:
+                                                            (TextEditingValue
+                                                                textEditingValue) {
+                                                          return userList
+                                                              .map<String>(
+                                                                  (user) => user[
+                                                                          'id']
+                                                                      .toString())
+                                                              .where((id) =>
+                                                                  id.contains(
+                                                                      textEditingValue
+                                                                          .text))
+                                                              .toList();
+                                                        },
+                                                        onSelected:
+                                                            (String value) {
+                                                          onTextChanged(value,
+                                                              secretaryName);
+                                                        },
+                                                        fieldViewBuilder: (BuildContext
+                                                                context,
+                                                            TextEditingController
+                                                                controller,
+                                                            FocusNode focusNode,
+                                                            VoidCallback
+                                                                onFieldSubmitted) {
+                                                          return TextFormField(
+                                                            validator: (value) {
+                                                              if (value!
+                                                                  .isEmpty) {
+                                                                return 'Please enter student ID';
+                                                              } else if (!RegExp(
+                                                                      r'^\d{2}[A-Z]{3}\d{5}$')
+                                                                  .hasMatch(
+                                                                      value)) {
+                                                                return 'Invalid student ID';
+                                                              }
+                                                              return null;
+                                                            },
+                                                            controller:
+                                                                controller,
+                                                            focusNode:
+                                                                focusNode,
+                                                            onChanged: (value) {
+                                                              onTextChanged(
+                                                                  value,
+                                                                  secretaryName);
+                                                            },
+                                                            decoration:
+                                                                const InputDecoration(
+                                                              enabledBorder:
+                                                                  OutlineInputBorder(
+                                                                borderSide: BorderSide(
+                                                                    width: 1,
+                                                                    color: Colors
+                                                                        .grey),
+                                                              ),
+                                                              focusedBorder:
+                                                                  OutlineInputBorder(
+                                                                borderSide: BorderSide(
+                                                                    width: 1,
+                                                                    color: Colors
+                                                                        .blue),
+                                                              ),
+                                                              errorBorder:
+                                                                  OutlineInputBorder(
+                                                                borderSide:
+                                                                    BorderSide(
+                                                                        width:
+                                                                            1,
+                                                                        color: Colors
+                                                                            .red),
+                                                              ),
+                                                              focusedErrorBorder:
+                                                                  OutlineInputBorder(
+                                                                borderSide:
+                                                                    BorderSide(
+                                                                        width:
+                                                                            1,
+                                                                        color: Colors
+                                                                            .red),
+                                                              ),
+                                                              labelText:
+                                                                  'Student ID',
+                                                              hintText:
+                                                                  'Enter student ID',
+                                                            ),
+                                                          );
+                                                        },
+                                                        optionsViewBuilder:
+                                                            (BuildContext
+                                                                    context,
+                                                                AutocompleteOnSelected<
+                                                                        String>
+                                                                    onSelected,
+                                                                Iterable<String>
+                                                                    options) {
+                                                          return Align(
+                                                            alignment: Alignment
+                                                                .topLeft,
+                                                            child: Material(
+                                                              elevation: 4.0,
+                                                              child:
+                                                                  ConstrainedBox(
+                                                                constraints:
+                                                                    BoxConstraints(
+                                                                  maxWidth: 300,
+                                                                  maxHeight:
+                                                                      250,
+                                                                ),
+                                                                child: ListView
+                                                                    .builder(
+                                                                  padding:
+                                                                      EdgeInsets
+                                                                          .all(
+                                                                              8.0),
+                                                                  itemCount:
+                                                                      options
+                                                                          .length,
+                                                                  itemBuilder:
+                                                                      (BuildContext
+                                                                              context,
+                                                                          int index) {
+                                                                    final String
+                                                                        user =
+                                                                        options.elementAt(
+                                                                            index);
+                                                                    return GestureDetector(
+                                                                      onTap:
+                                                                          () {
+                                                                        onSelected(
+                                                                            user);
+                                                                      },
+                                                                      child:
+                                                                          ListTile(
+                                                                        title: Text(
+                                                                            user),
+                                                                      ),
+                                                                    );
+                                                                  },
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          );
+                                                        },
+                                                      ),
                                               ),
                                             ],
                                           ),
@@ -440,26 +708,157 @@ class _EditEventState extends State<EditEvent> {
                                                 ),
                                               Expanded(
                                                 flex: 4,
-                                                child: CustomTextField(
-                                                  screen: !Responsive.isDesktop(
-                                                      context),
-                                                  labelText: 'Student ID',
-                                                  onChanged: (value) =>
-                                                      onTextChanged(
-                                                          value, treasurerName),
-                                                  validator: (value) {
-                                                    if (value!.isEmpty) {
-                                                      return 'Please enter student ID';
-                                                    } else if (!RegExp(
-                                                            r'^\d{2}[A-Z]{3}\d{5}$')
-                                                        .hasMatch(value)) {
-                                                      return 'Invalid student ID';
-                                                    }
-                                                    return null;
-                                                  },
-                                                  controller: treasurerID,
-                                                  hintText: 'Enter student ID',
-                                                ),
+                                                child: RawAutocomplete<
+                                                          String>(
+                                                        focusNode: _focusNode3,
+                                                        textEditingController:
+                                                            treasurerID,
+                                                        optionsBuilder:
+                                                            (TextEditingValue
+                                                                textEditingValue) {
+                                                          return userList
+                                                              .map<String>(
+                                                                  (user) => user[
+                                                                          'id']
+                                                                      .toString())
+                                                              .where((id) =>
+                                                                  id.contains(
+                                                                      textEditingValue
+                                                                          .text))
+                                                              .toList();
+                                                        },
+                                                        onSelected:
+                                                            (String value) {
+                                                          onTextChanged(value,
+                                                              treasurerName);
+                                                        },
+                                                        fieldViewBuilder: (BuildContext
+                                                                context,
+                                                            TextEditingController
+                                                                controller,
+                                                            FocusNode focusNode,
+                                                            VoidCallback
+                                                                onFieldSubmitted) {
+                                                          return TextFormField(
+                                                            validator: (value) {
+                                                              if (value!
+                                                                  .isEmpty) {
+                                                                return 'Please enter student ID';
+                                                              } else if (!RegExp(
+                                                                      r'^\d{2}[A-Z]{3}\d{5}$')
+                                                                  .hasMatch(
+                                                                      value)) {
+                                                                return 'Invalid student ID';
+                                                              }
+                                                              return null;
+                                                            },
+                                                            controller:
+                                                                controller,
+                                                            focusNode:
+                                                                focusNode,
+                                                            onChanged: (value) {
+                                                              onTextChanged(
+                                                                  value,
+                                                                  treasurerName);
+                                                            },
+                                                            decoration:
+                                                                const InputDecoration(
+                                                              enabledBorder:
+                                                                  OutlineInputBorder(
+                                                                borderSide: BorderSide(
+                                                                    width: 1,
+                                                                    color: Colors
+                                                                        .grey),
+                                                              ),
+                                                              focusedBorder:
+                                                                  OutlineInputBorder(
+                                                                borderSide: BorderSide(
+                                                                    width: 1,
+                                                                    color: Colors
+                                                                        .blue),
+                                                              ),
+                                                              errorBorder:
+                                                                  OutlineInputBorder(
+                                                                borderSide:
+                                                                    BorderSide(
+                                                                        width:
+                                                                            1,
+                                                                        color: Colors
+                                                                            .red),
+                                                              ),
+                                                              focusedErrorBorder:
+                                                                  OutlineInputBorder(
+                                                                borderSide:
+                                                                    BorderSide(
+                                                                        width:
+                                                                            1,
+                                                                        color: Colors
+                                                                            .red),
+                                                              ),
+                                                              labelText:
+                                                                  'Student ID',
+                                                              hintText:
+                                                                  'Enter student ID',
+                                                            ),
+                                                          );
+                                                        },
+                                                        optionsViewBuilder:
+                                                            (BuildContext
+                                                                    context,
+                                                                AutocompleteOnSelected<
+                                                                        String>
+                                                                    onSelected,
+                                                                Iterable<String>
+                                                                    options) {
+                                                          return Align(
+                                                            alignment: Alignment
+                                                                .topLeft,
+                                                            child: Material(
+                                                              elevation: 4.0,
+                                                              child:
+                                                                  ConstrainedBox(
+                                                                constraints:
+                                                                    BoxConstraints(
+                                                                  maxWidth: 300,
+                                                                  maxHeight:
+                                                                      250,
+                                                                ),
+                                                                child: ListView
+                                                                    .builder(
+                                                                  padding:
+                                                                      EdgeInsets
+                                                                          .all(
+                                                                              8.0),
+                                                                  itemCount:
+                                                                      options
+                                                                          .length,
+                                                                  itemBuilder:
+                                                                      (BuildContext
+                                                                              context,
+                                                                          int index) {
+                                                                    final String
+                                                                        user =
+                                                                        options.elementAt(
+                                                                            index);
+                                                                    return GestureDetector(
+                                                                      onTap:
+                                                                          () {
+                                                                        onSelected(
+                                                                            user);
+                                                                      },
+                                                                      child:
+                                                                          ListTile(
+                                                                        title: Text(
+                                                                            user),
+                                                                      ),
+                                                                    );
+                                                                  },
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          );
+                                                        },
+                                                      ),
                                               ),
                                             ],
                                           ),
@@ -626,26 +1025,157 @@ class _EditEventState extends State<EditEvent> {
                                                 ),
                                               Expanded(
                                                 flex: 4,
-                                                child: CustomTextField(
-                                                  screen: !Responsive.isDesktop(
-                                                      context),
-                                                  labelText: 'Student ID',
-                                                  onChanged: (value) =>
-                                                      onTextChanged(value,
-                                                          vpresidentName),
-                                                  validator: (value) {
-                                                    if (value!.isEmpty) {
-                                                      return 'Please enter student ID';
-                                                    } else if (!RegExp(
-                                                            r'^\d{2}[A-Z]{3}\d{5}$')
-                                                        .hasMatch(value)) {
-                                                      return 'Invalid student ID';
-                                                    }
-                                                    return null;
-                                                  },
-                                                  controller: vpresidentID,
-                                                  hintText: 'Enter student ID',
-                                                ),
+                                                child:RawAutocomplete<
+                                                          String>(
+                                                        focusNode: _focusNode2,
+                                                        textEditingController:
+                                                            vpresidentID,
+                                                        optionsBuilder:
+                                                            (TextEditingValue
+                                                                textEditingValue) {
+                                                          return userList
+                                                              .map<String>(
+                                                                  (user) => user[
+                                                                          'id']
+                                                                      .toString())
+                                                              .where((id) =>
+                                                                  id.contains(
+                                                                      textEditingValue
+                                                                          .text))
+                                                              .toList();
+                                                        },
+                                                        onSelected:
+                                                            (String value) {
+                                                          onTextChanged(value,
+                                                              vpresidentName);
+                                                        },
+                                                        fieldViewBuilder: (BuildContext
+                                                                context,
+                                                            TextEditingController
+                                                                controller,
+                                                            FocusNode focusNode,
+                                                            VoidCallback
+                                                                onFieldSubmitted) {
+                                                          return TextFormField(
+                                                            validator: (value) {
+                                                              if (value!
+                                                                  .isEmpty) {
+                                                                return 'Please enter student ID';
+                                                              } else if (!RegExp(
+                                                                      r'^\d{2}[A-Z]{3}\d{5}$')
+                                                                  .hasMatch(
+                                                                      value)) {
+                                                                return 'Invalid student ID';
+                                                              }
+                                                              return null;
+                                                            },
+                                                            controller:
+                                                                controller,
+                                                            focusNode:
+                                                                focusNode,
+                                                            onChanged: (value) {
+                                                              onTextChanged(
+                                                                  value,
+                                                                  vpresidentName);
+                                                            },
+                                                            decoration:
+                                                                const InputDecoration(
+                                                              enabledBorder:
+                                                                  OutlineInputBorder(
+                                                                borderSide: BorderSide(
+                                                                    width: 1,
+                                                                    color: Colors
+                                                                        .grey),
+                                                              ),
+                                                              focusedBorder:
+                                                                  OutlineInputBorder(
+                                                                borderSide: BorderSide(
+                                                                    width: 1,
+                                                                    color: Colors
+                                                                        .blue),
+                                                              ),
+                                                              errorBorder:
+                                                                  OutlineInputBorder(
+                                                                borderSide:
+                                                                    BorderSide(
+                                                                        width:
+                                                                            1,
+                                                                        color: Colors
+                                                                            .red),
+                                                              ),
+                                                              focusedErrorBorder:
+                                                                  OutlineInputBorder(
+                                                                borderSide:
+                                                                    BorderSide(
+                                                                        width:
+                                                                            1,
+                                                                        color: Colors
+                                                                            .red),
+                                                              ),
+                                                              labelText:
+                                                                  'Student ID',
+                                                              hintText:
+                                                                  'Enter student ID',
+                                                            ),
+                                                          );
+                                                        },
+                                                        optionsViewBuilder:
+                                                            (BuildContext
+                                                                    context,
+                                                                AutocompleteOnSelected<
+                                                                        String>
+                                                                    onSelected,
+                                                                Iterable<String>
+                                                                    options) {
+                                                          return Align(
+                                                            alignment: Alignment
+                                                                .topLeft,
+                                                            child: Material(
+                                                              elevation: 4.0,
+                                                              child:
+                                                                  ConstrainedBox(
+                                                                constraints:
+                                                                    BoxConstraints(
+                                                                  maxWidth: 300,
+                                                                  maxHeight:
+                                                                      250,
+                                                                ),
+                                                                child: ListView
+                                                                    .builder(
+                                                                  padding:
+                                                                      EdgeInsets
+                                                                          .all(
+                                                                              8.0),
+                                                                  itemCount:
+                                                                      options
+                                                                          .length,
+                                                                  itemBuilder:
+                                                                      (BuildContext
+                                                                              context,
+                                                                          int index) {
+                                                                    final String
+                                                                        user =
+                                                                        options.elementAt(
+                                                                            index);
+                                                                    return GestureDetector(
+                                                                      onTap:
+                                                                          () {
+                                                                        onSelected(
+                                                                            user);
+                                                                      },
+                                                                      child:
+                                                                          ListTile(
+                                                                        title: Text(
+                                                                            user),
+                                                                      ),
+                                                                    );
+                                                                  },
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          );
+                                                        },
+                                                      ),
                                               ),
                                             ],
                                           ),
@@ -669,26 +1199,157 @@ class _EditEventState extends State<EditEvent> {
                                                 ),
                                               Expanded(
                                                 flex: 4,
-                                                child: CustomTextField(
-                                                  screen: !Responsive.isDesktop(
-                                                      context),
-                                                  labelText: 'Student ID',
-                                                  onChanged: (value) =>
-                                                      onTextChanged(value,
-                                                          vsecretaryName),
-                                                  validator: (value) {
-                                                    if (value!.isEmpty) {
-                                                      return 'Please enter student ID';
-                                                    } else if (!RegExp(
-                                                            r'^\d{2}[A-Z]{3}\d{5}$')
-                                                        .hasMatch(value)) {
-                                                      return 'Invalid student ID';
-                                                    }
-                                                    return null;
-                                                  },
-                                                  controller: vsecretaryID,
-                                                  hintText: 'Enter student ID',
-                                                ),
+                                                child: RawAutocomplete<
+                                                          String>(
+                                                        focusNode: _focusNode5,
+                                                        textEditingController:
+                                                            vsecretaryID,
+                                                        optionsBuilder:
+                                                            (TextEditingValue
+                                                                textEditingValue) {
+                                                          return userList
+                                                              .map<String>(
+                                                                  (user) => user[
+                                                                          'id']
+                                                                      .toString())
+                                                              .where((id) =>
+                                                                  id.contains(
+                                                                      textEditingValue
+                                                                          .text))
+                                                              .toList();
+                                                        },
+                                                        onSelected:
+                                                            (String value) {
+                                                          onTextChanged(value,
+                                                              vsecretaryName);
+                                                        },
+                                                        fieldViewBuilder: (BuildContext
+                                                                context,
+                                                            TextEditingController
+                                                                controller,
+                                                            FocusNode focusNode,
+                                                            VoidCallback
+                                                                onFieldSubmitted) {
+                                                          return TextFormField(
+                                                            validator: (value) {
+                                                              if (value!
+                                                                  .isEmpty) {
+                                                                return 'Please enter student ID';
+                                                              } else if (!RegExp(
+                                                                      r'^\d{2}[A-Z]{3}\d{5}$')
+                                                                  .hasMatch(
+                                                                      value)) {
+                                                                return 'Invalid student ID';
+                                                              }
+                                                              return null;
+                                                            },
+                                                            controller:
+                                                                controller,
+                                                            focusNode:
+                                                                focusNode,
+                                                            onChanged: (value) {
+                                                              onTextChanged(
+                                                                  value,
+                                                                  vsecretaryName);
+                                                            },
+                                                            decoration:
+                                                                const InputDecoration(
+                                                              enabledBorder:
+                                                                  OutlineInputBorder(
+                                                                borderSide: BorderSide(
+                                                                    width: 1,
+                                                                    color: Colors
+                                                                        .grey),
+                                                              ),
+                                                              focusedBorder:
+                                                                  OutlineInputBorder(
+                                                                borderSide: BorderSide(
+                                                                    width: 1,
+                                                                    color: Colors
+                                                                        .blue),
+                                                              ),
+                                                              errorBorder:
+                                                                  OutlineInputBorder(
+                                                                borderSide:
+                                                                    BorderSide(
+                                                                        width:
+                                                                            1,
+                                                                        color: Colors
+                                                                            .red),
+                                                              ),
+                                                              focusedErrorBorder:
+                                                                  OutlineInputBorder(
+                                                                borderSide:
+                                                                    BorderSide(
+                                                                        width:
+                                                                            1,
+                                                                        color: Colors
+                                                                            .red),
+                                                              ),
+                                                              labelText:
+                                                                  'Student ID',
+                                                              hintText:
+                                                                  'Enter student ID',
+                                                            ),
+                                                          );
+                                                        },
+                                                        optionsViewBuilder:
+                                                            (BuildContext
+                                                                    context,
+                                                                AutocompleteOnSelected<
+                                                                        String>
+                                                                    onSelected,
+                                                                Iterable<String>
+                                                                    options) {
+                                                          return Align(
+                                                            alignment: Alignment
+                                                                .topLeft,
+                                                            child: Material(
+                                                              elevation: 4.0,
+                                                              child:
+                                                                  ConstrainedBox(
+                                                                constraints:
+                                                                    BoxConstraints(
+                                                                  maxWidth: 300,
+                                                                  maxHeight:
+                                                                      250,
+                                                                ),
+                                                                child: ListView
+                                                                    .builder(
+                                                                  padding:
+                                                                      EdgeInsets
+                                                                          .all(
+                                                                              8.0),
+                                                                  itemCount:
+                                                                      options
+                                                                          .length,
+                                                                  itemBuilder:
+                                                                      (BuildContext
+                                                                              context,
+                                                                          int index) {
+                                                                    final String
+                                                                        user =
+                                                                        options.elementAt(
+                                                                            index);
+                                                                    return GestureDetector(
+                                                                      onTap:
+                                                                          () {
+                                                                        onSelected(
+                                                                            user);
+                                                                      },
+                                                                      child:
+                                                                          ListTile(
+                                                                        title: Text(
+                                                                            user),
+                                                                      ),
+                                                                    );
+                                                                  },
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          );
+                                                        },
+                                                      ),
                                               ),
                                             ],
                                           ),
@@ -712,26 +1373,157 @@ class _EditEventState extends State<EditEvent> {
                                                 ),
                                               Expanded(
                                                 flex: 4,
-                                                child: CustomTextField(
-                                                  screen: !Responsive.isDesktop(
-                                                      context),
-                                                  labelText: 'Student ID',
-                                                  onChanged: (value) =>
-                                                      onTextChanged(value,
-                                                          vtreasurerName),
-                                                  validator: (value) {
-                                                    if (value!.isEmpty) {
-                                                      return 'Please enter student ID';
-                                                    } else if (!RegExp(
-                                                            r'^\d{2}[A-Z]{3}\d{5}$')
-                                                        .hasMatch(value)) {
-                                                      return 'Invalid student ID';
-                                                    }
-                                                    return null;
-                                                  },
-                                                  controller: vtreasurerID,
-                                                  hintText: 'Enter student ID',
-                                                ),
+                                                child: RawAutocomplete<
+                                                          String>(
+                                                        focusNode: _focusNode6,
+                                                        textEditingController:
+                                                            vtreasurerID,
+                                                        optionsBuilder:
+                                                            (TextEditingValue
+                                                                textEditingValue) {
+                                                          return userList
+                                                              .map<String>(
+                                                                  (user) => user[
+                                                                          'id']
+                                                                      .toString())
+                                                              .where((id) =>
+                                                                  id.contains(
+                                                                      textEditingValue
+                                                                          .text))
+                                                              .toList();
+                                                        },
+                                                        onSelected:
+                                                            (String value) {
+                                                          onTextChanged(value,
+                                                              vtreasurerName);
+                                                        },
+                                                        fieldViewBuilder: (BuildContext
+                                                                context,
+                                                            TextEditingController
+                                                                controller,
+                                                            FocusNode focusNode,
+                                                            VoidCallback
+                                                                onFieldSubmitted) {
+                                                          return TextFormField(
+                                                            validator: (value) {
+                                                              if (value!
+                                                                  .isEmpty) {
+                                                                return 'Please enter student ID';
+                                                              } else if (!RegExp(
+                                                                      r'^\d{2}[A-Z]{3}\d{5}$')
+                                                                  .hasMatch(
+                                                                      value)) {
+                                                                return 'Invalid student ID';
+                                                              }
+                                                              return null;
+                                                            },
+                                                            controller:
+                                                                controller,
+                                                            focusNode:
+                                                                focusNode,
+                                                            onChanged: (value) {
+                                                              onTextChanged(
+                                                                  value,
+                                                                  vtreasurerName);
+                                                            },
+                                                            decoration:
+                                                                const InputDecoration(
+                                                              enabledBorder:
+                                                                  OutlineInputBorder(
+                                                                borderSide: BorderSide(
+                                                                    width: 1,
+                                                                    color: Colors
+                                                                        .grey),
+                                                              ),
+                                                              focusedBorder:
+                                                                  OutlineInputBorder(
+                                                                borderSide: BorderSide(
+                                                                    width: 1,
+                                                                    color: Colors
+                                                                        .blue),
+                                                              ),
+                                                              errorBorder:
+                                                                  OutlineInputBorder(
+                                                                borderSide:
+                                                                    BorderSide(
+                                                                        width:
+                                                                            1,
+                                                                        color: Colors
+                                                                            .red),
+                                                              ),
+                                                              focusedErrorBorder:
+                                                                  OutlineInputBorder(
+                                                                borderSide:
+                                                                    BorderSide(
+                                                                        width:
+                                                                            1,
+                                                                        color: Colors
+                                                                            .red),
+                                                              ),
+                                                              labelText:
+                                                                  'Student ID',
+                                                              hintText:
+                                                                  'Enter student ID',
+                                                            ),
+                                                          );
+                                                        },
+                                                        optionsViewBuilder:
+                                                            (BuildContext
+                                                                    context,
+                                                                AutocompleteOnSelected<
+                                                                        String>
+                                                                    onSelected,
+                                                                Iterable<String>
+                                                                    options) {
+                                                          return Align(
+                                                            alignment: Alignment
+                                                                .topLeft,
+                                                            child: Material(
+                                                              elevation: 4.0,
+                                                              child:
+                                                                  ConstrainedBox(
+                                                                constraints:
+                                                                    BoxConstraints(
+                                                                  maxWidth: 300,
+                                                                  maxHeight:
+                                                                      250,
+                                                                ),
+                                                                child: ListView
+                                                                    .builder(
+                                                                  padding:
+                                                                      EdgeInsets
+                                                                          .all(
+                                                                              8.0),
+                                                                  itemCount:
+                                                                      options
+                                                                          .length,
+                                                                  itemBuilder:
+                                                                      (BuildContext
+                                                                              context,
+                                                                          int index) {
+                                                                    final String
+                                                                        user =
+                                                                        options.elementAt(
+                                                                            index);
+                                                                    return GestureDetector(
+                                                                      onTap:
+                                                                          () {
+                                                                        onSelected(
+                                                                            user);
+                                                                      },
+                                                                      child:
+                                                                          ListTile(
+                                                                        title: Text(
+                                                                            user),
+                                                                      ),
+                                                                    );
+                                                                  },
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          );
+                                                        },
+                                                      ),
                                               ),
                                             ],
                                           ),

@@ -544,8 +544,6 @@ class _EvaluationState extends State<Evaluation> {
                                                                           (context,
                                                                               url,
                                                                               error) {
-                                                                        print(
-                                                                            error);
                                                                         valid[1] =
                                                                             false;
                                                                         return Container(

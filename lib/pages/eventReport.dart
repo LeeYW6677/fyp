@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
@@ -725,7 +726,6 @@ class _EventReportState extends State<EventReport> {
                                                                       'nonMemberCount'] ??
                                                                   0;
 
-
                                                           // Calculate the total count
                                                           int totalCount =
                                                               memberCount +
@@ -748,7 +748,6 @@ class _EventReportState extends State<EventReport> {
                                                                     sum +
                                                                     value);
 
-                                                        print(completedEvents);
                                                         setState(() {
                                                           completedEvents =
                                                               completedEvents;
@@ -830,6 +829,13 @@ class _EventReportState extends State<EventReport> {
                                                     ),
                                                     const SizedBox(
                                                       height: 15,
+                                                    ),
+                                                    SizedBox(
+                                                      height: 500,
+                                                      width: 500,
+                                                      child:
+                                                          buildComparisonBarChart(
+                                                              completedEvents),
                                                     ),
                                                     SingleChildScrollView(
                                                         scrollDirection:
@@ -1009,4 +1015,125 @@ class _EventReportState extends State<EventReport> {
       bottomNavigationBar: const Footer(),
     );
   }
+}
+
+Widget bottomTitles(double value, TitleMeta meta) {
+  final titles = <String>['Mn', 'Te', 'Wd', 'Tu', 'Fr', 'St', 'Su'];
+
+  final Widget text = Text(
+    titles[value.toInt()],
+    style: const TextStyle(
+      color: Color(0xff7589a2),
+      fontWeight: FontWeight.bold,
+      fontSize: 14,
+    ),
+  );
+
+  return SideTitleWidget(
+    axisSide: meta.axisSide,
+    space: 16, //margin top
+    child: text,
+  );
+}
+
+Widget buildComparisonBarChart(List<Map<String, dynamic>> completedEvents) {
+  return BarChart(
+    BarChartData(
+      titlesData: FlTitlesData(
+        show: true,
+        rightTitles: AxisTitles(
+          sideTitles: SideTitles(showTitles: false),
+        ),
+        topTitles: AxisTitles(
+          sideTitles: SideTitles(showTitles: false),
+        ),
+        bottomTitles: AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: true,
+            getTitlesWidget: bottomTitles,
+            reservedSize: 42,
+          ),
+        ),
+      ),
+      alignment: BarChartAlignment.spaceAround,
+      maxY: calculateMaxY(completedEvents),
+      groupsSpace: 12,
+      barGroups: List.generate(
+        completedEvents.length,
+        (index) {
+          final Map<String, dynamic> event = completedEvents[index];
+          final double totalCount = event['totalCount'].toDouble();
+          final double participantCount = event['participantCount'].toDouble();
+          final double totalIncome = event['totalIncome'].toDouble();
+          final double totalIncomeAmount =
+              event['totalIncomeAmount'].toDouble();
+          final double totalExpense = event['totalExpense'].toDouble();
+          final double totalExpenseAmount =
+              event['totalExpenseAmount'].toDouble();
+
+          return BarChartGroupData(
+            x: index,
+            barsSpace: 8,
+            barRods: [
+              BarChartRodData(
+                toY: totalCount,
+                color:
+                    totalCount >= participantCount ? Colors.green : Colors.red,
+                width: 16,
+              ),
+              BarChartRodData(
+                toY: participantCount,
+                color:
+                    participantCount >= totalCount ? Colors.green : Colors.red,
+                width: 16,
+              ),
+              BarChartRodData(
+                toY: totalIncome,
+                color: totalIncome >= totalIncomeAmount
+                    ? Colors.green
+                    : Colors.red,
+                width: 16,
+              ),
+              BarChartRodData(
+                toY: totalIncomeAmount,
+                color: totalIncomeAmount >= totalIncome
+                    ? Colors.green
+                    : Colors.red,
+                width: 16,
+              ),
+              BarChartRodData(
+                toY: totalExpense,
+                color: totalExpense >= totalExpenseAmount
+                    ? Colors.green
+                    : Colors.red,
+                width: 16,
+              ),
+              BarChartRodData(
+                toY: totalExpenseAmount,
+                color: totalExpenseAmount >= totalExpense
+                    ? Colors.green
+                    : Colors.red,
+                width: 16,
+              ),
+            ],
+          );
+        },
+      ),
+    ),
+  );
+}
+
+double calculateMaxY(List<Map<String, dynamic>> completedEvents) {
+  double maxY = 0;
+  for (final event in completedEvents) {
+    maxY = maxY > event['totalCount'] ? maxY : event['totalCount'];
+    maxY = maxY > event['participantCount'] ? maxY : event['participantCount'];
+    maxY = maxY > event['totalIncome'] ? maxY : event['totalIncome'];
+    maxY =
+        maxY > event['totalIncomeAmount'] ? maxY : event['totalIncomeAmount'];
+    maxY = maxY > event['totalExpense'] ? maxY : event['totalExpense'];
+    maxY =
+        maxY > event['totalExpenseAmount'] ? maxY : event['totalExpenseAmount'];
+  }
+  return maxY + 100; // Adjust as needed
 }

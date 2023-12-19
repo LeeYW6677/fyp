@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
 import 'package:intl/intl.dart';
+import 'package:fl_chart/fl_chart.dart';
 
 class ClaimReport extends StatefulWidget {
   final String selectedEvent;
@@ -216,6 +217,10 @@ class _ClaimReportState extends State<ClaimReport> {
                                                         const SizedBox(
                                                           height: 15,
                                                         ),
+                                                        SizedBox(width: 500, height: 500, child: buildBarChart(acceptedClaims)),
+                                                        const SizedBox(
+                                                          height: 15,
+                                                        ),
                                                         SingleChildScrollView(
                                                             scrollDirection:
                                                                 Axis.horizontal,
@@ -404,4 +409,23 @@ class _ClaimReportState extends State<ClaimReport> {
       bottomNavigationBar: const Footer(),
     );
   }
+}
+
+Widget buildBarChart(List<Map<String, dynamic>> acceptedClaims) {
+  List<double> amounts = acceptedClaims.map<double>((claim) => claim['amount']).toList();
+
+  return BarChart(
+    BarChartData(
+      alignment: BarChartAlignment.spaceAround,
+      maxY: amounts.reduce((value, element) => value > element ? value : element) + 100,
+      barGroups: [
+        BarChartGroupData(x: 0, barsSpace: 4, barRods: [
+          BarChartRodData(
+            toY: amounts.reduce((value, element) => value + element),
+            width: 16,
+          ),
+        ]),
+      ],
+    ),
+  );
 }

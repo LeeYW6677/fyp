@@ -45,7 +45,6 @@ class _AdvisorEventState extends State<AdvisorEvent> {
       if (advisorSnapshot.docs.isNotEmpty) {
         Map<String, dynamic> advisorData = advisorSnapshot.docs.first.data();
         societyID = advisorData['societyID'] ?? '';
-        print('hi');
       }
 
       final QuerySnapshot<Map<String, dynamic>> eventSnapshot = await firestore

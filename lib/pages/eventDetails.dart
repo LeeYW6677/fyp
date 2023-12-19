@@ -649,8 +649,7 @@ class _EventDetailsState extends State<EventDetails> {
                                             );
                                           },
                                           text: 'Submit Claim'),
-                                    if (status == 'Planning' &&
-                                        progress != 3 &&
+                                    if ( progress != 3 &&
                                         position.startsWith('org') &&
                                         position.contains('President'))
                                       const SizedBox(

@@ -1080,10 +1080,11 @@ class _AddDialogState extends State<AddDialog> {
                       .where('studentID', isEqualTo: id.text)
                       .where('societyID', isEqualTo: widget.selectedSociety)
                       .get();
+
               if (existingMembers.docs.isEmpty) {
                 await FirebaseFirestore.instance
                     .collection('member')
-                    .doc(widget.selectedSociety + '/' + id.text)
+                    .doc()
                     .set({
                   'studentID': id.text,
                   'societyID': widget.selectedSociety,

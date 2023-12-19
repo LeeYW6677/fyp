@@ -2,18 +2,20 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
+import 'package:file_picker/file_picker.dart';
 
 class Participant extends StatefulWidget {
   final String selectedEvent;
   final String status;
   final int progress;
   final String position;
-  const Participant(
-      {super.key,
-      required this.selectedEvent,
-      required this.status,
-      required this.progress,
-      required this.position,});
+  const Participant({
+    super.key,
+    required this.selectedEvent,
+    required this.status,
+    required this.progress,
+    required this.position,
+  });
 
   @override
   State<Participant> createState() => _ParticipantState();
@@ -30,6 +32,8 @@ class _ParticipantState extends State<Participant> {
   String? idError;
   List<String> checkName = [];
   List<String> checkStatus = [];
+  List<Map<String, dynamic>> userList = [];
+  final FocusNode _focusNode = FocusNode();
 
   void resetTable() {
     setState(() {
@@ -51,6 +55,12 @@ class _ParticipantState extends State<Participant> {
       }
 
       final FirebaseFirestore firestore = FirebaseFirestore.instance;
+      QuerySnapshot querySnapshot =
+          await firestore.collection('user').where('id', isLessThan: 'A').get();
+
+      querySnapshot.docs.forEach((DocumentSnapshot document) {
+        userList.add(document.data() as Map<String, dynamic>);
+      });
 
       final QuerySnapshot<Map<String, dynamic>> participantSnapshot =
           await firestore
@@ -68,6 +78,10 @@ class _ParticipantState extends State<Participant> {
           );
         }).toList();
       }
+      List<String> participantIDs =
+          participantList.map((participant) => participant.studentID).toList();
+
+      userList.removeWhere((user) => participantIDs.contains(user['id']));
       setState(() {
         _isLoading = false;
       });
@@ -88,39 +102,23 @@ class _ParticipantState extends State<Participant> {
 
   Future<void> onTextChanged(String value, TextEditingController name,
       TextEditingController contact) async {
-    setState(() {
-      idError = null;
-    });
-    bool isParticipant =
-        participantList.any((participant) => participant.studentID == value);
-    if (isParticipant) {
-      setState(() {
-        idError = 'Already registered as participant';
-      });
-      return;
-    }
-    if (RegExp(r'^\d{2}[A-Z]{3}\d{5}$').hasMatch(value)) {
-      DocumentSnapshot<Map<String, dynamic>> student =
-          await FirebaseFirestore.instance.collection('user').doc(value).get();
+    bool hasMatch = false;
+    String studentName = '';
+    String contactNo = '';
 
-      if (student.exists) {
-        Map<String, dynamic> studentData = student.data()!;
-        setState(() {
-          name.text = studentData['name'];
-          contact.text = studentData['contact'];
-        });
-      } else {
-        setState(() {
-          name.text = '';
-          contact.text = '';
-        });
+    for (Map<String, dynamic> user in userList) {
+      if (user['id'] == value) {
+        hasMatch = true;
+        studentName = user['name'];
+        contactNo = user['contact'];
+        break;
       }
-    } else {
-      setState(() {
-        name.text = '';
-        contact.text = '';
-      });
     }
+
+    setState(() {
+      name.text = hasMatch ? studentName : '';
+      contact.text = hasMatch ? contactNo : '';
+    });
   }
 
   @override
@@ -215,37 +213,140 @@ class _ParticipantState extends State<Participant> {
                                                               Expanded(
                                                                 flex: 4,
                                                                 child:
-                                                                    CustomTextField(
-                                                                  hintText:
-                                                                      'Enter Student ID',
-                                                                  controller:
+                                                                    RawAutocomplete<
+                                                                        String>(
+                                                                  focusNode:
+                                                                      _focusNode,
+                                                                  textEditingController:
                                                                       id,
-                                                                  errorText:
-                                                                      idError,
-                                                                  screen: !Responsive
-                                                                      .isDesktop(
-                                                                          context),
-                                                                  labelText:
-                                                                      'Student ID',
-                                                                  validator:
-                                                                      (value) {
-                                                                    if (value!
-                                                                        .isEmpty) {
-                                                                      return 'Please enter student ID';
-                                                                    } else if (!RegExp(
-                                                                            r'^\d{2}[A-Z]{3}\d{5}$')
-                                                                        .hasMatch(
-                                                                            value)) {
-                                                                      return 'Invalid student ID';
-                                                                    }
-                                                                    return null;
+                                                                  optionsBuilder:
+                                                                      (TextEditingValue
+                                                                          textEditingValue) {
+                                                                    return userList
+                                                                        .map<String>((user) =>
+                                                                            user['id']
+                                                                                .toString())
+                                                                        .where((id) =>
+                                                                            id.contains(textEditingValue.text))
+                                                                        .toList();
                                                                   },
-                                                                  onChanged:
-                                                                      (value) {
+                                                                  onSelected:
+                                                                      (String
+                                                                          value) {
                                                                     onTextChanged(
                                                                         value,
                                                                         name,
                                                                         contact);
+                                                                  },
+                                                                  fieldViewBuilder: (BuildContext context,
+                                                                      TextEditingController
+                                                                          controller,
+                                                                      FocusNode
+                                                                          focusNode,
+                                                                      VoidCallback
+                                                                          onFieldSubmitted) {
+                                                                    return TextFormField(
+                                                                      validator:
+                                                                          (value) {
+                                                                        if (value!
+                                                                            .isEmpty) {
+                                                                          return 'Please enter student ID';
+                                                                        } else if (!RegExp(r'^\d{2}[A-Z]{3}\d{5}$')
+                                                                            .hasMatch(value)) {
+                                                                          return 'Invalid student ID';
+                                                                        }
+                                                                        return null;
+                                                                      },
+                                                                      controller:
+                                                                          controller,
+                                                                      focusNode:
+                                                                          focusNode,
+                                                                      onChanged:
+                                                                          (value) {
+                                                                        onTextChanged(
+                                                                            value,
+                                                                            name,
+                                                                            contact);
+                                                                      },
+                                                                      decoration:
+                                                                          const InputDecoration(
+                                                                        enabledBorder:
+                                                                            OutlineInputBorder(
+                                                                          borderSide: BorderSide(
+                                                                              width: 1,
+                                                                              color: Colors.grey),
+                                                                        ),
+                                                                        focusedBorder:
+                                                                            OutlineInputBorder(
+                                                                          borderSide: BorderSide(
+                                                                              width: 1,
+                                                                              color: Colors.blue),
+                                                                        ),
+                                                                        errorBorder:
+                                                                            OutlineInputBorder(
+                                                                          borderSide: BorderSide(
+                                                                              width: 1,
+                                                                              color: Colors.red),
+                                                                        ),
+                                                                        focusedErrorBorder:
+                                                                            OutlineInputBorder(
+                                                                          borderSide: BorderSide(
+                                                                              width: 1,
+                                                                              color: Colors.red),
+                                                                        ),
+                                                                        labelText:
+                                                                            'Student ID',
+                                                                        hintText:
+                                                                            'Enter student ID',
+                                                                      ),
+                                                                    );
+                                                                  },
+                                                                  optionsViewBuilder: (BuildContext context,
+                                                                      AutocompleteOnSelected<
+                                                                              String>
+                                                                          onSelected,
+                                                                      Iterable<
+                                                                              String>
+                                                                          options) {
+                                                                    return Align(
+                                                                      alignment:
+                                                                          Alignment
+                                                                              .topLeft,
+                                                                      child:
+                                                                          Material(
+                                                                        elevation:
+                                                                            4.0,
+                                                                        child:
+                                                                            ConstrainedBox(
+                                                                          constraints:
+                                                                              BoxConstraints(
+                                                                            maxWidth:
+                                                                                300,
+                                                                            maxHeight:
+                                                                                250,
+                                                                          ),
+                                                                          child:
+                                                                              ListView.builder(
+                                                                            padding:
+                                                                                EdgeInsets.all(8.0),
+                                                                            itemCount:
+                                                                                options.length,
+                                                                            itemBuilder:
+                                                                                (BuildContext context, int index) {
+                                                                              final String user = options.elementAt(index);
+                                                                              return GestureDetector(
+                                                                                onTap: () {
+                                                                                  onSelected(user);
+                                                                                },
+                                                                                child: ListTile(
+                                                                                  title: Text(user),
+                                                                                ),
+                                                                              );
+                                                                            },
+                                                                          ),
+                                                                        ),
+                                                                      ),
+                                                                    );
                                                                   },
                                                                 ),
                                                               ),
@@ -374,30 +475,53 @@ class _ParticipantState extends State<Participant> {
                                                             if (_formKey
                                                                 .currentState!
                                                                 .validate()) {
-                                                              if (idError ==
-                                                                  null) {
-                                                                Participants
-                                                                    newParticipants =
-                                                                    Participants(
-                                                                  studentID:
-                                                                      id.text,
-                                                                  name:
-                                                                      name.text,
-                                                                  contact:
-                                                                      contact
-                                                                          .text,
+                                                              bool
+                                                                  isParticipant =
+                                                                  participantList.any((participant) =>
+                                                                      participant
+                                                                          .studentID ==
+                                                                      id.text);
+                                                              if (isParticipant) {
+                                                                ScaffoldMessenger.of(
+                                                                        context)
+                                                                    .showSnackBar(
+                                                                  const SnackBar(
+                                                                    content: Text(
+                                                                        'Already registerd as an participant'),
+                                                                    width:
+                                                                        225.0,
+                                                                    behavior:
+                                                                        SnackBarBehavior
+                                                                            .floating,
+                                                                    duration: Duration(
+                                                                        seconds:
+                                                                            3),
+                                                                  ),
                                                                 );
-
-                                                                participantList.add(
-                                                                    newParticipants);
-                                                                setState(() {
-                                                                  participantList =
-                                                                      participantList;
-                                                                });
-                                                                id.clear();
-                                                                name.clear();
-                                                                contact.clear();
+                                                                return;
                                                               }
+                                                              Participants
+                                                                  newParticipants =
+                                                                  Participants(
+                                                                studentID:
+                                                                    id.text,
+                                                                name: name.text,
+                                                                contact: contact
+                                                                    .text,
+                                                              );
+
+                                                              participantList.add(
+                                                                  newParticipants);
+                                                              setState(() {
+                                                                userList.removeWhere(
+                                                                    (user) => user[
+                                                                        'id']);
+                                                                participantList =
+                                                                    participantList;
+                                                              });
+                                                              id.clear();
+                                                              name.clear();
+                                                              contact.clear();
                                                             }
                                                           },
                                                           text: 'Add'),
