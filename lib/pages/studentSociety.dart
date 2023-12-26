@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:emailjs/emailjs.dart';
 import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
@@ -27,6 +28,7 @@ class _StudentSocietyState extends State<StudentSociety> {
   List<Map<String, dynamic>> _members = [];
   List<Map<String, dynamic>> highcomm = [];
   List<Map<String, dynamic>> lowcomm = [];
+  List<Map<String, dynamic>> userList = [];
   List<String> societyIDs = [];
   List<String> societyNames = [];
   List<String> positionOrder = [
@@ -93,6 +95,12 @@ class _StudentSocietyState extends State<StudentSociety> {
         }
       }
 
+      QuerySnapshot querySnapshot =
+          await firestore.collection('user').where('id', isLessThan: 'A').get();
+
+      querySnapshot.docs.forEach((DocumentSnapshot document) {
+        userList.add(document.data() as Map<String, dynamic>);
+      });
       fetchSocietyDetails();
       setState(() {
         _isLoading = false;
@@ -555,6 +563,8 @@ class _StudentSocietyState extends State<StudentSociety> {
                                                               highcomm:
                                                                   highcomm,
                                                               lowcomm: lowcomm,
+                                                              userList:
+                                                                  userList,
                                                               columns: const [
                                                                 DataColumn(
                                                                   label: Text(
@@ -624,6 +634,7 @@ class CustomDataTable extends StatefulWidget {
   final List<Map<String, dynamic>> lowcomm;
   final BuildContext context;
   final String position;
+  final List<Map<String, dynamic>> userList;
 
   const CustomDataTable({
     Key? key,
@@ -635,6 +646,7 @@ class CustomDataTable extends StatefulWidget {
     required this.lowcomm,
     required this.context,
     required this.position,
+    required this.userList,
   }) : super(key: key);
 
   @override
@@ -753,6 +765,9 @@ class _CustomDataTableState extends State<CustomDataTable> {
                           function: () {
                             widget.fetchSocietyDetails();
                           },
+                          highcomm: widget.highcomm,
+                          lowcomm: widget.lowcomm,
+                          userList: widget.userList,
                         );
                       });
                 },
@@ -994,18 +1009,65 @@ class _MembersDataSource extends DataTableSource {
 class AddDialog extends StatefulWidget {
   final String selectedSociety;
   final VoidCallback? function;
+  final List<Map<String, dynamic>> userList;
+  final List<Map<String, dynamic>> highcomm;
+  final List<Map<String, dynamic>> lowcomm;
 
-  const AddDialog({required this.selectedSociety, this.function});
+  const AddDialog(
+      {required this.selectedSociety,
+      this.function,
+      required this.userList,
+      required this.highcomm,
+      required this.lowcomm});
   @override
   _AddDialogState createState() => _AddDialogState();
 }
 
 class _AddDialogState extends State<AddDialog> {
+  final FocusNode _focusNode = FocusNode();
   TextEditingController name = TextEditingController();
   TextEditingController id = TextEditingController();
   String? errorMessage;
-  bool found = false;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  Future<void> onTextChanged(String value, TextEditingController name) async {
+    setState(() {
+      errorMessage = null;
+    });
+    bool isInHighComm =
+        widget.highcomm.any((item) => item['studentID'] == value);
+
+    bool isInLowComm = widget.lowcomm.any((item) => item['studentID'] == value);
+
+    bool isParticipant = isInHighComm && isInLowComm;
+
+    if (isParticipant) {
+      setState(() {
+        errorMessage = 'Already registered as member';
+      });
+      return;
+    }
+    if (RegExp(r'^\d{2}[A-Z]{3}\d{5}$').hasMatch(value)) {
+      DocumentSnapshot<Map<String, dynamic>> student =
+          await FirebaseFirestore.instance.collection('user').doc(value).get();
+
+      if (student.exists) {
+        Map<String, dynamic> studentData = student.data()!;
+        setState(() {
+          name.text = studentData['name'];
+        });
+      } else {
+        setState(() {
+          name.text = '';
+        });
+      }
+    } else {
+      setState(() {
+        name.text = '';
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -1016,38 +1078,86 @@ class _AddDialogState extends State<AddDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              CustomTextField(
-                controller: id,
-                errorText: errorMessage,
-                hintText: 'Enter student ID',
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return 'Please enter student ID';
-                  } else if (!RegExp(r'^\d{2}[A-Z]{3}\d{5}$').hasMatch(value)) {
-                    return 'Invalid student ID';
-                  }
-                  return null;
+              RawAutocomplete<String>(
+                focusNode: _focusNode,
+                textEditingController: id,
+                optionsBuilder: (TextEditingValue textEditingValue) {
+                  return widget.userList
+                      .map<String>((user) => user['id'].toString())
+                      .where((id) => id.contains(textEditingValue.text))
+                      .toList();
                 },
-                onChanged: (value) async {
-                  if (RegExp(r'^\d{2}[A-Z]{3}\d{5}$').hasMatch(value)) {
-                    DocumentSnapshot<Map<String, dynamic>> student =
-                        await FirebaseFirestore.instance
-                            .collection('user')
-                            .doc(id.text)
-                            .get();
-
-                    if (student.exists) {
-                      Map<String, dynamic> studentData = student.data()!;
-                      name.text = studentData['name'];
-                      found = true;
-                    } else {
-                      name.text = '';
-                      found = false;
-                    }
-                  } else {
-                    name.text = '';
-                    found = false;
-                  }
+                onSelected: (String value) {
+                  onTextChanged(value, name);
+                },
+                fieldViewBuilder: (BuildContext context,
+                    TextEditingController controller,
+                    FocusNode focusNode,
+                    VoidCallback onFieldSubmitted) {
+                  return TextFormField(
+                    validator: (value) {
+                      if (value!.isEmpty) {
+                        return 'Please enter student ID';
+                      } else if (!RegExp(r'^\d{2}[A-Z]{3}\d{5}$')
+                          .hasMatch(value)) {
+                        return 'Invalid student ID';
+                      }
+                      return null;
+                    },
+                    controller: controller,
+                    focusNode: focusNode,
+                    onChanged: (value) {
+                      onTextChanged(value, name);
+                    },
+                    decoration: InputDecoration(
+                      errorText: errorMessage,
+                      enabledBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(width: 1, color: Colors.grey),
+                      ),
+                      focusedBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(width: 1, color: Colors.blue),
+                      ),
+                      errorBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(width: 1, color: Colors.red),
+                      ),
+                      focusedErrorBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(width: 1, color: Colors.red),
+                      ),
+                      labelText: 'Student ID',
+                      hintText: 'Enter student ID',
+                    ),
+                  );
+                },
+                optionsViewBuilder: (BuildContext context,
+                    AutocompleteOnSelected<String> onSelected,
+                    Iterable<String> options) {
+                  return Align(
+                    alignment: Alignment.topLeft,
+                    child: Material(
+                      elevation: 4.0,
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(
+                          maxWidth: 300,
+                          maxHeight: 250,
+                        ),
+                        child: ListView.builder(
+                          padding: const EdgeInsets.all(8.0),
+                          itemCount: options.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            final String user = options.elementAt(index);
+                            return GestureDetector(
+                              onTap: () {
+                                onSelected(user);
+                              },
+                              child: ListTile(
+                                title: Text(user),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  );
                 },
               ),
               const SizedBox(height: 10),
@@ -1073,7 +1183,7 @@ class _AddDialogState extends State<AddDialog> {
               errorMessage = null;
             });
 
-            if (_formKey.currentState!.validate() && found) {
+            if (_formKey.currentState!.validate()) {
               QuerySnapshot<Map<String, dynamic>> existingMembers =
                   await FirebaseFirestore.instance
                       .collection('member')
@@ -1099,10 +1209,6 @@ class _AddDialogState extends State<AddDialog> {
                   errorMessage = 'Student already registered';
                 });
               }
-            } else {
-              setState(() {
-                errorMessage = 'Student not found';
-              });
             }
           },
           child: const Text('OK'),
@@ -1133,6 +1239,55 @@ class _EditDialogState extends State<EditDialog> {
   TextEditingController id2 = TextEditingController();
   TextEditingController name1 = TextEditingController();
   TextEditingController name2 = TextEditingController();
+
+  void _sendEmail(String studentID, String committeeName, String position,
+      String email) async {
+    String subject;
+    String message;
+    String societyName = '';
+    DocumentSnapshot<Map<String, dynamic>> societySnapshot =
+        await FirebaseFirestore.instance
+            .collection('society')
+            .doc(widget.selectedSociety)
+            .get();
+
+    if (societySnapshot.exists) {
+      societyName = societySnapshot.data()?['societyName'] ?? 'Unknown Society';
+    }
+
+    if (position == 'Member') {
+      subject = 'Committee Demotion Notification';
+      message =
+          'We regret to inform you that your role as $position within the $societyName at TAR UMT has been adjusted. We appreciate your past contributions and dedication to our university community.\n\nWhile this decision has been made, we value your continued involvement and encourage you to explore other opportunities to contribute to the $societyName.\n\nThank you for your understanding, and we look forward to your ongoing support within our community.';
+    } else {
+      subject = 'Committee Promotion Notification';
+      message =
+          'Congratulations! We are pleased to inform you that you have been promoted to the position of $position within the $societyName at TAR UMT.\n\nYour dedication and outstanding contributions have not gone unnoticed, and we are confident that you will excel in your new role. Thank you for your continued commitment to our university community.\n\nWe look forward to your continued success and valuable contributions to the $societyName.';
+    }
+
+    try {
+      // Send email using EmailJS
+      await EmailJS.send(
+        'service_ul1uscs',
+        'template_alwxa78',
+        {
+          'name': committeeName,
+          'email': email,
+          'subject': subject,
+          'message': message,
+        },
+        const Options(
+          publicKey: 'Zfr0vuSDdyYaWouwQ',
+          privateKey: 'c2nvTqTugRdLVJxuMSYwe',
+        ),
+      );
+    } catch (error) {
+      if (error is EmailJSResponseStatus) {
+        print('ERROR... ${error.status}: ${error.text}');
+      }
+      print(error.toString());
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1232,7 +1387,13 @@ class _EditDialogState extends State<EditDialog> {
                   });
                 }
               });
+              Map<String, dynamic>? user = widget.lowcomm.firstWhere(
+                (user) => user['id'].toString() == selectedID1,
+              );
 
+              // Retrieve email from the user
+              String userEmail = user['email'].toString();
+              _sendEmail(selectedID1, name1.text, position.text, userEmail);
               await FirebaseFirestore.instance
                   .collection('member')
                   .where('studentID', isEqualTo: selectedID2)
@@ -1245,6 +1406,13 @@ class _EditDialogState extends State<EditDialog> {
                   });
                 }
               });
+              Map<String, dynamic>? user2 = widget.highcomm.firstWhere(
+                (user) => user['id'].toString() == selectedID2,
+              );
+
+              // Retrieve email from the user
+              String userEmail2 = user2['email'].toString();
+              _sendEmail(selectedID2, name2.text, 'Member', userEmail2);
               if (widget.function != null) {
                 widget.function!();
               }

@@ -360,7 +360,7 @@ class _EventReportState extends State<EventReport> {
                                                                         context:
                                                                             context,
                                                                         initialDate:
-                                                                            DateTime(2023),
+                                                                            DateTime.now(),
                                                                         firstDate:
                                                                             DateTime(2023),
                                                                         lastDate:
@@ -565,10 +565,7 @@ class _EventReportState extends State<EventReport> {
                                                                     .parse(end
                                                                         .text);
 
-                                                            if (formattedStartText != null &&
-                                                                formattedEndText !=
-                                                                    null &&
-                                                                formattedStartText
+                                                            if (formattedStartText
                                                                     .isBefore(
                                                                         startDate!) &&
                                                                 endDate!.isBefore(
@@ -779,7 +776,7 @@ class _EventReportState extends State<EventReport> {
                                           borderRadius: BorderRadius.circular(
                                               10.0), // Adjust radius as needed
                                         ),
-                                        padding: EdgeInsets.all(
+                                        padding: const EdgeInsets.all(
                                             10.0), // Adjust padding as needed
                                         child: completedEvents.isNotEmpty
                                             ? Center(
@@ -830,12 +827,63 @@ class _EventReportState extends State<EventReport> {
                                                     const SizedBox(
                                                       height: 15,
                                                     ),
-                                                    SizedBox(
-                                                      height: 500,
-                                                      width: 500,
-                                                      child:
-                                                          buildComparisonBarChart(
-                                                              completedEvents),
+                                                    Row(
+                                                      children: [
+                                                        Expanded(
+                                                          flex: 1,
+                                                          child: BarChartSample2(
+                                                            title: 'Participant Count',
+                                                            completedEvents:
+                                                                completedEvents,
+                                                            data1: completedEvents
+                                                                .map((event) =>
+                                                                    event['totalCount']
+                                                                        as int)
+                                                                .toList(),
+                                                            data2: completedEvents
+                                                                .map((event) =>
+                                                                    event['participantCount']
+                                                                        as int)
+                                                                .toList(),
+                                                          ),
+                                                        ),
+                                                        Expanded(
+                                                          flex: 1,
+                                                          child: BarChartSample2(
+                                                            title: 'Income',
+                                                            completedEvents:
+                                                                completedEvents,
+                                                            data1: completedEvents
+                                                                .map((event) =>
+                                                                    event['totalIncomeAmount']
+                                                                        as int)
+                                                                .toList(),
+                                                            data2: completedEvents
+                                                                .map((event) =>
+                                                                    event['totalIncome']
+                                                                        as int)
+                                                                .toList(),
+                                                          ),
+                                                        ),
+                                                        Expanded(
+                                                          flex: 1,
+                                                          child: BarChartSample2(
+                                                            title: 'Expense',
+                                                            completedEvents:
+                                                                completedEvents,
+                                                            data1: completedEvents
+                                                                .map((event) =>
+                                                                    event['totalExpenseAmount']
+                                                                        as int)
+                                                                .toList(),
+                                                            data2: completedEvents
+                                                                .map((event) =>
+                                                                    event['totalExpense']
+                                                                        as int)
+                                                                .toList(),
+                                                          ),
+                                                        ),
+                                                      ],
                                                     ),
                                                     SingleChildScrollView(
                                                         scrollDirection:
@@ -843,34 +891,89 @@ class _EventReportState extends State<EventReport> {
                                                         child: DataTable(
                                                             columns: const [
                                                               DataColumn(
-                                                                  label: Text(
-                                                                      'No.')),
+                                                                  label:
+                                                                      Text('')),
+                                                              DataColumn(
+                                                                  label:
+                                                                      Text('')),
                                                               DataColumn(
                                                                   label: Text(
-                                                                      'Event Name')),
+                                                                      'Participant')),
+                                                              DataColumn(
+                                                                  label:
+                                                                      Text('')),
                                                               DataColumn(
                                                                   label: Text(
-                                                                      'Expected')),
+                                                                      'Income')),
+                                                              DataColumn(
+                                                                  label:
+                                                                      Text('')),
                                                               DataColumn(
                                                                   label: Text(
-                                                                      'Actual')),
+                                                                      'Expense')),
                                                               DataColumn(
-                                                                  label: Text(
-                                                                      'Expected(RM)')),
+                                                                  label:
+                                                                      Text('')),
                                                               DataColumn(
-                                                                  label: Text(
-                                                                      'Actual(RM)')),
-                                                              DataColumn(
-                                                                  label: Text(
-                                                                      'Expected(RM)')),
-                                                              DataColumn(
-                                                                  label: Text(
-                                                                      'Actual(RM)')),
-                                                              DataColumn(
-                                                                  label: Text(
-                                                                      'Profit/Loss(RM)')),
+                                                                  label:
+                                                                      Text('')),
                                                             ],
                                                             rows: [
+                                                              const DataRow(
+                                                                cells: [
+                                                                  DataCell(Text(
+                                                                      'No.',
+                                                                      style: TextStyle(
+                                                                          fontWeight:
+                                                                              FontWeight.bold))),
+                                                                  DataCell(Text(
+                                                                      'Event Name',
+                                                                      style: TextStyle(
+                                                                          fontWeight:
+                                                                              FontWeight.bold))),
+                                                                  DataCell(
+                                                                    Text(
+                                                                        'Expected',
+                                                                        style: TextStyle(
+                                                                            fontWeight:
+                                                                                FontWeight.bold)),
+                                                                  ),
+                                                                  DataCell(Text(
+                                                                      'Actual',
+                                                                      style: TextStyle(
+                                                                          fontWeight:
+                                                                              FontWeight.bold))),
+                                                                  DataCell(
+                                                                    Text(
+                                                                        'Expected(RM)',
+                                                                        style: TextStyle(
+                                                                            fontWeight:
+                                                                                FontWeight.bold)),
+                                                                  ),
+                                                                  DataCell(Text(
+                                                                      'Actual(RM)',
+                                                                      style: TextStyle(
+                                                                          fontWeight:
+                                                                              FontWeight.bold))),
+                                                                  DataCell(
+                                                                    Text(
+                                                                        'Expected(RM)',
+                                                                        style: TextStyle(
+                                                                            fontWeight:
+                                                                                FontWeight.bold)),
+                                                                  ),
+                                                                  DataCell(Text(
+                                                                      'Actual(RM)',
+                                                                      style: TextStyle(
+                                                                          fontWeight:
+                                                                              FontWeight.bold))),
+                                                                  DataCell(Text(
+                                                                      'Profit/Loss(RM)',
+                                                                      style: TextStyle(
+                                                                          fontWeight:
+                                                                              FontWeight.bold))),
+                                                                ],
+                                                              ),
                                                               ...completedEvents
                                                                   .asMap()
                                                                   .entries
@@ -962,21 +1065,22 @@ class _EventReportState extends State<EventReport> {
                                                               }).toList(),
                                                               DataRow(
                                                                 cells: [
-                                                                  DataCell(
+                                                                  const DataCell(
                                                                       Text('')),
-                                                                  DataCell(
+                                                                  const DataCell(
                                                                       Text('')),
-                                                                  DataCell(
+                                                                  const DataCell(
                                                                       Text('')),
-                                                                  DataCell(
+                                                                  const DataCell(
                                                                       Text('')),
-                                                                  DataCell(
+                                                                  const DataCell(
                                                                       Text('')),
-                                                                  DataCell(
+                                                                  const DataCell(
                                                                       Text('')),
-                                                                  DataCell(
+                                                                  const DataCell(
                                                                       Text('')),
-                                                                  DataCell(Text(
+                                                                  const DataCell(
+                                                                      Text(
                                                                     'Total',
                                                                     style: TextStyle(
                                                                         fontWeight:
@@ -986,7 +1090,7 @@ class _EventReportState extends State<EventReport> {
                                                                       totalProfitLoss
                                                                           .toStringAsFixed(
                                                                               2),
-                                                                      style: TextStyle(
+                                                                      style: const TextStyle(
                                                                           fontWeight:
                                                                               FontWeight.bold))),
                                                                 ],
@@ -1017,123 +1121,162 @@ class _EventReportState extends State<EventReport> {
   }
 }
 
-Widget bottomTitles(double value, TitleMeta meta) {
-  final titles = <String>['Mn', 'Te', 'Wd', 'Tu', 'Fr', 'St', 'Su'];
-
-  final Widget text = Text(
-    titles[value.toInt()],
-    style: const TextStyle(
-      color: Color(0xff7589a2),
-      fontWeight: FontWeight.bold,
-      fontSize: 14,
-    ),
-  );
-
-  return SideTitleWidget(
-    axisSide: meta.axisSide,
-    space: 16, //margin top
-    child: text,
-  );
+class BarChartSample2 extends StatefulWidget {
+  final List<Map<String, dynamic>> completedEvents;
+  final List<dynamic> data1;
+  final List<dynamic> data2;
+  final String title;
+  BarChartSample2(
+      {super.key,
+      required this.completedEvents,
+      required this.data1,
+      required this.data2,
+      required this.title,});
+  final Color leftBarColor = Colors.green;
+  final Color rightBarColor = Colors.red;
+  @override
+  State<StatefulWidget> createState() => BarChartSample2State();
 }
 
-Widget buildComparisonBarChart(List<Map<String, dynamic>> completedEvents) {
-  return BarChart(
-    BarChartData(
-      titlesData: FlTitlesData(
-        show: true,
-        rightTitles: AxisTitles(
-          sideTitles: SideTitles(showTitles: false),
-        ),
-        topTitles: AxisTitles(
-          sideTitles: SideTitles(showTitles: false),
-        ),
-        bottomTitles: AxisTitles(
-          sideTitles: SideTitles(
-            showTitles: true,
-            getTitlesWidget: bottomTitles,
-            reservedSize: 42,
-          ),
+class BarChartSample2State extends State<BarChartSample2> {
+  final double width = 7;
+  late List<BarChartGroupData> rawBarGroups;
+  late List<BarChartGroupData> showingBarGroups;
+  int touchedGroupIndex = -1;
+
+  @override
+  void initState() {
+    super.initState();
+    final items = getBarChartGroups();
+
+    rawBarGroups = items;
+
+    showingBarGroups = rawBarGroups;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AspectRatio(
+      aspectRatio: 1,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Center(
+                  child: Text(
+                    widget.title,
+                    style: TextStyle(fontSize: 16),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(
+              height: 38,
+            ),
+            Expanded(
+              child: BarChart(
+                BarChartData(
+                  gridData: FlGridData(
+                    show: true,
+                    drawVerticalLine: false,
+                    getDrawingHorizontalLine: (value) => FlLine(
+                      color: Colors.black.withOpacity(0.2),
+                      strokeWidth: 1,
+                    ),
+                  ),
+                  maxY: calculateMaxY(widget.completedEvents),
+                  titlesData: FlTitlesData(
+                    show: true,
+                    rightTitles: AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    topTitles: AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        getTitlesWidget: bottomTitles,
+                        reservedSize: 42,
+                      ),
+                    ),
+                  ),
+                  borderData: FlBorderData(
+                    show: true,
+                  ),
+                  barGroups: showingBarGroups,
+                ),
+              ),
+            ),
+            const SizedBox(
+              height: 12,
+            ),
+          ],
         ),
       ),
-      alignment: BarChartAlignment.spaceAround,
-      maxY: calculateMaxY(completedEvents),
-      groupsSpace: 12,
-      barGroups: List.generate(
-        completedEvents.length,
-        (index) {
-          final Map<String, dynamic> event = completedEvents[index];
-          final double totalCount = event['totalCount'].toDouble();
-          final double participantCount = event['participantCount'].toDouble();
-          final double totalIncome = event['totalIncome'].toDouble();
-          final double totalIncomeAmount =
-              event['totalIncomeAmount'].toDouble();
-          final double totalExpense = event['totalExpense'].toDouble();
-          final double totalExpenseAmount =
-              event['totalExpenseAmount'].toDouble();
+    );
+  }
 
-          return BarChartGroupData(
-            x: index,
-            barsSpace: 8,
+  double calculateMaxY(List<Map<String, dynamic>> completedEvents) {
+    double maxY = 0;
+      for (final value in widget.data1) {
+        maxY = maxY > value ? maxY : value;
+      }
+
+      for (final value in widget.data2) {
+        maxY = maxY > value ? maxY : value;
+      }
+    
+    return maxY + 5;
+  }
+
+  Widget bottomTitles(double value, TitleMeta meta) {
+    final eventNames = widget.completedEvents
+        .map((event) => event['eventName'].toString())
+        .toList();
+    final Widget text = Text(
+      eventNames[value.toInt()],
+      style: const TextStyle(
+        color: Color(0xff7589a2),
+        fontWeight: FontWeight.bold,
+        fontSize: 14,
+      ),
+    );
+
+    return SideTitleWidget(
+      axisSide: meta.axisSide,
+      space: 16,
+      child: text,
+    );
+  }
+
+  List<BarChartGroupData> getBarChartGroups() {
+    return widget.completedEvents
+        .asMap()
+        .entries
+        .map(
+          (entry) => BarChartGroupData(
+            barsSpace: 4,
+            x: entry.key,
             barRods: [
               BarChartRodData(
-                toY: totalCount,
-                color:
-                    totalCount >= participantCount ? Colors.green : Colors.red,
-                width: 16,
+                toY: widget.data1[entry.key],
+                color: widget.leftBarColor,
+                width: width,
               ),
               BarChartRodData(
-                toY: participantCount,
-                color:
-                    participantCount >= totalCount ? Colors.green : Colors.red,
-                width: 16,
-              ),
-              BarChartRodData(
-                toY: totalIncome,
-                color: totalIncome >= totalIncomeAmount
-                    ? Colors.green
-                    : Colors.red,
-                width: 16,
-              ),
-              BarChartRodData(
-                toY: totalIncomeAmount,
-                color: totalIncomeAmount >= totalIncome
-                    ? Colors.green
-                    : Colors.red,
-                width: 16,
-              ),
-              BarChartRodData(
-                toY: totalExpense,
-                color: totalExpense >= totalExpenseAmount
-                    ? Colors.green
-                    : Colors.red,
-                width: 16,
-              ),
-              BarChartRodData(
-                toY: totalExpenseAmount,
-                color: totalExpenseAmount >= totalExpense
-                    ? Colors.green
-                    : Colors.red,
-                width: 16,
+                toY: widget.data2[entry.key],
+                color: widget.rightBarColor,
+                width: width,
               ),
             ],
-          );
-        },
-      ),
-    ),
-  );
-}
-
-double calculateMaxY(List<Map<String, dynamic>> completedEvents) {
-  double maxY = 0;
-  for (final event in completedEvents) {
-    maxY = maxY > event['totalCount'] ? maxY : event['totalCount'];
-    maxY = maxY > event['participantCount'] ? maxY : event['participantCount'];
-    maxY = maxY > event['totalIncome'] ? maxY : event['totalIncome'];
-    maxY =
-        maxY > event['totalIncomeAmount'] ? maxY : event['totalIncomeAmount'];
-    maxY = maxY > event['totalExpense'] ? maxY : event['totalExpense'];
-    maxY =
-        maxY > event['totalExpenseAmount'] ? maxY : event['totalExpenseAmount'];
+          ),
+        )
+        .toList();
   }
-  return maxY + 100; // Adjust as needed
 }

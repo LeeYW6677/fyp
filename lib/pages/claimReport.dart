@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
-import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
 
 class ClaimReport extends StatefulWidget {
@@ -19,6 +18,7 @@ class _ClaimReportState extends State<ClaimReport> {
   List<Map<String, dynamic>> rejectedClaims = [];
   String name = '';
   double totalProfitLoss = 0;
+  double totalProfitLoss2 = 0;
 
   Future<void> getData() async {
     try {
@@ -59,16 +59,18 @@ class _ClaimReportState extends State<ClaimReport> {
           });
 
           rejectedClaims.forEach((Map<String, dynamic> claim) {
+            double claimAmount = claim['amount'] ?? 0.0;
+            totalProfitLoss2 += claimAmount;
             String treasurerStatus = claim['treasurerStatus'];
             String advisorStatus = claim['advisorStatus'];
 
             if (treasurerStatus == 'Rejected') {
-              claim['rejected'] =  claim['treasurerName'];
+              claim['rejected'] = claim['treasurerName'];
             }
 
             // Set advisorName to a predefined value if advisorStatus is 'Rejected'
             if (advisorStatus == 'Rejected') {
-              claim['rejected'] =  claim['advisorName'];
+              claim['rejected'] = claim['advisorName'];
             }
           });
         }
@@ -217,7 +219,16 @@ class _ClaimReportState extends State<ClaimReport> {
                                                         const SizedBox(
                                                           height: 15,
                                                         ),
-                                                        SizedBox(width: 500, height: 500, child: buildBarChart(acceptedClaims)),
+                                                        SizedBox(
+                                                            width: 300,
+                                                            height: 300,
+                                                            child:
+                                                                PieChartSample2(
+                                                              data1:
+                                                                  totalProfitLoss,
+                                                              data2:
+                                                                  totalProfitLoss2,
+                                                            )),
                                                         const SizedBox(
                                                           height: 15,
                                                         ),
@@ -228,24 +239,56 @@ class _ClaimReportState extends State<ClaimReport> {
                                                                 columns: const [
                                                                   DataColumn(
                                                                       label: Text(
-                                                                          'No.')),
+                                                                          '')),
                                                                   DataColumn(
                                                                       label: Text(
-                                                                          'Claimant')),
+                                                                          '')),
                                                                   DataColumn(
                                                                       label: Text(
-                                                                          'Title')),
+                                                                          '')),
                                                                   DataColumn(
                                                                       label: Text(
-                                                                          'Checked by')),
+                                                                          'Approved Claim')),
                                                                   DataColumn(
                                                                       label: Text(
-                                                                          'Approved by')),
+                                                                          '')),
                                                                   DataColumn(
                                                                       label: Text(
-                                                                          'Amount(RM)')),
+                                                                          '')),
                                                                 ],
                                                                 rows: [
+                                                                  const DataRow(
+                                                                    cells: [
+                                                                      DataCell(Text(
+                                                                          'No.',
+                                                                          style:
+                                                                              TextStyle(fontWeight: FontWeight.bold))),
+                                                                      DataCell(Text(
+                                                                          'Claimant',
+                                                                          style:
+                                                                              TextStyle(fontWeight: FontWeight.bold))),
+                                                                      DataCell(
+                                                                        Text(
+                                                                            'Title',
+                                                                            style:
+                                                                                TextStyle(fontWeight: FontWeight.bold)),
+                                                                      ),
+                                                                      DataCell(Text(
+                                                                          'Checked by',
+                                                                          style:
+                                                                              TextStyle(fontWeight: FontWeight.bold))),
+                                                                      DataCell(
+                                                                        Text(
+                                                                            'Approved by',
+                                                                            style:
+                                                                                TextStyle(fontWeight: FontWeight.bold)),
+                                                                      ),
+                                                                      DataCell(Text(
+                                                                          'Amount(RM)',
+                                                                          style:
+                                                                              TextStyle(fontWeight: FontWeight.bold))),
+                                                                    ],
+                                                                  ),
                                                                   ...acceptedClaims
                                                                       .asMap()
                                                                       .entries
@@ -326,24 +369,56 @@ class _ClaimReportState extends State<ClaimReport> {
                                                                 columns: const [
                                                                   DataColumn(
                                                                       label: Text(
-                                                                          'No.')),
+                                                                          '')),
                                                                   DataColumn(
                                                                       label: Text(
-                                                                          'Claimant')),
+                                                                          '')),
                                                                   DataColumn(
                                                                       label: Text(
-                                                                          'Title')),
+                                                                          '')),
                                                                   DataColumn(
                                                                       label: Text(
-                                                                          'Rejected by')),
+                                                                          'Rejected Claim')),
                                                                   DataColumn(
                                                                       label: Text(
-                                                                          'Reason')),
+                                                                          '')),
                                                                   DataColumn(
                                                                       label: Text(
-                                                                          'Amount(RM)')),
+                                                                          '')),
                                                                 ],
                                                                 rows: [
+                                                                  const DataRow(
+                                                                    cells: [
+                                                                      DataCell(Text(
+                                                                          'No.',
+                                                                          style:
+                                                                              TextStyle(fontWeight: FontWeight.bold))),
+                                                                      DataCell(Text(
+                                                                          'Claimant',
+                                                                          style:
+                                                                              TextStyle(fontWeight: FontWeight.bold))),
+                                                                      DataCell(
+                                                                        Text(
+                                                                            'Title',
+                                                                            style:
+                                                                                TextStyle(fontWeight: FontWeight.bold)),
+                                                                      ),
+                                                                      DataCell(Text(
+                                                                          'Rejected by',
+                                                                          style:
+                                                                              TextStyle(fontWeight: FontWeight.bold))),
+                                                                      DataCell(
+                                                                        Text(
+                                                                            'Reason by',
+                                                                            style:
+                                                                                TextStyle(fontWeight: FontWeight.bold)),
+                                                                      ),
+                                                                      DataCell(Text(
+                                                                          'Amount(RM)',
+                                                                          style:
+                                                                              TextStyle(fontWeight: FontWeight.bold))),
+                                                                    ],
+                                                                  ),
                                                                   ...rejectedClaims
                                                                       .asMap()
                                                                       .entries
@@ -385,6 +460,34 @@ class _ClaimReportState extends State<ClaimReport> {
                                                                       ],
                                                                     );
                                                                   }).toList(),
+                                                                  DataRow(
+                                                                    cells: [
+                                                                      const DataCell(
+                                                                          Text(
+                                                                              '')),
+                                                                      const DataCell(
+                                                                          Text(
+                                                                              '')),
+                                                                      const DataCell(
+                                                                          Text(
+                                                                              '')),
+                                                                      const DataCell(
+                                                                          Text(
+                                                                              '')),
+                                                                      const DataCell(
+                                                                          Text(
+                                                                        'Total',
+                                                                        style: TextStyle(
+                                                                            fontWeight:
+                                                                                FontWeight.bold),
+                                                                      )),
+                                                                      DataCell(Text(
+                                                                          totalProfitLoss2.toStringAsFixed(
+                                                                              2),
+                                                                          style:
+                                                                              const TextStyle(fontWeight: FontWeight.bold))),
+                                                                    ],
+                                                                  ),
                                                                 ])),
                                                       ],
                                                     ),
@@ -411,21 +514,116 @@ class _ClaimReportState extends State<ClaimReport> {
   }
 }
 
-Widget buildBarChart(List<Map<String, dynamic>> acceptedClaims) {
-  List<double> amounts = acceptedClaims.map<double>((claim) => claim['amount']).toList();
+class PieChartSample2 extends StatefulWidget {
+  final double data1;
+  final double data2;
+  const PieChartSample2({super.key, required this.data1, required this.data2});
 
-  return BarChart(
-    BarChartData(
-      alignment: BarChartAlignment.spaceAround,
-      maxY: amounts.reduce((value, element) => value > element ? value : element) + 100,
-      barGroups: [
-        BarChartGroupData(x: 0, barsSpace: 4, barRods: [
-          BarChartRodData(
-            toY: amounts.reduce((value, element) => value + element),
-            width: 16,
+  @override
+  State<StatefulWidget> createState() => PieChart2State();
+}
+
+class PieChart2State extends State<PieChartSample2> {
+  int touchedIndex = -1;
+
+  @override
+  Widget build(BuildContext context) {
+    return AspectRatio(
+      aspectRatio: 1.3,
+      child: Row(
+        children: <Widget>[
+          const SizedBox(
+            height: 18,
           ),
-        ]),
+          Expanded(
+            child: AspectRatio(
+              aspectRatio: 1,
+              child: PieChart(
+                PieChartData(
+                  pieTouchData: PieTouchData(
+                    touchCallback: (FlTouchEvent event, pieTouchResponse) {
+                      setState(() {
+                        if (!event.isInterestedForInteractions ||
+                            pieTouchResponse == null ||
+                            pieTouchResponse.touchedSection == null) {
+                          touchedIndex = -1;
+                          return;
+                        }
+                        touchedIndex = pieTouchResponse
+                            .touchedSection!.touchedSectionIndex;
+                      });
+                    },
+                  ),
+                  sectionsSpace: 0,
+                  centerSpaceRadius: 40,
+                  sections: showingSections(),
+                ),
+              ),
+            ),
+          ),
+          Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildLegendItem(Colors.blue, "Accepted"),
+                const SizedBox(width: 10),
+                _buildLegendItem(Colors.red, "Rejected"),
+              ]),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLegendItem(Color color, String label) {
+    return Row(
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          color: color,
+        ),
+        const SizedBox(width: 4),
+        Text(label),
       ],
-    ),
-  );
+    );
+  }
+
+  List<PieChartSectionData> showingSections() {
+    return List.generate(2, (i) {
+      final isTouched = i == touchedIndex;
+      final fontSize = isTouched ? 25.0 : 16.0;
+      final radius = isTouched ? 60.0 : 50.0;
+      switch (i) {
+        case 0:
+          return PieChartSectionData(
+            color: Colors.blue,
+            value: widget.data1,
+            title:
+                '${(widget.data1 / (widget.data1 + widget.data2) * 100).toStringAsFixed(1)}%',
+            radius: radius,
+            titleStyle: TextStyle(
+              fontSize: fontSize,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+          );
+        case 1:
+          return PieChartSectionData(
+            color: Colors.red,
+            value: widget.data2,
+            title:
+                '${(widget.data2 / (widget.data1 + widget.data2) * 100).toStringAsFixed(1)}%',
+            radius: radius,
+            titleStyle: TextStyle(
+              fontSize: fontSize,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+          );
+
+        default:
+          throw Error();
+      }
+    });
+  }
 }

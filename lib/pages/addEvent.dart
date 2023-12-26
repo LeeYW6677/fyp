@@ -175,9 +175,10 @@ class _AddEventState extends State<AddEvent> {
         'template_alwxa78',
         {
           'name': committeeName,
-          'position': position,
-          'event': eventName,
+          'subject': 'Organising Committee Selection Notifcation',
           'email': userEmail,
+          'message':
+              'Congratulations! We are pleased to inform you that you have been selected as the $position for the upcoming event, $eventName at TAR UMT.\n\nYour willingness to contribute to our university community is truly appreciated, and we are excited to see the positive impact we know you will make.\n\nThank you for your dedication, and we look forward to your valuable contributions to the success of $eventName.',
         },
         const Options(
           publicKey: 'Zfr0vuSDdyYaWouwQ',
@@ -231,8 +232,8 @@ class _AddEventState extends State<AddEvent> {
         _isLoading = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(error.toString()),
+        const SnackBar(
+          content: Text("Failed to fetch data. Please try again"),
           width: 225.0,
           behavior: SnackBarBehavior.floating,
           duration: const Duration(seconds: 3),

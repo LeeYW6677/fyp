@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:emailjs/emailjs.dart';
 import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
@@ -121,6 +122,40 @@ class _EditEventState extends State<EditEvent> {
     }
   }
 
+  void _sendEmail(String studentID, String committeeName, String eventName,
+      String position) async {
+    try {
+      Map<String, dynamic>? user = userList.firstWhere(
+        (user) => user['id'].toString() == studentID,
+      );
+
+      // Retrieve email from the user
+      String userEmail = user['email'].toString();
+
+      // Send email using EmailJS
+      await EmailJS.send(
+        'service_ul1uscs',
+        'template_alwxa78',
+        {
+          'name': committeeName,
+          'email': userEmail,
+          'subject': 'Organising Committee Selection Notifcation',
+          'message':
+              'Congratulations! We are pleased to inform you that you have been selected as the $position for the upcoming event, $eventName at TAR UMT.\n\nYour willingness to contribute to our university community is truly appreciated, and we are excited to see the positive impact we know you will make.\n\nThank you for your dedication, and we look forward to your valuable contributions to the success of $eventName.',
+        },
+        const Options(
+          publicKey: 'Zfr0vuSDdyYaWouwQ',
+          privateKey: 'c2nvTqTugRdLVJxuMSYwe',
+        ),
+      );
+    } catch (error) {
+      if (error is EmailJSResponseStatus) {
+        print('ERROR... ${error.status}: ${error.text}');
+      }
+      print(error.toString());
+    }
+  }
+
   Future<void> onTextChanged(
       String value, TextEditingController controller) async {
     bool hasMatch = false;
@@ -197,6 +232,7 @@ class _EditEventState extends State<EditEvent> {
           'studentID': studentID,
         });
       }
+      _sendEmail(studentID, committeeName, name.text, position);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -223,144 +259,155 @@ class _EditEventState extends State<EditEvent> {
               index: 1,
             )
           : null,
-      body: SafeArea(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (Responsive.isDesktop(context))
-              const Expanded(
-                child: CustomDrawer(
-                  index: 2,
-                  page: 'Society',
-                ),
-              ),
-            Expanded(
-              flex: 5,
-              child: SingleChildScrollView(
-                child: Column(children: [
-                  Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Change Committee',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 20,
-                              ),
-                            ),
-                            const Divider(
-                              thickness: 0.1,
-                              color: Colors.black,
-                            ),
-                            Form(
-                              key: _formKey1,
-                              child: Column(
+      body: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(),
+            )
+          : SafeArea(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (Responsive.isDesktop(context))
+                    const Expanded(
+                      child: CustomDrawer(
+                        index: 2,
+                        page: 'Society',
+                      ),
+                    ),
+                  Expanded(
+                    flex: 5,
+                    child: SingleChildScrollView(
+                      child: Column(children: [
+                        Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.start,
-                                            children: [
-                                              const Expanded(
-                                                flex: 2,
-                                                child: Text(
-                                                  'Event Name',
-                                                  style:
-                                                      TextStyle(fontSize: 16),
-                                                ),
-                                              ),
-                                              Expanded(
-                                                flex: 4,
-                                                child: CustomTextField(
-                                                  enabled: false,
-                                                  controller: name,
-                                                  hintText: 'Enter event name',
-                                                  validator: (value) {
-                                                    if (value!.isEmpty) {
-                                                      return 'Please enter event name';
-                                                    }
-                                                    return null;
-                                                  },
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                      if (Responsive.isDesktop(context))
-                                        const Expanded(
-                                          child: SizedBox(),
-                                        ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 50),
-                                  const Row(
-                                    children: [
-                                      Text(
-                                        'Committee Info',
-                                        style: TextStyle(
-                                          color: Colors.blue,
-                                          fontSize: 20,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const Padding(
-                                    padding: EdgeInsets.only(top: 8.0),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                            flex: 1,
-                                            child: Text(
-                                              'President',
-                                              style: TextStyle(fontSize: 16),
-                                            )),
-                                        Expanded(
-                                            flex: 1,
-                                            child: Text(
-                                              'Secretary',
-                                              style: TextStyle(fontSize: 16),
-                                            )),
-                                        Expanded(
-                                            flex: 1,
-                                            child: Text(
-                                              'Treasurer',
-                                              style: TextStyle(fontSize: 16),
-                                            )),
-                                      ],
+                                  const Text(
+                                    'Change Committee',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20,
                                     ),
                                   ),
                                   const Divider(
                                     thickness: 0.1,
                                     color: Colors.black,
                                   ),
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(8.0),
+                                  Form(
+                                    key: _formKey1,
+                                    child: Column(
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: Padding(
+                                                padding:
+                                                    const EdgeInsets.all(8.0),
+                                                child: Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.start,
+                                                  children: [
+                                                    const Expanded(
+                                                      flex: 2,
+                                                      child: Text(
+                                                        'Event Name',
+                                                        style: TextStyle(
+                                                            fontSize: 16),
+                                                      ),
+                                                    ),
+                                                    Expanded(
+                                                      flex: 4,
+                                                      child: CustomTextField(
+                                                        enabled: false,
+                                                        controller: name,
+                                                        hintText:
+                                                            'Enter event name',
+                                                        validator: (value) {
+                                                          if (value!.isEmpty) {
+                                                            return 'Please enter event name';
+                                                          }
+                                                          return null;
+                                                        },
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                            if (Responsive.isDesktop(context))
+                                              const Expanded(
+                                                child: SizedBox(),
+                                              ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 50),
+                                        const Row(
+                                          children: [
+                                            Text(
+                                              'Committee Info',
+                                              style: TextStyle(
+                                                color: Colors.blue,
+                                                fontSize: 20,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const Padding(
+                                          padding: EdgeInsets.only(top: 8.0),
                                           child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.start,
                                             children: [
-                                              if (Responsive.isDesktop(context))
-                                                const Expanded(
+                                              Expanded(
                                                   flex: 1,
                                                   child: Text(
-                                                    'Student ID',
+                                                    'President',
                                                     style:
                                                         TextStyle(fontSize: 16),
-                                                  ),
-                                                ),
+                                                  )),
                                               Expanded(
-                                                flex: 4,
-                                                child: RawAutocomplete<
+                                                  flex: 1,
+                                                  child: Text(
+                                                    'Secretary',
+                                                    style:
+                                                        TextStyle(fontSize: 16),
+                                                  )),
+                                              Expanded(
+                                                  flex: 1,
+                                                  child: Text(
+                                                    'Treasurer',
+                                                    style:
+                                                        TextStyle(fontSize: 16),
+                                                  )),
+                                            ],
+                                          ),
+                                        ),
+                                        const Divider(
+                                          thickness: 0.1,
+                                          color: Colors.black,
+                                        ),
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: Padding(
+                                                padding:
+                                                    const EdgeInsets.all(8.0),
+                                                child: Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.start,
+                                                  children: [
+                                                    if (Responsive.isDesktop(
+                                                        context))
+                                                      const Expanded(
+                                                        flex: 1,
+                                                        child: Text(
+                                                          'Student ID',
+                                                          style: TextStyle(
+                                                              fontSize: 16),
+                                                        ),
+                                                      ),
+                                                    Expanded(
+                                                      flex: 4,
+                                                      child: RawAutocomplete<
                                                           String>(
                                                         focusNode: _focusNode2,
                                                         textEditingController:
@@ -511,30 +558,32 @@ class _EditEventState extends State<EditEvent> {
                                                           );
                                                         },
                                                       ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                      Expanded(
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.start,
-                                            children: [
-                                              if (Responsive.isDesktop(context))
-                                                const Expanded(
-                                                  flex: 1,
-                                                  child: Text(
-                                                    'Student ID',
-                                                    style:
-                                                        TextStyle(fontSize: 16),
-                                                  ),
+                                                    ),
+                                                  ],
                                                 ),
-                                              Expanded(
-                                                flex: 4,
-                                                child: RawAutocomplete<
+                                              ),
+                                            ),
+                                            Expanded(
+                                              child: Padding(
+                                                padding:
+                                                    const EdgeInsets.all(8.0),
+                                                child: Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.start,
+                                                  children: [
+                                                    if (Responsive.isDesktop(
+                                                        context))
+                                                      const Expanded(
+                                                        flex: 1,
+                                                        child: Text(
+                                                          'Student ID',
+                                                          style: TextStyle(
+                                                              fontSize: 16),
+                                                        ),
+                                                      ),
+                                                    Expanded(
+                                                      flex: 4,
+                                                      child: RawAutocomplete<
                                                           String>(
                                                         focusNode: _focusNode,
                                                         textEditingController:
@@ -685,30 +734,32 @@ class _EditEventState extends State<EditEvent> {
                                                           );
                                                         },
                                                       ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                      Expanded(
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.start,
-                                            children: [
-                                              if (Responsive.isDesktop(context))
-                                                const Expanded(
-                                                  flex: 1,
-                                                  child: Text(
-                                                    'Student ID',
-                                                    style:
-                                                        TextStyle(fontSize: 16),
-                                                  ),
+                                                    ),
+                                                  ],
                                                 ),
-                                              Expanded(
-                                                flex: 4,
-                                                child: RawAutocomplete<
+                                              ),
+                                            ),
+                                            Expanded(
+                                              child: Padding(
+                                                padding:
+                                                    const EdgeInsets.all(8.0),
+                                                child: Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.start,
+                                                  children: [
+                                                    if (Responsive.isDesktop(
+                                                        context))
+                                                      const Expanded(
+                                                        flex: 1,
+                                                        child: Text(
+                                                          'Student ID',
+                                                          style: TextStyle(
+                                                              fontSize: 16),
+                                                        ),
+                                                      ),
+                                                    Expanded(
+                                                      flex: 4,
+                                                      child: RawAutocomplete<
                                                           String>(
                                                         focusNode: _focusNode3,
                                                         textEditingController:
@@ -859,173 +910,187 @@ class _EditEventState extends State<EditEvent> {
                                                           );
                                                         },
                                                       ),
+                                                    ),
+                                                  ],
+                                                ),
                                               ),
+                                            ),
+                                          ],
+                                        ),
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: Padding(
+                                                padding:
+                                                    const EdgeInsets.all(8.0),
+                                                child: Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.start,
+                                                  children: [
+                                                    if (Responsive.isDesktop(
+                                                        context))
+                                                      const Expanded(
+                                                        flex: 1,
+                                                        child: Text(
+                                                          'Name',
+                                                          style: TextStyle(
+                                                              fontSize: 16),
+                                                        ),
+                                                      ),
+                                                    Expanded(
+                                                      flex: 4,
+                                                      child: CustomTextField(
+                                                        validator: (value) {
+                                                          if (value!.isEmpty) {
+                                                            return 'No Student Found';
+                                                          }
+                                                          return null;
+                                                        },
+                                                        enabled: false,
+                                                        controller:
+                                                            presidentName,
+                                                        hintText:
+                                                            'Associated Student Name',
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                            Expanded(
+                                              child: Padding(
+                                                padding:
+                                                    const EdgeInsets.all(8.0),
+                                                child: Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.start,
+                                                  children: [
+                                                    if (Responsive.isDesktop(
+                                                        context))
+                                                      const Expanded(
+                                                        flex: 1,
+                                                        child: Text(
+                                                          'Name',
+                                                          style: TextStyle(
+                                                              fontSize: 16),
+                                                        ),
+                                                      ),
+                                                    Expanded(
+                                                      flex: 4,
+                                                      child: CustomTextField(
+                                                        validator: (value) {
+                                                          if (value!.isEmpty) {
+                                                            return 'No Student Found';
+                                                          }
+                                                          return null;
+                                                        },
+                                                        enabled: false,
+                                                        controller:
+                                                            secretaryName,
+                                                        hintText:
+                                                            'Associated Student Name',
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                            Expanded(
+                                              child: Padding(
+                                                padding:
+                                                    const EdgeInsets.all(8.0),
+                                                child: Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.start,
+                                                  children: [
+                                                    if (Responsive.isDesktop(
+                                                        context))
+                                                      const Expanded(
+                                                        flex: 1,
+                                                        child: Text(
+                                                          'Name',
+                                                          style: TextStyle(
+                                                              fontSize: 16),
+                                                        ),
+                                                      ),
+                                                    Expanded(
+                                                      flex: 4,
+                                                      child: CustomTextField(
+                                                        validator: (value) {
+                                                          if (value!.isEmpty) {
+                                                            return 'No Student Found';
+                                                          }
+                                                          return null;
+                                                        },
+                                                        enabled: false,
+                                                        controller:
+                                                            treasurerName,
+                                                        hintText:
+                                                            'Associated Student Name',
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 50),
+                                        const Padding(
+                                          padding: EdgeInsets.only(top: 8.0),
+                                          child: Row(
+                                            children: [
+                                              Expanded(
+                                                  flex: 1,
+                                                  child: Text(
+                                                    'Vice President',
+                                                    style:
+                                                        TextStyle(fontSize: 16),
+                                                  )),
+                                              Expanded(
+                                                  flex: 1,
+                                                  child: Text(
+                                                    'Vice Secretary',
+                                                    style:
+                                                        TextStyle(fontSize: 16),
+                                                  )),
+                                              Expanded(
+                                                  flex: 1,
+                                                  child: Text(
+                                                    'Vice Treasurer',
+                                                    style:
+                                                        TextStyle(fontSize: 16),
+                                                  )),
                                             ],
                                           ),
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.start,
-                                            children: [
-                                              if (Responsive.isDesktop(context))
-                                                const Expanded(
-                                                  flex: 1,
-                                                  child: Text(
-                                                    'Name',
-                                                    style:
-                                                        TextStyle(fontSize: 16),
-                                                  ),
-                                                ),
-                                              Expanded(
-                                                flex: 4,
-                                                child: CustomTextField(
-                                                  validator: (value) {
-                                                    if (value!.isEmpty) {
-                                                      return 'No Student Found';
-                                                    }
-                                                    return null;
-                                                  },
-                                                  enabled: false,
-                                                  controller: presidentName,
-                                                  hintText:
-                                                      'Associated Student Name',
-                                                ),
-                                              ),
-                                            ],
-                                          ),
+                                        const Divider(
+                                          thickness: 0.1,
+                                          color: Colors.black,
                                         ),
-                                      ),
-                                      Expanded(
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.start,
-                                            children: [
-                                              if (Responsive.isDesktop(context))
-                                                const Expanded(
-                                                  flex: 1,
-                                                  child: Text(
-                                                    'Name',
-                                                    style:
-                                                        TextStyle(fontSize: 16),
-                                                  ),
-                                                ),
-                                              Expanded(
-                                                flex: 4,
-                                                child: CustomTextField(
-                                                  validator: (value) {
-                                                    if (value!.isEmpty) {
-                                                      return 'No Student Found';
-                                                    }
-                                                    return null;
-                                                  },
-                                                  enabled: false,
-                                                  controller: secretaryName,
-                                                  hintText:
-                                                      'Associated Student Name',
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                      Expanded(
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.start,
-                                            children: [
-                                              if (Responsive.isDesktop(context))
-                                                const Expanded(
-                                                  flex: 1,
-                                                  child: Text(
-                                                    'Name',
-                                                    style:
-                                                        TextStyle(fontSize: 16),
-                                                  ),
-                                                ),
-                                              Expanded(
-                                                flex: 4,
-                                                child: CustomTextField(
-                                                  validator: (value) {
-                                                    if (value!.isEmpty) {
-                                                      return 'No Student Found';
-                                                    }
-                                                    return null;
-                                                  },
-                                                  enabled: false,
-                                                  controller: treasurerName,
-                                                  hintText:
-                                                      'Associated Student Name',
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 50),
-                                  const Padding(
-                                    padding: EdgeInsets.only(top: 8.0),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                            flex: 1,
-                                            child: Text(
-                                              'Vice President',
-                                              style: TextStyle(fontSize: 16),
-                                            )),
-                                        Expanded(
-                                            flex: 1,
-                                            child: Text(
-                                              'Vice Secretary',
-                                              style: TextStyle(fontSize: 16),
-                                            )),
-                                        Expanded(
-                                            flex: 1,
-                                            child: Text(
-                                              'Vice Treasurer',
-                                              style: TextStyle(fontSize: 16),
-                                            )),
-                                      ],
-                                    ),
-                                  ),
-                                  const Divider(
-                                    thickness: 0.1,
-                                    color: Colors.black,
-                                  ),
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.start,
-                                            children: [
-                                              if (Responsive.isDesktop(context))
-                                                const Expanded(
-                                                  flex: 1,
-                                                  child: Text(
-                                                    'Student ID',
-                                                    style:
-                                                        TextStyle(fontSize: 16),
-                                                  ),
-                                                ),
-                                              Expanded(
-                                                flex: 4,
-                                                child:RawAutocomplete<
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: Padding(
+                                                padding:
+                                                    const EdgeInsets.all(8.0),
+                                                child: Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.start,
+                                                  children: [
+                                                    if (Responsive.isDesktop(
+                                                        context))
+                                                      const Expanded(
+                                                        flex: 1,
+                                                        child: Text(
+                                                          'Student ID',
+                                                          style: TextStyle(
+                                                              fontSize: 16),
+                                                        ),
+                                                      ),
+                                                    Expanded(
+                                                      flex: 4,
+                                                      child: RawAutocomplete<
                                                           String>(
                                                         focusNode: _focusNode2,
                                                         textEditingController:
@@ -1072,7 +1137,7 @@ class _EditEventState extends State<EditEvent> {
                                                             controller:
                                                                 controller,
                                                             focusNode:
-                                                                focusNode,
+                                                                _focusNode4,
                                                             onChanged: (value) {
                                                               onTextChanged(
                                                                   value,
@@ -1176,30 +1241,32 @@ class _EditEventState extends State<EditEvent> {
                                                           );
                                                         },
                                                       ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                      Expanded(
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.start,
-                                            children: [
-                                              if (Responsive.isDesktop(context))
-                                                const Expanded(
-                                                  flex: 1,
-                                                  child: Text(
-                                                    'Student ID',
-                                                    style:
-                                                        TextStyle(fontSize: 16),
-                                                  ),
+                                                    ),
+                                                  ],
                                                 ),
-                                              Expanded(
-                                                flex: 4,
-                                                child: RawAutocomplete<
+                                              ),
+                                            ),
+                                            Expanded(
+                                              child: Padding(
+                                                padding:
+                                                    const EdgeInsets.all(8.0),
+                                                child: Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.start,
+                                                  children: [
+                                                    if (Responsive.isDesktop(
+                                                        context))
+                                                      const Expanded(
+                                                        flex: 1,
+                                                        child: Text(
+                                                          'Student ID',
+                                                          style: TextStyle(
+                                                              fontSize: 16),
+                                                        ),
+                                                      ),
+                                                    Expanded(
+                                                      flex: 4,
+                                                      child: RawAutocomplete<
                                                           String>(
                                                         focusNode: _focusNode5,
                                                         textEditingController:
@@ -1350,30 +1417,32 @@ class _EditEventState extends State<EditEvent> {
                                                           );
                                                         },
                                                       ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                      Expanded(
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.start,
-                                            children: [
-                                              if (Responsive.isDesktop(context))
-                                                const Expanded(
-                                                  flex: 1,
-                                                  child: Text(
-                                                    'Student ID',
-                                                    style:
-                                                        TextStyle(fontSize: 16),
-                                                  ),
+                                                    ),
+                                                  ],
                                                 ),
-                                              Expanded(
-                                                flex: 4,
-                                                child: RawAutocomplete<
+                                              ),
+                                            ),
+                                            Expanded(
+                                              child: Padding(
+                                                padding:
+                                                    const EdgeInsets.all(8.0),
+                                                child: Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.start,
+                                                  children: [
+                                                    if (Responsive.isDesktop(
+                                                        context))
+                                                      const Expanded(
+                                                        flex: 1,
+                                                        child: Text(
+                                                          'Student ID',
+                                                          style: TextStyle(
+                                                              fontSize: 16),
+                                                        ),
+                                                      ),
+                                                    Expanded(
+                                                      flex: 4,
+                                                      child: RawAutocomplete<
                                                           String>(
                                                         focusNode: _focusNode6,
                                                         textEditingController:
@@ -1524,257 +1593,288 @@ class _EditEventState extends State<EditEvent> {
                                                           );
                                                         },
                                                       ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.start,
-                                            children: [
-                                              if (Responsive.isDesktop(context))
-                                                const Expanded(
-                                                  flex: 1,
-                                                  child: Text(
-                                                    'Name',
-                                                    style:
-                                                        TextStyle(fontSize: 16),
-                                                  ),
-                                                ),
-                                              Expanded(
-                                                flex: 4,
-                                                child: CustomTextField(
-                                                  validator: (value) {
-                                                    if (value!.isEmpty) {
-                                                      return 'No Student Found';
-                                                    }
-                                                    return null;
-                                                  },
-                                                  enabled: false,
-                                                  controller: vpresidentName,
-                                                  hintText:
-                                                      'Associated Student Name',
+                                                    ),
+                                                  ],
                                                 ),
                                               ),
-                                            ],
-                                          ),
+                                            ),
+                                          ],
                                         ),
-                                      ),
-                                      Expanded(
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.start,
-                                            children: [
-                                              if (Responsive.isDesktop(context))
-                                                const Expanded(
-                                                  flex: 1,
-                                                  child: Text(
-                                                    'Name',
-                                                    style:
-                                                        TextStyle(fontSize: 16),
-                                                  ),
-                                                ),
-                                              Expanded(
-                                                flex: 4,
-                                                child: CustomTextField(
-                                                  validator: (value) {
-                                                    if (value!.isEmpty) {
-                                                      return 'No Student Found';
-                                                    }
-                                                    return null;
-                                                  },
-                                                  enabled: false,
-                                                  controller: vsecretaryName,
-                                                  hintText:
-                                                      'Associated Student Name',
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                      Expanded(
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.start,
-                                            children: [
-                                              if (Responsive.isDesktop(context))
-                                                const Expanded(
-                                                  flex: 1,
-                                                  child: Text(
-                                                    'Name',
-                                                    style:
-                                                        TextStyle(fontSize: 16),
-                                                  ),
-                                                ),
-                                              Expanded(
-                                                flex: 4,
-                                                child: CustomTextField(
-                                                  validator: (value) {
-                                                    if (value!.isEmpty) {
-                                                      return 'No Student Found';
-                                                    }
-                                                    return null;
-                                                  },
-                                                  enabled: false,
-                                                  controller: vtreasurerName,
-                                                  hintText:
-                                                      'Associated Student Name',
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 8.0, vertical: 12.0),
-                                        child: CustomButton(
-                                          onPressed: () async {
-                                            if (_formKey1.currentState!
-                                                .validate()) {
-                                              if (hasDuplicateTextValues()) {
-                                                ScaffoldMessenger.of(context)
-                                                    .showSnackBar(
-                                                  const SnackBar(
-                                                    content: Text(
-                                                        'Duplicate Committee spotted. Please correct it.'),
-                                                    width: 275.0,
-                                                    behavior: SnackBarBehavior
-                                                        .floating,
-                                                    duration:
-                                                        Duration(seconds: 3),
-                                                  ),
-                                                );
-                                              } else {
-                                                try {
-                                                  String contactNo;
-                                                  contactNo =
-                                                      await getContactNo(
-                                                          presidentID.text);
-                                                  updateCommittee(
-                                                      widget.selectedEvent,
-                                                      presidentID.text,
-                                                      'President',
-                                                      presidentName.text,
-                                                      contactNo);
-                                                  contactNo =
-                                                      await getContactNo(
-                                                          vpresidentID.text);
-                                                  updateCommittee(
-                                                      widget.selectedEvent,
-                                                      vpresidentID.text,
-                                                      'Vice President',
-                                                      vpresidentName.text,
-                                                      contactNo);
-                                                  contactNo =
-                                                      await getContactNo(
-                                                          secretaryID.text);
-                                                  updateCommittee(
-                                                      widget.selectedEvent,
-                                                      secretaryID.text,
-                                                      'Secretary',
-                                                      secretaryName.text,
-                                                      contactNo);
-                                                  contactNo =
-                                                      await getContactNo(
-                                                          vsecretaryID.text);
-                                                  updateCommittee(
-                                                      widget.selectedEvent,
-                                                      vsecretaryID.text,
-                                                      'Vice Secretary',
-                                                      vsecretaryName.text,
-                                                      contactNo);
-                                                  contactNo =
-                                                      await getContactNo(
-                                                          treasurerID.text);
-                                                  updateCommittee(
-                                                      widget.selectedEvent,
-                                                      treasurerID.text,
-                                                      'Treasurer',
-                                                      treasurerName.text,
-                                                      contactNo);
-                                                  contactNo =
-                                                      await getContactNo(
-                                                          vtreasurerID.text);
-                                                  await updateCommittee(
-                                                      widget.selectedEvent,
-                                                      vtreasurerID.text,
-                                                      'Vice Treasurer',
-                                                      vtreasurerName.text,
-                                                      contactNo);
-                                                  Navigator.push(
-                                                    context,
-                                                    MaterialPageRoute(
-                                                      builder: (context) =>
-                                                          EventDetails(
-                                                        selectedEvent: widget
-                                                            .selectedEvent,
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: Padding(
+                                                padding:
+                                                    const EdgeInsets.all(8.0),
+                                                child: Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.start,
+                                                  children: [
+                                                    if (Responsive.isDesktop(
+                                                        context))
+                                                      const Expanded(
+                                                        flex: 1,
+                                                        child: Text(
+                                                          'Name',
+                                                          style: TextStyle(
+                                                              fontSize: 16),
+                                                        ),
+                                                      ),
+                                                    Expanded(
+                                                      flex: 4,
+                                                      child: CustomTextField(
+                                                        validator: (value) {
+                                                          if (value!.isEmpty) {
+                                                            return 'No Student Found';
+                                                          }
+                                                          return null;
+                                                        },
+                                                        enabled: false,
+                                                        controller:
+                                                            vpresidentName,
+                                                        hintText:
+                                                            'Associated Student Name',
                                                       ),
                                                     ),
-                                                  );
-                                                  ScaffoldMessenger.of(context)
-                                                      .showSnackBar(
-                                                    SnackBar(
-                                                      content: Text(
-                                                          '${name.text}\'s committee has been updated.'),
-                                                      width: 225.0,
-                                                      behavior: SnackBarBehavior
-                                                          .floating,
-                                                      duration: const Duration(
-                                                          seconds: 3),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                            Expanded(
+                                              child: Padding(
+                                                padding:
+                                                    const EdgeInsets.all(8.0),
+                                                child: Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.start,
+                                                  children: [
+                                                    if (Responsive.isDesktop(
+                                                        context))
+                                                      const Expanded(
+                                                        flex: 1,
+                                                        child: Text(
+                                                          'Name',
+                                                          style: TextStyle(
+                                                              fontSize: 16),
+                                                        ),
+                                                      ),
+                                                    Expanded(
+                                                      flex: 4,
+                                                      child: CustomTextField(
+                                                        validator: (value) {
+                                                          if (value!.isEmpty) {
+                                                            return 'No Student Found';
+                                                          }
+                                                          return null;
+                                                        },
+                                                        enabled: false,
+                                                        controller:
+                                                            vsecretaryName,
+                                                        hintText:
+                                                            'Associated Student Name',
+                                                      ),
                                                     ),
-                                                  );
-                                                } catch (e) {
-                                                  ScaffoldMessenger.of(context)
-                                                      .showSnackBar(
-                                                    const SnackBar(
-                                                      content: Text(
-                                                          'Failed to update committee. Please try again.'),
-                                                      width: 225.0,
-                                                      behavior: SnackBarBehavior
-                                                          .floating,
-                                                      duration:
-                                                          Duration(seconds: 3),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                            Expanded(
+                                              child: Padding(
+                                                padding:
+                                                    const EdgeInsets.all(8.0),
+                                                child: Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.start,
+                                                  children: [
+                                                    if (Responsive.isDesktop(
+                                                        context))
+                                                      const Expanded(
+                                                        flex: 1,
+                                                        child: Text(
+                                                          'Name',
+                                                          style: TextStyle(
+                                                              fontSize: 16),
+                                                        ),
+                                                      ),
+                                                    Expanded(
+                                                      flex: 4,
+                                                      child: CustomTextField(
+                                                        validator: (value) {
+                                                          if (value!.isEmpty) {
+                                                            return 'No Student Found';
+                                                          }
+                                                          return null;
+                                                        },
+                                                        enabled: false,
+                                                        controller:
+                                                            vtreasurerName,
+                                                        hintText:
+                                                            'Associated Student Name',
+                                                      ),
                                                     ),
-                                                  );
-                                                }
-                                              }
-                                            }
-                                          },
-                                          text: 'Change Committee',
-                                          width: 200,
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                      ),
-                                    ],
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.end,
+                                          children: [
+                                            Padding(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 8.0,
+                                                      vertical: 12.0),
+                                              child: CustomButton(
+                                                onPressed: () async {
+                                                  if (_formKey1.currentState!
+                                                      .validate()) {
+                                                    if (hasDuplicateTextValues()) {
+                                                      ScaffoldMessenger.of(
+                                                              context)
+                                                          .showSnackBar(
+                                                        const SnackBar(
+                                                          content: Text(
+                                                              'Duplicate Committee spotted. Please correct it.'),
+                                                          width: 275.0,
+                                                          behavior:
+                                                              SnackBarBehavior
+                                                                  .floating,
+                                                          duration: Duration(
+                                                              seconds: 3),
+                                                        ),
+                                                      );
+                                                    } else {
+                                                      try {
+                                                        String contactNo;
+                                                        contactNo =
+                                                            await getContactNo(
+                                                                presidentID
+                                                                    .text);
+                                                        updateCommittee(
+                                                            widget
+                                                                .selectedEvent,
+                                                            presidentID.text,
+                                                            'President',
+                                                            presidentName.text,
+                                                            contactNo);
+                                                        contactNo =
+                                                            await getContactNo(
+                                                                vpresidentID
+                                                                    .text);
+                                                        updateCommittee(
+                                                            widget
+                                                                .selectedEvent,
+                                                            vpresidentID.text,
+                                                            'Vice President',
+                                                            vpresidentName.text,
+                                                            contactNo);
+                                                        contactNo =
+                                                            await getContactNo(
+                                                                secretaryID
+                                                                    .text);
+                                                        updateCommittee(
+                                                            widget
+                                                                .selectedEvent,
+                                                            secretaryID.text,
+                                                            'Secretary',
+                                                            secretaryName.text,
+                                                            contactNo);
+                                                        contactNo =
+                                                            await getContactNo(
+                                                                vsecretaryID
+                                                                    .text);
+                                                        updateCommittee(
+                                                            widget
+                                                                .selectedEvent,
+                                                            vsecretaryID.text,
+                                                            'Vice Secretary',
+                                                            vsecretaryName.text,
+                                                            contactNo);
+                                                        contactNo =
+                                                            await getContactNo(
+                                                                treasurerID
+                                                                    .text);
+                                                        updateCommittee(
+                                                            widget
+                                                                .selectedEvent,
+                                                            treasurerID.text,
+                                                            'Treasurer',
+                                                            treasurerName.text,
+                                                            contactNo);
+                                                        contactNo =
+                                                            await getContactNo(
+                                                                vtreasurerID
+                                                                    .text);
+                                                        await updateCommittee(
+                                                            widget
+                                                                .selectedEvent,
+                                                            vtreasurerID.text,
+                                                            'Vice Treasurer',
+                                                            vtreasurerName.text,
+                                                            contactNo);
+                                                        Navigator.push(
+                                                          context,
+                                                          MaterialPageRoute(
+                                                            builder: (context) =>
+                                                                EventDetails(
+                                                              selectedEvent: widget
+                                                                  .selectedEvent,
+                                                            ),
+                                                          ),
+                                                        );
+                                                        ScaffoldMessenger.of(
+                                                                context)
+                                                            .showSnackBar(
+                                                          SnackBar(
+                                                            content: Text(
+                                                                '${name.text}\'s committee has been updated.'),
+                                                            width: 225.0,
+                                                            behavior:
+                                                                SnackBarBehavior
+                                                                    .floating,
+                                                            duration:
+                                                                const Duration(
+                                                                    seconds: 3),
+                                                          ),
+                                                        );
+                                                      } catch (e) {
+                                                        ScaffoldMessenger.of(
+                                                                context)
+                                                            .showSnackBar(
+                                                          const SnackBar(
+                                                            content: Text(
+                                                                'Failed to update committee. Please try again.'),
+                                                            width: 225.0,
+                                                            behavior:
+                                                                SnackBarBehavior
+                                                                    .floating,
+                                                            duration: Duration(
+                                                                seconds: 3),
+                                                          ),
+                                                        );
+                                                      }
+                                                    }
+                                                  }
+                                                },
+                                                text: 'Change Committee',
+                                                width: 200,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ],
-                              ),
-                            ),
-                          ]))
-                ]),
+                                ]))
+                      ]),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
       bottomNavigationBar: const Footer(),
     );
   }

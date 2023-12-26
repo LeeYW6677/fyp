@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
-import 'package:fyp/pages/addEvent.dart';
 import 'package:fyp/pages/eventDetails.dart';
 import 'package:intl/intl.dart';
 import 'package:localstorage/localstorage.dart';

@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'dart:math';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:emailjs/emailjs.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,6 +12,7 @@ import 'package:fyp/pages/eventDetails.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:localstorage/localstorage.dart';
+import 'package:http/http.dart' as http;
 
 class ViewClaim extends StatefulWidget {
   final String selectedClaim;
@@ -22,6 +25,8 @@ class ViewClaim extends StatefulWidget {
 }
 
 class _ViewClaimState extends State<ViewClaim> {
+  String? nameError;
+  List<String> items = [];
   bool enabled = true;
   bool _isLoading = true;
   String imageUrl = '';
@@ -29,7 +34,6 @@ class _ViewClaimState extends State<ViewClaim> {
   List<XFile?> _imageFile = List.generate(1, (index) => null);
   bool isValid = false;
   final double containerSize = 400.0;
-  final double imageSize = 400.0;
   String savedUrl = '';
   final date = TextEditingController();
   final vendor = TextEditingController();
@@ -38,9 +42,11 @@ class _ViewClaimState extends State<ViewClaim> {
   final amount = TextEditingController();
   final title = TextEditingController();
   final nothing = TextEditingController();
+  final item = TextEditingController();
   List<String> checkName = ['', '', ''];
   List<String> checkStatus = ['', '', ''];
   String status = '';
+  String claimantID = '';
   int access = 0;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final LocalStorage storage = LocalStorage('user');
@@ -53,8 +59,114 @@ class _ViewClaimState extends State<ViewClaim> {
       if (pickedFile != null) {
         _imageFile[0] = XFile(pickedFile.path);
         isValid = true;
+        sendData();
       }
     });
+  }
+
+  Future<void> sendData() async {
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+      // Read the image file as bytes
+      List<int> imageBytes = await _imageFile[0]!.readAsBytes();
+
+      // Encode the image bytes as a base64 string
+      String base64Image = base64Encode(imageBytes);
+
+      var response = await http.post(
+        Uri.parse('http://127.0.0.1:5000'),
+        body: jsonEncode({
+          'image': base64Image,
+        }),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        items.clear();
+        Map<String, dynamic> jsonData = jsonDecode(response.body);
+        print(jsonData);
+
+        List<List<String>> entities = (jsonData['result'] as List)
+            .map((dynamic e) => List<String>.from(e as List))
+            .toList();
+        setState(() {
+          vendor.text = getValueByLabel(entities, "COMPANY");
+          String totalValue = getValueByLabel(entities, "TOTAL");
+          if (totalValue.split('.').length - 1 >= 2) {
+            amount.text = extractRemainingDecimal(totalValue);
+          } else {
+            amount.text = totalValue;
+          }
+          String rawDateValue = getValueByLabel(entities, "DATE");
+
+          if (rawDateValue.isNotEmpty) {
+            DateTime pdate = parseDate(rawDateValue);
+
+            String formattedDate = DateFormat('dd-MM-yyyy').format(pdate);
+            date.text = formattedDate;
+          }
+          getAllItems(entities, "ITEM");
+          items = items;
+        });
+      } else {
+        var error = jsonDecode(response.body)['error'];
+        print('Error: $error');
+      }
+      setState(() {
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      print('Error: $e');
+    }
+  }
+
+  String extractRemainingDecimal(String input) {
+    // Find the first occurrence of '.'
+    int firstIndex = input.indexOf('.');
+
+    if (firstIndex != -1 && firstIndex < input.length - 3) {
+      // Extract the remaining value after the first decimal point and the following two digits
+      String remainingValue = input.substring(firstIndex + 3, input.length);
+      return remainingValue;
+    }
+
+    return '0.00'; // Return '0.00' if no decimal point or not enough digits are found
+  }
+
+  void getAllItems(List<List<String>> dataList, String label) {
+    for (var entry in dataList) {
+      if (entry.isNotEmpty && entry.length > 1 && entry[0] == label) {
+        items.add(entry[1]);
+      }
+    }
+  }
+
+  DateTime parseDate(String rawDate) {
+    List<String> possibleFormats = ['dd/MM/yyyy', 'dd-MM-yyyy'];
+
+    for (String format in possibleFormats) {
+      try {
+        return DateFormat(format).parseStrict(rawDate);
+      } catch (e) {
+        return DateTime.now();
+      }
+    }
+
+    return DateTime.now();
+  }
+
+  String getValueByLabel(List<List<String>> dataList, String label) {
+    for (var entry in dataList) {
+      if (entry.isNotEmpty && entry.length > 1 && entry[0] == label) {
+        return entry[1];
+      }
+    }
+    return '';
   }
 
   Future<void> getData() async {
@@ -83,7 +195,10 @@ class _ViewClaimState extends State<ViewClaim> {
         status = approvalData['status'];
         savedUrl = approvalData['receiptImage'];
         nothing.text = approvalData['comment'];
-        String claimantID = approvalData['claimantID'];
+        claimantID = approvalData['claimantID'];
+        dynamic claimItemData = approvalData['claimItem'];
+
+        items = List<String>.from(claimItemData);
         final userDoc = await FirebaseFirestore.instance
             .collection('user')
             .doc(claimantID)
@@ -128,6 +243,7 @@ class _ViewClaimState extends State<ViewClaim> {
       }
 
       setState(() {
+        items = items;
         savedUrl = savedUrl;
         checkName = checkName;
         checkStatus = checkStatus;
@@ -142,7 +258,7 @@ class _ViewClaimState extends State<ViewClaim> {
           content: Text(error.toString()),
           width: 225.0,
           behavior: SnackBarBehavior.floating,
-          duration: Duration(seconds: 3),
+          duration: const Duration(seconds: 3),
         ),
       );
     }
@@ -223,8 +339,6 @@ class _ViewClaimState extends State<ViewClaim> {
                                                         (context, url, error) {
                                                       isValid = false;
                                                       return Container(
-                                                        width: imageSize,
-                                                        height: imageSize,
                                                         decoration:
                                                             BoxDecoration(
                                                           border: Border.all(
@@ -260,8 +374,6 @@ class _ViewClaimState extends State<ViewClaim> {
                                                       );
                                                     },
                                                     fit: BoxFit.cover,
-                                                    width: imageSize,
-                                                    height: imageSize,
                                                   )
                                                 : Container(
                                                     width: containerSize,
@@ -711,6 +823,159 @@ class _ViewClaimState extends State<ViewClaim> {
                                                     ),
                                                   ],
                                                 ),
+                                                const SizedBox(
+                                                  height: 15,
+                                                ),
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(8.0),
+                                                  child: Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment.start,
+                                                    children: [
+                                                      if (Responsive.isDesktop(
+                                                              context) ||
+                                                          enabled)
+                                                        const Expanded(
+                                                          flex: 1,
+                                                          child: Text(
+                                                            'Item',
+                                                            style: TextStyle(
+                                                                fontSize: 16),
+                                                          ),
+                                                        ),
+                                                      if (enabled)
+                                                        Expanded(
+                                                          flex: 8,
+                                                          child:
+                                                              CustomTextField(
+                                                            enabled: enabled,
+                                                            screen: !Responsive
+                                                                .isDesktop(
+                                                                    context),
+                                                            labelText:
+                                                                'Item Name',
+                                                            errorText:
+                                                                nameError,
+                                                            controller: item,
+                                                            hintText:
+                                                                'Enter item name',
+                                                          ),
+                                                        ),
+                                                      const SizedBox(
+                                                        width: 15,
+                                                      ),
+                                                      if (enabled)
+                                                        CustomButton(
+                                                          width: 150,
+                                                          onPressed: () {
+                                                            if (item.text
+                                                                .isNotEmpty) {
+                                                              setState(() {
+                                                                nameError =
+                                                                    null;
+                                                                items.add(
+                                                                    item.text);
+                                                                item.clear();
+                                                              });
+                                                            } else {
+                                                              setState(() {
+                                                                nameError =
+                                                                    'Please enter item name.';
+                                                              });
+                                                            }
+                                                          },
+                                                          text: 'Add',
+                                                        ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                if (items.isNotEmpty)
+                                                  ConstrainedBox(
+                                                    constraints:
+                                                        const BoxConstraints(
+                                                      minHeight: 100,
+                                                      maxHeight: 500,
+                                                    ),
+                                                    child: Container(
+                                                      child: GridView.builder(
+                                                        padding:
+                                                            EdgeInsets.zero,
+                                                        shrinkWrap: true,
+                                                        gridDelegate:
+                                                            const SliverGridDelegateWithFixedCrossAxisCount(
+                                                          crossAxisCount: 2,
+                                                          mainAxisSpacing: 0.0,
+                                                          crossAxisSpacing:
+                                                              10.0,
+                                                          childAspectRatio: 8.0,
+                                                        ),
+                                                        itemCount: items.length,
+                                                        itemBuilder:
+                                                            (context, index) {
+                                                          return Center(
+                                                            child: Container(
+                                                              height: 50,
+                                                              decoration:
+                                                                  BoxDecoration(
+                                                                border:
+                                                                    Border.all(
+                                                                  color: const Color
+                                                                      .fromARGB(
+                                                                      255,
+                                                                      141,
+                                                                      141,
+                                                                      141),
+                                                                ),
+                                                                borderRadius:
+                                                                    BorderRadius
+                                                                        .circular(
+                                                                            8.0),
+                                                              ),
+                                                              child: Column(
+                                                                children: [
+                                                                  Row(
+                                                                    children: [
+                                                                      Expanded(
+                                                                        child:
+                                                                            CustomTextField(
+                                                                          enabled:
+                                                                              enabled,
+                                                                          controller:
+                                                                              TextEditingController(text: items[index]),
+                                                                          onChanged:
+                                                                              (newValue) {
+                                                                            setState(() {
+                                                                              items[index] = newValue;
+                                                                            });
+                                                                          },
+                                                                          hintText:
+                                                                              'Enter item name',
+                                                                        ),
+                                                                      ),
+                                                                      if (enabled)
+                                                                        Row(
+                                                                          children: [
+                                                                            IconButton(
+                                                                              icon: const Icon(Icons.delete),
+                                                                              onPressed: () {
+                                                                                setState(() {
+                                                                                  items.removeAt(index);
+                                                                                });
+                                                                              },
+                                                                            ),
+                                                                          ],
+                                                                        ),
+                                                                    ],
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                          );
+                                                        },
+                                                      ),
+                                                    ),
+                                                  ),
                                                 if (!enabled)
                                                   CustomTimeline2(
                                                       status: status,
@@ -724,6 +989,28 @@ class _ViewClaimState extends State<ViewClaim> {
                                                       CustomButton(
                                                           width: 150,
                                                           onPressed: () async {
+                                                            if (items.any(
+                                                                (item) =>
+                                                                    item ==
+                                                                    '')) {
+                                                              ScaffoldMessenger
+                                                                      .of(context)
+                                                                  .showSnackBar(
+                                                                const SnackBar(
+                                                                  content: Text(
+                                                                      'Please enter all item name.'),
+                                                                  width: 225.0,
+                                                                  behavior:
+                                                                      SnackBarBehavior
+                                                                          .floating,
+                                                                  duration:
+                                                                      Duration(
+                                                                          seconds:
+                                                                              3),
+                                                                ),
+                                                              );
+                                                              return;
+                                                            }
                                                             if (_formKey
                                                                 .currentState!
                                                                 .validate()) {
@@ -731,9 +1018,32 @@ class _ViewClaimState extends State<ViewClaim> {
                                                                           0] !=
                                                                       null &&
                                                                   isValid) {
+                                                                String todayDate = DateTime
+                                                                        .now()
+                                                                    .toLocal()
+                                                                    .toString()
+                                                                    .substring(
+                                                                        0, 10)
+                                                                    .replaceAll(
+                                                                        '-',
+                                                                        '');
+
+                                                                String randomDigits =
+                                                                    Random()
+                                                                        .nextInt(
+                                                                            999)
+                                                                        .toString()
+                                                                        .padLeft(
+                                                                            3,
+                                                                            '0');
+
+                                                                // Concatenate the parts to form the eventID
+                                                                String claimID =
+                                                                    'C$todayDate$randomDigits';
                                                                 String
                                                                     imageName =
-                                                                    'receipt_${widget.selectedClaim}.jpg';
+                                                                    'receipt_$claimID.jpg';
+
                                                                 try {
                                                                   List<int>
                                                                       fileBytes =
@@ -776,27 +1086,7 @@ class _ViewClaimState extends State<ViewClaim> {
                                                                     ),
                                                                   );
                                                                 }
-                                                                String todayDate = DateTime
-                                                                        .now()
-                                                                    .toLocal()
-                                                                    .toString()
-                                                                    .substring(
-                                                                        0, 10)
-                                                                    .replaceAll(
-                                                                        '-',
-                                                                        '');
 
-                                                                String randomDigits =
-                                                                    Random()
-                                                                        .nextInt(
-                                                                            999)
-                                                                        .toString()
-                                                                        .padLeft(
-                                                                            3,
-                                                                            '0');
-
-                                                                String claimID =
-                                                                    'C$todayDate$randomDigits';
                                                                 DocumentReference
                                                                     docRef =
                                                                     FirebaseFirestore
@@ -843,6 +1133,8 @@ class _ViewClaimState extends State<ViewClaim> {
                                                                   'advisorStatus':
                                                                       '',
                                                                   'comment': '',
+                                                                  'claimItem':
+                                                                      items,
                                                                 });
                                                                 Navigator.push(
                                                                   context,
@@ -892,7 +1184,7 @@ class _ViewClaimState extends State<ViewClaim> {
                                                           },
                                                           text: 'Submit'),
                                                     const SizedBox(
-                                                      width: 15,
+                                                      width: 10,
                                                     ),
                                                     if (access >= 1)
                                                       CustomButton(
@@ -903,6 +1195,8 @@ class _ViewClaimState extends State<ViewClaim> {
                                                                     context,
                                                                 builder: (_) {
                                                                   return ApproveDialog(
+                                                                      claimantID:
+                                                                          claimantID,
                                                                       amount: amount
                                                                           .text,
                                                                       title: title
@@ -936,12 +1230,20 @@ class _ViewClaimState extends State<ViewClaim> {
                                                               context: context,
                                                               builder: (_) {
                                                                 return RejectDialog(
+                                                                    claimantID:
+                                                                        claimantID,
+                                                                    amount: amount
+                                                                        .text,
+                                                                    title: title
+                                                                        .text,
                                                                     function:
                                                                         getData,
                                                                     access:
                                                                         access,
+                                                                    claimID: widget
+                                                                        .selectedClaim,
                                                                     eventID: widget
-                                                                        .selectedClaim);
+                                                                        .selectedEvent);
                                                               },
                                                             );
                                                           },
@@ -1005,6 +1307,7 @@ class ApproveDialog extends StatefulWidget {
   final String title;
   final String amount;
   final String selectedEvent;
+  final String claimantID;
 
   const ApproveDialog({
     super.key,
@@ -1015,6 +1318,7 @@ class ApproveDialog extends StatefulWidget {
     required this.title,
     required this.amount,
     required this.selectedEvent,
+    required this.claimantID,
   });
   @override
   _ApproveDialogState createState() => _ApproveDialogState();
@@ -1029,6 +1333,45 @@ class _ApproveDialogState extends State<ApproveDialog> {
   String eventStatus = '';
 
   final LocalStorage storage = LocalStorage('user');
+
+  void _sendEmail() async {
+    try {
+      QuerySnapshot<Map<String, dynamic>> userQuery = await FirebaseFirestore
+          .instance
+          .collection('user')
+          .where('id', isEqualTo: widget.claimantID)
+          .get();
+      String userName = userQuery.docs[0]['name'];
+      String userEmail = userQuery.docs[0]['email'];
+      QuerySnapshot<Map<String, dynamic>> eventQuery = await FirebaseFirestore
+          .instance
+          .collection('event')
+          .where('eventID', isEqualTo: widget.selectedEvent)
+          .get();
+      String eventName = eventQuery.docs[0]['eventName'];
+      await EmailJS.send(
+        'service_ul1uscs',
+        'template_alwxa78',
+        {
+          'name': userName,
+          'subject': 'Claim Reimbursement Approval Notification',
+          'email': userEmail,
+          'message':
+              'Congratulations, $userName! We are pleased to inform you that your claim reimbursement request has been approved.\n\nApproved Claim Details:\nEvent: $eventName\nTitle: ${widget.title}\nAmount: RM${widget.amount}\n\nIf you have any further questions or need additional information, please feel free to reach out. Thank you for your commitment.',
+        },
+        const Options(
+          publicKey: 'Zfr0vuSDdyYaWouwQ',
+          privateKey: 'c2nvTqTugRdLVJxuMSYwe',
+        ),
+      );
+    } catch (error) {
+      if (error is EmailJSResponseStatus) {
+        print('ERROR... ${error.status}: ${error.text}');
+      }
+      print(error.toString());
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -1056,6 +1399,7 @@ class _ApproveDialogState extends State<ApproveDialog> {
                 advisorName = storage.getItem('name');
                 advisorStatus = 'Approved';
                 eventStatus = 'Approved';
+                _sendEmail();
               }
               await firestore.collection('claim').doc(widget.claimID).update({
                 if (treasurerName.isNotEmpty) 'treasurerName': treasurerName,
@@ -1071,6 +1415,7 @@ class _ApproveDialogState extends State<ApproveDialog> {
               });
 
               if (widget.access == 2) {
+                _sendEmail();
                 await firestore
                     .collection('accountStatement')
                     .doc(widget.claimID)
@@ -1105,14 +1450,22 @@ class _ApproveDialogState extends State<ApproveDialog> {
 
 class RejectDialog extends StatefulWidget {
   final String eventID;
+  final String claimID;
   final int access;
   final VoidCallback? function;
+  final String title;
+  final String amount;
+  final String claimantID;
 
   const RejectDialog({
     super.key,
     required this.eventID,
     required this.access,
     required this.function,
+    required this.claimantID,
+    required this.amount,
+    required this.claimID,
+    required this.title,
   });
   @override
   _RejectDialogState createState() => _RejectDialogState();
@@ -1128,6 +1481,51 @@ class _RejectDialogState extends State<RejectDialog> {
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
   final LocalStorage storage = LocalStorage('user');
+
+  void _sendEmail() async {
+    String position;
+    if (widget.access == 1) {
+      position = "Society Treasurer";
+    } else {
+      position = "Society Advisor";
+    }
+    try {
+      QuerySnapshot<Map<String, dynamic>> userQuery = await FirebaseFirestore
+          .instance
+          .collection('user')
+          .where('id', isEqualTo: widget.claimantID)
+          .get();
+      String userName = userQuery.docs[0]['name'];
+      String userEmail = userQuery.docs[0]['email'];
+      QuerySnapshot<Map<String, dynamic>> eventQuery = await FirebaseFirestore
+          .instance
+          .collection('event')
+          .where('eventID', isEqualTo: widget.eventID)
+          .get();
+      String eventName = eventQuery.docs[0]['eventName'];
+      await EmailJS.send(
+        'service_ul1uscs',
+        'template_alwxa78',
+        {
+          'name': userName,
+          'subject': 'Claim Reimbursement Rejection Notification',
+          'email': userEmail,
+          'message':
+              'Dear $userName,\n\nWe regret to inform you that your claim reimbursement request has been rejected by ${storage.getItem('name')} ($position).\n\nRejected Claim Details:\nEvent: $eventName\nTitle: ${widget.title}\nAmount: RM${widget.amount}\n\nReason for Rejection: ${comment.text}\n\nIf you have any further questions or need clarification, please feel free to reach out. We appreciate your understanding.\n\nThank you for your cooperation.',
+        },
+        const Options(
+          publicKey: 'Zfr0vuSDdyYaWouwQ',
+          privateKey: 'c2nvTqTugRdLVJxuMSYwe',
+        ),
+      );
+    } catch (error) {
+      if (error is EmailJSResponseStatus) {
+        print('ERROR... ${error.status}: ${error.text}');
+      }
+      print(error.toString());
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -1166,7 +1564,7 @@ class _RejectDialogState extends State<RejectDialog> {
             if (formKey.currentState!.validate()) {
               final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
-              await firestore.collection('claim').doc(widget.eventID).update({
+              await firestore.collection('claim').doc(widget.claimID).update({
                 'status': 'Rejected',
                 if (widget.access == 1)
                   'treasurerName': storage.getItem('name'),
@@ -1175,6 +1573,7 @@ class _RejectDialogState extends State<RejectDialog> {
                 if (widget.access == 2) 'advisorStatus': 'Rejected',
                 'comment': comment.text,
               });
+              _sendEmail();
               Navigator.of(context).pop();
               widget.function!();
               ScaffoldMessenger.of(context).showSnackBar(

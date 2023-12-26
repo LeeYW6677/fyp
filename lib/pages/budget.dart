@@ -486,22 +486,41 @@ class _BudgetState extends State<Budget> {
                                                                 columns: const [
                                                                   DataColumn(
                                                                     label: Text(
-                                                                        'Item Name'),
+                                                                        ''),
                                                                   ),
                                                                   DataColumn(
                                                                       label: Text(
-                                                                          'Unit Price')),
+                                                                          'Income')),
                                                                   DataColumn(
                                                                       label: Text(
-                                                                          'Qty')),
+                                                                          '')),
                                                                   DataColumn(
                                                                       label: Text(
-                                                                          'Total')),
+                                                                          '')),
                                                                   DataColumn(
                                                                       label: Text(
                                                                           '')),
                                                                 ],
                                                                 rows: [
+                                                                  const DataRow(
+                                                                    cells: [
+                                                                      DataCell(Text(
+                                                                          'Item Name',
+                                                                          style:
+                                                                              TextStyle(fontWeight: FontWeight.bold))),
+                                                                      DataCell(Text(
+                                                                          'Unit Price')),
+                                                                      DataCell(
+                                                                        Text(
+                                                                            'Qty'),
+                                                                      ),
+                                                                      DataCell(Text(
+                                                                          'Total')),
+                                                                      DataCell(
+                                                                          Text(
+                                                                              '')),
+                                                                    ],
+                                                                  ),
                                                                   ...income
                                                                       .asMap()
                                                                       .entries
@@ -599,21 +618,46 @@ class _BudgetState extends State<Budget> {
                                                                 columns: const [
                                                                   DataColumn(
                                                                       label: Text(
-                                                                          'Item Name')),
+                                                                          '')),
                                                                   DataColumn(
                                                                       label: Text(
-                                                                          'Unit Price')),
+                                                                          'Expense')),
                                                                   DataColumn(
                                                                       label: Text(
-                                                                          'Qty')),
+                                                                          '')),
                                                                   DataColumn(
                                                                       label: Text(
-                                                                          'Total')),
+                                                                          '')),
                                                                   DataColumn(
                                                                       label: Text(
                                                                           '')),
                                                                 ],
                                                                 rows: [
+                                                                  const DataRow(
+                                                                    cells: [
+                                                                      DataCell(Text(
+                                                                          'Item Name',
+                                                                          style:
+                                                                              TextStyle(fontWeight: FontWeight.bold))),
+                                                                      DataCell(Text(
+                                                                          'Unit Price',
+                                                                          style:
+                                                                              TextStyle(fontWeight: FontWeight.bold))),
+                                                                      DataCell(
+                                                                        Text(
+                                                                            'Qty',
+                                                                            style:
+                                                                                TextStyle(fontWeight: FontWeight.bold)),
+                                                                      ),
+                                                                      DataCell(Text(
+                                                                          'Total',
+                                                                          style:
+                                                                              TextStyle(fontWeight: FontWeight.bold))),
+                                                                      DataCell(
+                                                                          Text(
+                                                                              '')),
+                                                                    ],
+                                                                  ),
                                                                   ...expense
                                                                       .asMap()
                                                                       .entries

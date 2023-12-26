@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:emailjs/emailjs.dart';
 import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
@@ -327,6 +328,7 @@ class _EventDetailsState extends State<EventDetails> {
                                                 context: context,
                                                 builder: (_) {
                                                   return DeleteDialog(
+                                                      eventName: name,
                                                       eventID:
                                                           widget.selectedEvent);
                                                 });
@@ -649,7 +651,7 @@ class _EventDetailsState extends State<EventDetails> {
                                             );
                                           },
                                           text: 'Submit Claim'),
-                                    if ( progress != 3 &&
+                                    if (progress != 3 &&
                                         position.startsWith('org') &&
                                         position.contains('President'))
                                       const SizedBox(
@@ -957,6 +959,7 @@ class _EventDetailsState extends State<EventDetails> {
                                                       function: getData,
                                                       status: status,
                                                       access: access,
+                                                      eventName: name,
                                                       eventID:
                                                           widget.selectedEvent);
                                                 });
@@ -973,6 +976,7 @@ class _EventDetailsState extends State<EventDetails> {
                                                 context: context,
                                                 builder: (_) {
                                                   return RejectDialog(
+                                                      eventName: name,
                                                       status: status,
                                                       function: getData,
                                                       access: access,
@@ -1161,7 +1165,7 @@ class _ConfirmDialog2State extends State<ConfirmDialog2> {
               'status': 'Closing',
               'progress': 0,
             });
-            widget.function!();
+            widget.function();
             Navigator.of(context).pop();
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
@@ -1181,10 +1185,12 @@ class _ConfirmDialog2State extends State<ConfirmDialog2> {
 
 class DeleteDialog extends StatefulWidget {
   final String eventID;
+  final String eventName;
 
   const DeleteDialog({
     super.key,
     required this.eventID,
+    required this.eventName,
   });
   @override
   _DeleteDialogState createState() => _DeleteDialogState();
@@ -1192,6 +1198,34 @@ class DeleteDialog extends StatefulWidget {
 
 class _DeleteDialogState extends State<DeleteDialog> {
   final LocalStorage storage = LocalStorage('user');
+
+  void _sendEmail(
+      String studentEmail, String committeeName, String eventName) async {
+    try {
+      // Send email using EmailJS
+      await EmailJS.send(
+        'service_ul1uscs',
+        'template_alwxa78',
+        {
+          'name': committeeName,
+          'email': studentEmail,
+          'subject': '$eventName cancelled',
+          'message':
+              'We regret to inform you that the upcoming event, $eventName at TAR UMT, has been canceled. Unfortunately, due to unforeseen circumstances, we are unable to proceed with the event as planned. \n\nWe appreciate your interest and willingness to contribute to our university community. We understand the disappointment this may cause, and we sincerely apologize for any inconvenience. \n\nThank you for your understanding, and we hope to have the opportunity to collaborate on future events.',
+        },
+        const Options(
+          publicKey: 'Zfr0vuSDdyYaWouwQ',
+          privateKey: 'c2nvTqTugRdLVJxuMSYwe',
+        ),
+      );
+    } catch (error) {
+      if (error is EmailJSResponseStatus) {
+        print('ERROR... ${error.status}: ${error.text}');
+      }
+      print(error.toString());
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -1210,6 +1244,27 @@ class _DeleteDialogState extends State<DeleteDialog> {
         TextButton(
           onPressed: () async {
             final FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+            QuerySnapshot<Map<String, dynamic>> committeeDocuments =
+                await firestore
+                    .collection('committee')
+                    .where('eventID', isEqualTo: widget.eventID)
+                    .get();
+
+            for (QueryDocumentSnapshot<Map<String, dynamic>> committeeDocument
+                in committeeDocuments.docs) {
+              // Retrieve studentID from committee
+              String studentID = committeeDocument['studentID'];
+
+              // Fetch email from user collection based on studentID
+              DocumentSnapshot<Map<String, dynamic>> userDocument =
+                  await firestore.collection('user').doc(studentID).get();
+
+              String userEmail = userDocument['email'];
+              String committeeName = userDocument['name'];
+              _sendEmail(userEmail, committeeName, widget.eventName);
+            }
+
             // Create a batch
             WriteBatch batch = firestore.batch();
 
@@ -1282,6 +1337,7 @@ class ApproveDialog extends StatefulWidget {
   final int access;
   final String status;
   final VoidCallback? function;
+  final String eventName;
 
   const ApproveDialog({
     super.key,
@@ -1289,6 +1345,7 @@ class ApproveDialog extends StatefulWidget {
     required this.access,
     required this.status,
     required this.function,
+    required this.eventName,
   });
   @override
   _ApproveDialogState createState() => _ApproveDialogState();
@@ -1303,6 +1360,63 @@ class _ApproveDialogState extends State<ApproveDialog> {
   String branchHeadStatus = '';
   String eventStatus = '';
   int progress = 0;
+
+  void _sendEmail() async {
+    String subject;
+    String message;
+    try {
+      QuerySnapshot<Map<String, dynamic>> committeeQuery =
+          await FirebaseFirestore.instance
+              .collection('committee')
+              .where('eventID', isEqualTo: widget.eventID)
+              .get();
+
+      for (QueryDocumentSnapshot<Map<String, dynamic>> committeeDoc
+          in committeeQuery.docs) {
+        String studentID = committeeDoc['studentID'];
+
+        DocumentSnapshot<Map<String, dynamic>> userDoc = await FirebaseFirestore
+            .instance
+            .collection('user')
+            .doc(studentID)
+            .get();
+
+        if (userDoc.exists) {
+          String userEmail = userDoc['email'];
+          String userName = userDoc['name'];
+          if (widget.status == 'Planning') {
+            subject = 'Event Approval Notification';
+            message =
+                'Congratulations, $userName! We are pleased to inform you that the event, ${widget.eventName}, has been approved.\n\nYour hard work and dedication to organizing this event are truly appreciated. We look forward to the success of the event and the positive impact it will have on our university community.\n\nThank you for your commitment, and we appreciate your valuable contributions.';
+          } else {
+            subject = 'Event Closing Notification';
+            message =
+                'Congratulations, $userName! We are pleased to inform you that the event, ${widget.eventName}, has successfully concluded.\n\nYour hard work and dedication to organizing this event were truly appreciated. The success of the event and the positive impact it had on our university community are a testament to your commitment.\n\nThank you for your valuable contributions throughout the event, and we appreciate your continued dedication to making our university community vibrant and engaging.';
+          }
+          // Send email using EmailJS
+          await EmailJS.send(
+            'service_ul1uscs',
+            'template_alwxa78',
+            {
+              'name': userName,
+              'subject': subject,
+              'email': userEmail,
+              'message': message,
+            },
+            const Options(
+              publicKey: 'Zfr0vuSDdyYaWouwQ',
+              privateKey: 'c2nvTqTugRdLVJxuMSYwe',
+            ),
+          );
+        }
+      }
+    } catch (error) {
+      if (error is EmailJSResponseStatus) {
+        print('ERROR... ${error.status}: ${error.text}');
+      }
+      print(error.toString());
+    }
+  }
 
   final LocalStorage storage = LocalStorage('user');
   @override
@@ -1335,6 +1449,7 @@ class _ApproveDialogState extends State<ApproveDialog> {
             } else if (widget.access == 3) {
               branchHeadName = storage.getItem('name');
               branchHeadStatus = 'Approved';
+              _sendEmail();
               if (widget.status == 'Planning') {
                 eventStatus = 'Closing';
                 progress = 0;
@@ -1403,6 +1518,7 @@ class RejectDialog extends StatefulWidget {
   final String eventID;
   final int access;
   final VoidCallback? function;
+  final String eventName;
 
   const RejectDialog({
     super.key,
@@ -1410,6 +1526,7 @@ class RejectDialog extends StatefulWidget {
     required this.eventID,
     required this.access,
     required this.function,
+    required this.eventName,
   });
   @override
   _RejectDialogState createState() => _RejectDialogState();
@@ -1428,6 +1545,62 @@ class _RejectDialogState extends State<RejectDialog> {
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
   final LocalStorage storage = LocalStorage('user');
+
+  void _sendEmail() async {
+    String position;
+    if (widget.access == 1) {
+      position = "Society President";
+    } else if (widget.access == 2) {
+      position = "Society Advisor";
+    } else {
+      position = "Branch Head";
+    }
+    try {
+      QuerySnapshot<Map<String, dynamic>> committeeQuery =
+          await FirebaseFirestore.instance
+              .collection('committee')
+              .where('eventID', isEqualTo: widget.eventID)
+              .get();
+
+      for (QueryDocumentSnapshot<Map<String, dynamic>> committeeDoc
+          in committeeQuery.docs) {
+        String studentID = committeeDoc['studentID'];
+
+        DocumentSnapshot<Map<String, dynamic>> userDoc = await FirebaseFirestore
+            .instance
+            .collection('user')
+            .doc(studentID)
+            .get();
+
+        if (userDoc.exists) {
+          String userEmail = userDoc['email'];
+          String userName = userDoc['name'];
+          // Send email using EmailJS
+          await EmailJS.send(
+            'service_ul1uscs',
+            'template_alwxa78',
+            {
+              'name': userName,
+              'subject': 'Event Rejection Notification',
+              'email': userEmail,
+              'message':
+                  'We regret to inform you that the event, ${widget.eventName}, has been rejected by ${storage.getItem('name')}(${position}).\n\nUnfortunately, the event forms submitted did not meet the necessary criteria for approval. We appreciate your effort and dedication in organizing the event, but at this time, we are unable to proceed with its approval.\n\nReason for Rejection: ${comment.text}\n\nWe understand the disappointment this may cause and thank you for your understanding. If you have any questions or need further clarification, please feel free to reach out.\n\nThank you for your commitment, and we appreciate your efforts to contribute to our university community.',
+            },
+            const Options(
+              publicKey: 'Zfr0vuSDdyYaWouwQ',
+              privateKey: 'c2nvTqTugRdLVJxuMSYwe',
+            ),
+          );
+        }
+      }
+    } catch (error) {
+      if (error is EmailJSResponseStatus) {
+        print('ERROR... ${error.status}: ${error.text}');
+      }
+      print(error.toString());
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -1499,7 +1672,7 @@ class _RejectDialogState extends State<RejectDialog> {
                   'comment': comment.text,
                 });
               }
-
+              _sendEmail();
               widget.function!();
               Navigator.of(context).pop();
               ScaffoldMessenger.of(context).showSnackBar(

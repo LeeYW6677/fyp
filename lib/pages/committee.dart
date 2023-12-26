@@ -1,4 +1,11 @@
+import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:another_flushbar/flushbar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:csv/csv.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
@@ -8,12 +15,13 @@ class OrgCommittee extends StatefulWidget {
   final String status;
   final int progress;
   final String position;
-  const OrgCommittee(
-      {super.key,
-      required this.selectedEvent,
-      required this.status,
-      required this.progress,
-      required this.position,});
+  const OrgCommittee({
+    super.key,
+    required this.selectedEvent,
+    required this.status,
+    required this.progress,
+    required this.position,
+  });
 
   @override
   State<OrgCommittee> createState() => _OrgCommitteeState();
@@ -32,6 +40,8 @@ class _OrgCommitteeState extends State<OrgCommittee> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
   List<Committee> committeeList = [];
+  List<Map<String, dynamic>> userList = [];
+  final FocusNode _focusNode = FocusNode();
 
   void resetTable() {
     setState(() {
@@ -72,7 +82,15 @@ class _OrgCommitteeState extends State<OrgCommittee> {
         }).toList();
       }
 
+      QuerySnapshot querySnapshot =
+          await firestore.collection('user').where('id', isLessThan: 'A').get();
+
+      querySnapshot.docs.forEach((DocumentSnapshot document) {
+        userList.add(document.data() as Map<String, dynamic>);
+      });
+
       setState(() {
+        userList = userList;
         _isLoading = false;
       });
     } catch (error) {
@@ -87,6 +105,116 @@ class _OrgCommitteeState extends State<OrgCommittee> {
           duration: Duration(seconds: 3),
         ),
       );
+    }
+  }
+
+  Future<void> displayFirstColumnValues(Uint8List bytes) async {
+    String csvString = utf8.decode(bytes);
+    List<List<dynamic>> csvTable =
+        const CsvToListConverter().convert(csvString);
+
+    List<int> rowsWithoutUser = [];
+    List<int> registeredUser = [];
+    List<int> blockedPosition = [];
+
+    for (int rowIndex = 0; rowIndex < csvTable.length; rowIndex++) {
+      List<dynamic> row = csvTable[rowIndex];
+      if (row.isNotEmpty && row[0] != null) {
+        String studentID = row[0].toString();
+        String position = row[1].toString();
+
+        Map<String, dynamic> user = userList.firstWhere(
+          (user) => user['id'].toString() == studentID,
+          orElse: () => {
+            'id': '',
+            'name': '',
+            'contact': '',
+          },
+        );
+
+        if (user['id'].isNotEmpty) {
+          bool isParticipant = committeeList
+              .any((committee) => committee.studentID == user['id']);
+          if (!isParticipant &&
+              !restrictedPositions.contains(position.toLowerCase())) {
+            Committee newParticipants = Committee(
+              studentID: user['id'].toString(),
+              position: position,
+              name: user['name'].toString(),
+              contact: user['contact'].toString(),
+            );
+            committeeList.add(newParticipants);
+            setState(() {
+              committeeList = committeeList;
+            });
+          } else if (isParticipant) {
+            registeredUser.add(rowIndex + 1);
+          } else {
+            blockedPosition.add(rowIndex + 1);
+          }
+        } else {
+          rowsWithoutUser.add(rowIndex + 1);
+        }
+      }
+    }
+    String message = '';
+
+    if (registeredUser.isNotEmpty) {
+      message +=
+          'Rows with Duplicate Participant: ${registeredUser.join(', ')}\n';
+    }
+    if (blockedPosition.isNotEmpty) {
+      message += 'Rows with Blocked Position: ${blockedPosition.join(', ')}\n';
+    }
+
+    if (rowsWithoutUser.isNotEmpty) {
+      message +=
+          'Rows with Unknown Student ID: ${rowsWithoutUser.join(', ')}\n';
+    }
+
+    if (message.isNotEmpty) {
+      Flushbar(
+        message: message,
+        duration: const Duration(seconds: 60),
+        isDismissible: false,
+        margin: EdgeInsets.all(50),
+        borderRadius: BorderRadius.circular(8),
+        maxWidth: 500,
+        flushbarStyle: FlushbarStyle.FLOATING,
+        mainButton: TextButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          child: const Text('Dismiss'),
+        ),
+      ).show(context);
+    }
+  }
+
+  Future<File?> pickCSVFile() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['csv'],
+    );
+
+    if (result != null) {
+      if (result.files.single.extension?.toLowerCase() == 'csv') {
+        if (result.files.single.bytes != null) {
+          await displayFirstColumnValues(result.files.single.bytes!);
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Invalid file type. Please select a CSV file.'),
+            width: 225.0,
+            behavior: SnackBarBehavior.floating,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+      return null;
+    } else {
+      return null;
     }
   }
 
@@ -227,37 +355,129 @@ class _OrgCommitteeState extends State<OrgCommittee> {
                                                                 Expanded(
                                                                   flex: 4,
                                                                   child:
-                                                                      CustomTextField(
-                                                                    hintText:
-                                                                        'Enter Student ID',
-                                                                    controller:
+                                                                      RawAutocomplete<
+                                                                          String>(
+                                                                    focusNode:
+                                                                        _focusNode,
+                                                                    textEditingController:
                                                                         id,
-                                                                    errorText:
-                                                                        idError,
-                                                                    screen: !Responsive
-                                                                        .isDesktop(
-                                                                            context),
-                                                                    labelText:
-                                                                        'Student ID',
-                                                                    validator:
-                                                                        (value) {
-                                                                      if (value!
-                                                                          .isEmpty) {
-                                                                        return 'Please enter student ID';
-                                                                      } else if (!RegExp(
-                                                                              r'^\d{2}[A-Z]{3}\d{5}$')
-                                                                          .hasMatch(
-                                                                              value)) {
-                                                                        return 'Invalid student ID';
-                                                                      }
-                                                                      return null;
+                                                                    optionsBuilder:
+                                                                        (TextEditingValue
+                                                                            textEditingValue) {
+                                                                      return userList
+                                                                          .map<String>((user) => user['id']
+                                                                              .toString())
+                                                                          .where((id) =>
+                                                                              id.contains(textEditingValue.text))
+                                                                          .toList();
                                                                     },
-                                                                    onChanged:
-                                                                        (value) {
+                                                                    onSelected:
+                                                                        (String
+                                                                            value) {
                                                                       onTextChanged(
                                                                           value,
                                                                           name,
                                                                           contact);
+                                                                    },
+                                                                    fieldViewBuilder: (BuildContext context,
+                                                                        TextEditingController
+                                                                            controller,
+                                                                        FocusNode
+                                                                            focusNode,
+                                                                        VoidCallback
+                                                                            onFieldSubmitted) {
+                                                                      return TextFormField(
+                                                                        validator:
+                                                                            (value) {
+                                                                          if (value!
+                                                                              .isEmpty) {
+                                                                            return 'Please enter student ID';
+                                                                          } else if (!RegExp(r'^\d{2}[A-Z]{3}\d{5}$')
+                                                                              .hasMatch(value)) {
+                                                                            return 'Invalid student ID';
+                                                                          }
+                                                                          return null;
+                                                                        },
+                                                                        controller:
+                                                                            controller,
+                                                                        focusNode:
+                                                                            focusNode,
+                                                                        onChanged:
+                                                                            (value) {
+                                                                          onTextChanged(
+                                                                              value,
+                                                                              name,
+                                                                              contact);
+                                                                        },
+                                                                        decoration:
+                                                                            InputDecoration(
+                                                                          errorText:
+                                                                              idError,
+                                                                          enabledBorder:
+                                                                              const OutlineInputBorder(
+                                                                            borderSide:
+                                                                                BorderSide(width: 1, color: Colors.grey),
+                                                                          ),
+                                                                          focusedBorder:
+                                                                              const OutlineInputBorder(
+                                                                            borderSide:
+                                                                                BorderSide(width: 1, color: Colors.blue),
+                                                                          ),
+                                                                          errorBorder:
+                                                                              const OutlineInputBorder(
+                                                                            borderSide:
+                                                                                BorderSide(width: 1, color: Colors.red),
+                                                                          ),
+                                                                          focusedErrorBorder:
+                                                                              const OutlineInputBorder(
+                                                                            borderSide:
+                                                                                BorderSide(width: 1, color: Colors.red),
+                                                                          ),
+                                                                          labelText:
+                                                                              'Student ID',
+                                                                          hintText:
+                                                                              'Enter student ID',
+                                                                        ),
+                                                                      );
+                                                                    },
+                                                                    optionsViewBuilder: (BuildContext context,
+                                                                        AutocompleteOnSelected<String>
+                                                                            onSelected,
+                                                                        Iterable<String>
+                                                                            options) {
+                                                                      return Align(
+                                                                        alignment:
+                                                                            Alignment.topLeft,
+                                                                        child:
+                                                                            Material(
+                                                                          elevation:
+                                                                              4.0,
+                                                                          child:
+                                                                              ConstrainedBox(
+                                                                            constraints:
+                                                                                const BoxConstraints(
+                                                                              maxWidth: 300,
+                                                                              maxHeight: 250,
+                                                                            ),
+                                                                            child:
+                                                                                ListView.builder(
+                                                                              padding: const EdgeInsets.all(8.0),
+                                                                              itemCount: options.length,
+                                                                              itemBuilder: (BuildContext context, int index) {
+                                                                                final String user = options.elementAt(index);
+                                                                                return GestureDetector(
+                                                                                  onTap: () {
+                                                                                    onSelected(user);
+                                                                                  },
+                                                                                  child: ListTile(
+                                                                                    title: Text(user),
+                                                                                  ),
+                                                                                );
+                                                                              },
+                                                                            ),
+                                                                          ),
+                                                                        ),
+                                                                      );
                                                                     },
                                                                   ),
                                                                 ),
@@ -428,6 +648,18 @@ class _OrgCommitteeState extends State<OrgCommittee> {
                                                       mainAxisAlignment:
                                                           MainAxisAlignment.end,
                                                       children: [
+                                                        Tooltip(
+                                                          message: "Column of CSV File : Student ID, Position",
+                                                          child: CustomButton(
+                                                              width: 150,
+                                                              onPressed: () {
+                                                                pickCSVFile();
+                                                              },
+                                                              text: 'Import CSV'),
+                                                        ),
+                                                        const SizedBox(
+                                                          width: 15,
+                                                        ),
                                                         CustomButton(
                                                             width: 150,
                                                             onPressed: () {
@@ -541,6 +773,7 @@ class _OrgCommitteeState extends State<OrgCommittee> {
                                                                                   index: entry.key,
                                                                                   list: committeeList,
                                                                                   function: resetTable,
+                                                                                  userList: userList,
                                                                                 );
                                                                               },
                                                                             );
@@ -678,12 +911,14 @@ class EditDialog extends StatefulWidget {
   final int index;
   final VoidCallback function;
   final List<Committee> list;
+  final List<Map<String, dynamic>> userList;
 
   const EditDialog({
     required this.index,
     required this.committee,
     required this.function,
     required this.list,
+    required this.userList,
   });
   @override
   _EditDialogState createState() => _EditDialogState();
@@ -696,6 +931,7 @@ class _EditDialogState extends State<EditDialog> {
   TextEditingController contact = TextEditingController();
   TextEditingController position = TextEditingController();
   String? idError;
+  final FocusNode _focusNode = FocusNode();
   List<String> restrictedPositions = [
     'president',
     'vice president',
@@ -760,22 +996,86 @@ class _EditDialogState extends State<EditDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CustomTextField(
-              hintText: 'Enter Student ID',
-              controller: id,
-              errorText: idError,
-              screen: true,
-              labelText: 'Student ID',
-              validator: (value) {
-                if (value!.isEmpty) {
-                  return 'Please enter student ID';
-                } else if (!RegExp(r'^\d{2}[A-Z]{3}\d{5}$').hasMatch(value)) {
-                  return 'Invalid student ID';
-                }
-                return null;
+            RawAutocomplete<String>(
+              focusNode: _focusNode,
+              textEditingController: id,
+              optionsBuilder: (TextEditingValue textEditingValue) {
+                return widget.userList
+                    .map<String>((user) => user['id'].toString())
+                    .where((id) => id.contains(textEditingValue.text))
+                    .toList();
               },
-              onChanged: (value) {
+              onSelected: (String value) {
                 onTextChanged(value, name, contact);
+              },
+              fieldViewBuilder: (BuildContext context,
+                  TextEditingController controller,
+                  FocusNode focusNode,
+                  VoidCallback onFieldSubmitted) {
+                return TextFormField(
+                  validator: (value) {
+                    if (value!.isEmpty) {
+                      return 'Please enter student ID';
+                    } else if (!RegExp(r'^\d{2}[A-Z]{3}\d{5}$')
+                        .hasMatch(value)) {
+                      return 'Invalid student ID';
+                    }
+                    return null;
+                  },
+                  controller: controller,
+                  focusNode: focusNode,
+                  onChanged: (value) {
+                    onTextChanged(value, name, contact);
+                  },
+                  decoration: InputDecoration(
+                    errorText: idError,
+                    enabledBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(width: 1, color: Colors.grey),
+                    ),
+                    focusedBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(width: 1, color: Colors.blue),
+                    ),
+                    errorBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(width: 1, color: Colors.red),
+                    ),
+                    focusedErrorBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(width: 1, color: Colors.red),
+                    ),
+                    labelText: 'Student ID',
+                    hintText: 'Enter student ID',
+                  ),
+                );
+              },
+              optionsViewBuilder: (BuildContext context,
+                  AutocompleteOnSelected<String> onSelected,
+                  Iterable<String> options) {
+                return Align(
+                  alignment: Alignment.topLeft,
+                  child: Material(
+                    elevation: 4.0,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        maxWidth: 300,
+                        maxHeight: 250,
+                      ),
+                      child: ListView.builder(
+                        padding: const EdgeInsets.all(8.0),
+                        itemCount: options.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          final String user = options.elementAt(index);
+                          return GestureDetector(
+                            onTap: () {
+                              onSelected(user);
+                            },
+                            child: ListTile(
+                              title: Text(user),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                );
               },
             ),
             const SizedBox(

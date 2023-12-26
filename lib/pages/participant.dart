@@ -1,8 +1,14 @@
+import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:another_flushbar/flushbar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:csv/csv.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
-import 'package:file_picker/file_picker.dart';
 
 class Participant extends StatefulWidget {
   final String selectedEvent;
@@ -23,6 +29,8 @@ class Participant extends StatefulWidget {
 
 class _ParticipantState extends State<Participant> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  List<Map<String, dynamic>> userList = [];
+  final FocusNode _focusNode2 = FocusNode();
   bool _isLoading = true;
   bool enabled = true;
   final id = TextEditingController();
@@ -32,8 +40,6 @@ class _ParticipantState extends State<Participant> {
   String? idError;
   List<String> checkName = [];
   List<String> checkStatus = [];
-  List<Map<String, dynamic>> userList = [];
-  final FocusNode _focusNode = FocusNode();
 
   void resetTable() {
     setState(() {
@@ -55,12 +61,6 @@ class _ParticipantState extends State<Participant> {
       }
 
       final FirebaseFirestore firestore = FirebaseFirestore.instance;
-      QuerySnapshot querySnapshot =
-          await firestore.collection('user').where('id', isLessThan: 'A').get();
-
-      querySnapshot.docs.forEach((DocumentSnapshot document) {
-        userList.add(document.data() as Map<String, dynamic>);
-      });
 
       final QuerySnapshot<Map<String, dynamic>> participantSnapshot =
           await firestore
@@ -78,10 +78,14 @@ class _ParticipantState extends State<Participant> {
           );
         }).toList();
       }
-      List<String> participantIDs =
-          participantList.map((participant) => participant.studentID).toList();
 
-      userList.removeWhere((user) => participantIDs.contains(user['id']));
+      QuerySnapshot querySnapshot =
+          await firestore.collection('user').where('id', isLessThan: 'A').get();
+
+      querySnapshot.docs.forEach((DocumentSnapshot document) {
+        userList.add(document.data() as Map<String, dynamic>);
+      });
+
       setState(() {
         _isLoading = false;
       });
@@ -102,23 +106,136 @@ class _ParticipantState extends State<Participant> {
 
   Future<void> onTextChanged(String value, TextEditingController name,
       TextEditingController contact) async {
-    bool hasMatch = false;
-    String studentName = '';
-    String contactNo = '';
+    setState(() {
+      idError = null;
+    });
+    bool isParticipant =
+        participantList.any((participant) => participant.studentID == value);
+    if (isParticipant) {
+      setState(() {
+        idError = 'Already registered as participant';
+      });
+      return;
+    }
+    if (RegExp(r'^\d{2}[A-Z]{3}\d{5}$').hasMatch(value)) {
+      DocumentSnapshot<Map<String, dynamic>> student =
+          await FirebaseFirestore.instance.collection('user').doc(value).get();
 
-    for (Map<String, dynamic> user in userList) {
-      if (user['id'] == value) {
-        hasMatch = true;
-        studentName = user['name'];
-        contactNo = user['contact'];
-        break;
+      if (student.exists) {
+        Map<String, dynamic> studentData = student.data()!;
+        setState(() {
+          name.text = studentData['name'];
+          contact.text = studentData['contact'];
+        });
+      } else {
+        setState(() {
+          name.text = '';
+          contact.text = '';
+        });
+      }
+    } else {
+      setState(() {
+        name.text = '';
+        contact.text = '';
+      });
+    }
+  }
+
+  Future<void> displayFirstColumnValues(Uint8List bytes) async {
+    String csvString = utf8.decode(bytes);
+    List<List<dynamic>> csvTable =
+        const CsvToListConverter().convert(csvString);
+
+    List<int> rowsWithoutUser = [];
+    List<int> registeredUser = [];
+
+    for (int rowIndex = 0; rowIndex < csvTable.length; rowIndex++) {
+      List<dynamic> row = csvTable[rowIndex];
+      if (row.isNotEmpty && row[0] != null) {
+        String studentID = row[0].toString();
+
+        Map<String, dynamic> user = userList.firstWhere(
+          (user) => user['id'].toString() == studentID,
+          orElse: () => {'id': '', 'name': '', 'contact': ''},
+        );
+
+        if (user['id'].isNotEmpty) {
+          bool isParticipant = participantList
+              .any((participant) => participant.studentID == user['id']);
+          if (!isParticipant) {
+            Participants newParticipants = Participants(
+              studentID: user['id'].toString(),
+              name: user['name'].toString(),
+              contact: user['contact'].toString(),
+            );
+            participantList.add(newParticipants);
+            setState(() {
+              participantList = participantList;
+            });
+          } else {
+            registeredUser.add(rowIndex+1);
+          }
+        } else {
+          rowsWithoutUser.add(rowIndex+1);
+        }
       }
     }
+    String message = '';
 
-    setState(() {
-      name.text = hasMatch ? studentName : '';
-      contact.text = hasMatch ? contactNo : '';
-    });
+    if (registeredUser.isNotEmpty) {
+      message +=
+          'Rows with Duplicate Participant: ${registeredUser.join(', ')}\n';
+    }
+
+    if (rowsWithoutUser.isNotEmpty) {
+      message +=
+          'Rows with Unknown Student ID: ${rowsWithoutUser.join(', ')}\n';
+    }
+
+    if (message.isNotEmpty) {
+      Flushbar(
+        message: message,
+        duration: const Duration(seconds: 60),
+        isDismissible: false,
+        margin: EdgeInsets.all(50),
+        borderRadius: BorderRadius.circular(8),
+        maxWidth: 500,
+        flushbarStyle: FlushbarStyle.FLOATING,
+        mainButton: TextButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          child: const Text('Dismiss'),
+        ),
+      ).show(context);
+    }
+  }
+
+  Future<File?> pickCSVFile() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['csv'],
+    );
+
+    if (result != null) {
+      if (result.files.single.extension?.toLowerCase() == 'csv') {
+        if (result.files.single.bytes != null) {
+          await displayFirstColumnValues(result.files.single.bytes!);
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Invalid file type. Please select a CSV file.'),
+            width: 225.0,
+            behavior: SnackBarBehavior.floating,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+      return null;
+    } else {
+      return null;
+    }
   }
 
   @override
@@ -216,7 +333,7 @@ class _ParticipantState extends State<Participant> {
                                                                     RawAutocomplete<
                                                                         String>(
                                                                   focusNode:
-                                                                      _focusNode,
+                                                                      _focusNode2,
                                                                   textEditingController:
                                                                       id,
                                                                   optionsBuilder:
@@ -269,27 +386,29 @@ class _ParticipantState extends State<Participant> {
                                                                             contact);
                                                                       },
                                                                       decoration:
-                                                                          const InputDecoration(
+                                                                          InputDecoration(
+                                                                        errorText:
+                                                                            idError,
                                                                         enabledBorder:
-                                                                            OutlineInputBorder(
+                                                                            const OutlineInputBorder(
                                                                           borderSide: BorderSide(
                                                                               width: 1,
                                                                               color: Colors.grey),
                                                                         ),
                                                                         focusedBorder:
-                                                                            OutlineInputBorder(
+                                                                            const OutlineInputBorder(
                                                                           borderSide: BorderSide(
                                                                               width: 1,
                                                                               color: Colors.blue),
                                                                         ),
                                                                         errorBorder:
-                                                                            OutlineInputBorder(
+                                                                            const OutlineInputBorder(
                                                                           borderSide: BorderSide(
                                                                               width: 1,
                                                                               color: Colors.red),
                                                                         ),
                                                                         focusedErrorBorder:
-                                                                            OutlineInputBorder(
+                                                                            const OutlineInputBorder(
                                                                           borderSide: BorderSide(
                                                                               width: 1,
                                                                               color: Colors.red),
@@ -319,7 +438,7 @@ class _ParticipantState extends State<Participant> {
                                                                         child:
                                                                             ConstrainedBox(
                                                                           constraints:
-                                                                              BoxConstraints(
+                                                                              const BoxConstraints(
                                                                             maxWidth:
                                                                                 300,
                                                                             maxHeight:
@@ -328,7 +447,7 @@ class _ParticipantState extends State<Participant> {
                                                                           child:
                                                                               ListView.builder(
                                                                             padding:
-                                                                                EdgeInsets.all(8.0),
+                                                                                const EdgeInsets.all(8.0),
                                                                             itemCount:
                                                                                 options.length,
                                                                             itemBuilder:
@@ -469,59 +588,48 @@ class _ParticipantState extends State<Participant> {
                                                     mainAxisAlignment:
                                                         MainAxisAlignment.end,
                                                     children: [
+                                                      Tooltip(
+                                                        message: "Column of CSV File : Student ID, Position",
+                                                        child: CustomButton(
+                                                            width: 150,
+                                                            onPressed: () {
+                                                              pickCSVFile();
+                                                            },
+                                                            text: 'Import CSV'),
+                                                      ),
+                                                      const SizedBox(
+                                                        width: 15,
+                                                      ),
                                                       CustomButton(
                                                           width: 150,
                                                           onPressed: () {
                                                             if (_formKey
                                                                 .currentState!
                                                                 .validate()) {
-                                                              bool
-                                                                  isParticipant =
-                                                                  participantList.any((participant) =>
-                                                                      participant
-                                                                          .studentID ==
-                                                                      id.text);
-                                                              if (isParticipant) {
-                                                                ScaffoldMessenger.of(
-                                                                        context)
-                                                                    .showSnackBar(
-                                                                  const SnackBar(
-                                                                    content: Text(
-                                                                        'Already registerd as an participant'),
-                                                                    width:
-                                                                        225.0,
-                                                                    behavior:
-                                                                        SnackBarBehavior
-                                                                            .floating,
-                                                                    duration: Duration(
-                                                                        seconds:
-                                                                            3),
-                                                                  ),
+                                                              if (idError ==
+                                                                  null) {
+                                                                Participants
+                                                                    newParticipants =
+                                                                    Participants(
+                                                                  studentID:
+                                                                      id.text,
+                                                                  name:
+                                                                      name.text,
+                                                                  contact:
+                                                                      contact
+                                                                          .text,
                                                                 );
-                                                                return;
-                                                              }
-                                                              Participants
-                                                                  newParticipants =
-                                                                  Participants(
-                                                                studentID:
-                                                                    id.text,
-                                                                name: name.text,
-                                                                contact: contact
-                                                                    .text,
-                                                              );
 
-                                                              participantList.add(
-                                                                  newParticipants);
-                                                              setState(() {
-                                                                userList.removeWhere(
-                                                                    (user) => user[
-                                                                        'id']);
-                                                                participantList =
-                                                                    participantList;
-                                                              });
-                                                              id.clear();
-                                                              name.clear();
-                                                              contact.clear();
+                                                                participantList.add(
+                                                                    newParticipants);
+                                                                setState(() {
+                                                                  participantList =
+                                                                      participantList;
+                                                                });
+                                                                id.clear();
+                                                                name.clear();
+                                                                contact.clear();
+                                                              }
                                                             }
                                                           },
                                                           text: 'Add'),
@@ -595,6 +703,7 @@ class _ParticipantState extends State<Participant> {
                                                                                     index: index,
                                                                                     list: participantList,
                                                                                     function: resetTable,
+                                                                                    userList: userList,
                                                                                   );
                                                                                 });
                                                                           },
@@ -723,12 +832,14 @@ class EditDialog extends StatefulWidget {
   final int index;
   final VoidCallback function;
   final List<Participants> list;
+  final List<Map<String, dynamic>> userList;
 
   const EditDialog({
     required this.index,
     required this.participant,
     required this.function,
     required this.list,
+    required this.userList,
   });
   @override
   _EditDialogState createState() => _EditDialogState();
@@ -739,6 +850,7 @@ class _EditDialogState extends State<EditDialog> {
   TextEditingController name = TextEditingController();
   TextEditingController id = TextEditingController();
   TextEditingController contact = TextEditingController();
+  final FocusNode _focusNode2 = FocusNode();
   String? idError;
 
   @override
@@ -795,22 +907,86 @@ class _EditDialogState extends State<EditDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CustomTextField(
-              hintText: 'Enter Student ID',
-              controller: id,
-              errorText: idError,
-              screen: true,
-              labelText: 'Student ID',
-              validator: (value) {
-                if (value!.isEmpty) {
-                  return 'Please enter student ID';
-                } else if (!RegExp(r'^\d{2}[A-Z]{3}\d{5}$').hasMatch(value)) {
-                  return 'Invalid student ID';
-                }
-                return null;
+            RawAutocomplete<String>(
+              focusNode: _focusNode2,
+              textEditingController: id,
+              optionsBuilder: (TextEditingValue textEditingValue) {
+                return widget.userList
+                    .map<String>((user) => user['id'].toString())
+                    .where((id) => id.contains(textEditingValue.text))
+                    .toList();
               },
-              onChanged: (value) {
+              onSelected: (String value) {
                 onTextChanged(value, name, contact);
+              },
+              fieldViewBuilder: (BuildContext context,
+                  TextEditingController controller,
+                  FocusNode focusNode,
+                  VoidCallback onFieldSubmitted) {
+                return TextFormField(
+                  validator: (value) {
+                    if (value!.isEmpty) {
+                      return 'Please enter student ID';
+                    } else if (!RegExp(r'^\d{2}[A-Z]{3}\d{5}$')
+                        .hasMatch(value)) {
+                      return 'Invalid student ID';
+                    }
+                    return null;
+                  },
+                  controller: controller,
+                  focusNode: focusNode,
+                  onChanged: (value) {
+                    onTextChanged(value, name, contact);
+                  },
+                  decoration: InputDecoration(
+                    errorText: idError,
+                    enabledBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(width: 1, color: Colors.grey),
+                    ),
+                    focusedBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(width: 1, color: Colors.blue),
+                    ),
+                    errorBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(width: 1, color: Colors.red),
+                    ),
+                    focusedErrorBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(width: 1, color: Colors.red),
+                    ),
+                    labelText: 'Student ID',
+                    hintText: 'Enter student ID',
+                  ),
+                );
+              },
+              optionsViewBuilder: (BuildContext context,
+                  AutocompleteOnSelected<String> onSelected,
+                  Iterable<String> options) {
+                return Align(
+                  alignment: Alignment.topLeft,
+                  child: Material(
+                    elevation: 4.0,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        maxWidth: 300,
+                        maxHeight: 250,
+                      ),
+                      child: ListView.builder(
+                        padding: const EdgeInsets.all(8.0),
+                        itemCount: options.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          final String user = options.elementAt(index);
+                          return GestureDetector(
+                            onTap: () {
+                              onSelected(user);
+                            },
+                            child: ListTile(
+                              title: Text(user),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                );
               },
             ),
             const SizedBox(

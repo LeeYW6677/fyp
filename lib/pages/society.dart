@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:emailjs/emailjs.dart';
 import 'package:flutter/material.dart';
 import 'package:fyp/functions/customWidget.dart';
 import 'package:fyp/functions/responsive.dart';
@@ -22,10 +23,12 @@ class _SocietyState extends State<Society> {
   String selectedSociety = '';
   List<Map<String, dynamic>> advisorList = [];
   List<Map<String, dynamic>> coAdvisorList = [];
+  List<Map<String, dynamic>> allAdvisorList = [];
   List<Map<String, dynamic>> allAdvisor = [];
   List<Map<String, dynamic>> _members = [];
   List<Map<String, dynamic>> highcomm = [];
   List<Map<String, dynamic>> lowcomm = [];
+  List<Map<String, dynamic>> userList = [];
   List<String> societyIDs = [];
   List<String> societyNames = [];
   List<String> positionOrder = [
@@ -57,6 +60,14 @@ class _SocietyState extends State<Society> {
       societyNames = societySnapshot.docs
           .map((doc) => doc['societyName'].toString())
           .toList();
+
+      QuerySnapshot querySnapshot =
+          await firestore.collection('user').where('id', isLessThan: 'A').get();
+
+      querySnapshot.docs.forEach((DocumentSnapshot document) {
+        userList.add(document.data() as Map<String, dynamic>);
+      });
+
       fetchSocietyDetails();
       setState(() {
         _isLoading = false;
@@ -65,6 +76,7 @@ class _SocietyState extends State<Society> {
       setState(() {
         _isLoading = false;
       });
+      print(error.toString());
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Failed to fetch data. Please try again.'),
@@ -151,6 +163,28 @@ class _SocietyState extends State<Society> {
           _members.where((member) => member['position'] != 'Member').toList();
       lowcomm =
           _members.where((member) => member['position'] == 'Member').toList();
+
+      allAdvisorList.clear();
+      QuerySnapshot querySnapshot1 = await firestore
+          .collection('user')
+          .where('id', isGreaterThanOrEqualTo: 'A', isLessThan: 'B')
+          .get();
+
+      List<DocumentSnapshot> filteredDocuments = querySnapshot1.docs
+          .where((doc) =>
+              doc['societyID'] == '' &&
+              doc['position'] == '' &&
+              doc['ic'] != '')
+          .toList();
+
+      filteredDocuments.forEach((DocumentSnapshot document) {
+        allAdvisorList.add(document.data() as Map<String, dynamic>);
+      });
+
+      for (Map<String, dynamic> advisor in allAdvisor) {
+        String advisorId = advisor['id'];
+        allAdvisorList.removeWhere((advisor) => advisor['id'] == advisorId);
+      }
       setState(() {
         _members = _members;
       });
@@ -503,6 +537,8 @@ class _SocietyState extends State<Society> {
                                                             context: context,
                                                             builder: (_) {
                                                               return ChangeDialog(
+                                                                allAdvisorList:
+                                                                    allAdvisorList,
                                                                 original:
                                                                     allAdvisor,
                                                                 selectedSociety:
@@ -535,6 +571,7 @@ class _SocietyState extends State<Society> {
                                                             fetchSocietyDetails,
                                                         highcomm: highcomm,
                                                         lowcomm: lowcomm,
+                                                        userList: userList,
                                                         columns: const [
                                                           DataColumn(
                                                             label: Text('Name'),
@@ -586,6 +623,7 @@ class CustomDataTable extends StatefulWidget {
   final VoidCallback fetchSocietyDetails;
   final List<Map<String, dynamic>> highcomm;
   final List<Map<String, dynamic>> lowcomm;
+  final List<Map<String, dynamic>> userList;
   final BuildContext context;
 
   const CustomDataTable({
@@ -597,6 +635,7 @@ class CustomDataTable extends StatefulWidget {
     required this.highcomm,
     required this.lowcomm,
     required this.context,
+    required this.userList,
   }) : super(key: key);
 
   @override
@@ -711,6 +750,9 @@ class _CustomDataTableState extends State<CustomDataTable> {
                         function: () {
                           widget.fetchSocietyDetails();
                         },
+                        highcomm: widget.highcomm,
+                        lowcomm: widget.lowcomm,
+                        userList: widget.userList,
                       );
                     });
               },
@@ -926,8 +968,16 @@ class _MembersDataSource extends DataTableSource {
 class AddDialog extends StatefulWidget {
   final String selectedSociety;
   final VoidCallback? function;
+  final List<Map<String, dynamic>> highcomm;
+  final List<Map<String, dynamic>> lowcomm;
+  final List<Map<String, dynamic>> userList;
 
-  AddDialog({required this.selectedSociety, this.function});
+  AddDialog(
+      {required this.selectedSociety,
+      this.function,
+      required this.userList,
+      required this.highcomm,
+      required this.lowcomm});
   @override
   _AddDialogState createState() => _AddDialogState();
 }
@@ -935,9 +985,48 @@ class AddDialog extends StatefulWidget {
 class _AddDialogState extends State<AddDialog> {
   TextEditingController name = TextEditingController();
   TextEditingController id = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
   String? errorMessage;
-  bool found = false;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  Future<void> onTextChanged(String value, TextEditingController name) async {
+    setState(() {
+      errorMessage = null;
+    });
+    bool isInHighComm =
+        widget.highcomm.any((item) => item['studentID'] == value);
+
+    bool isInLowComm = widget.lowcomm.any((item) => item['studentID'] == value);
+
+    bool isParticipant = isInHighComm && isInLowComm;
+
+    if (isParticipant) {
+      setState(() {
+        errorMessage = 'Already registered as member';
+      });
+      return;
+    }
+    if (RegExp(r'^\d{2}[A-Z]{3}\d{5}$').hasMatch(value)) {
+      DocumentSnapshot<Map<String, dynamic>> student =
+          await FirebaseFirestore.instance.collection('user').doc(value).get();
+
+      if (student.exists) {
+        Map<String, dynamic> studentData = student.data()!;
+        setState(() {
+          name.text = studentData['name'];
+        });
+      } else {
+        setState(() {
+          name.text = '';
+        });
+      }
+    } else {
+      setState(() {
+        name.text = '';
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -948,38 +1037,86 @@ class _AddDialogState extends State<AddDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              CustomTextField(
-                controller: id,
-                errorText: errorMessage,
-                hintText: 'Enter student ID',
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return 'Please enter student ID';
-                  } else if (!RegExp(r'^\d{2}[A-Z]{3}\d{5}$').hasMatch(value)) {
-                    return 'Invalid student ID';
-                  }
-                  return null;
+              RawAutocomplete<String>(
+                focusNode: _focusNode,
+                textEditingController: id,
+                optionsBuilder: (TextEditingValue textEditingValue) {
+                  return widget.userList
+                      .map<String>((user) => user['id'].toString())
+                      .where((id) => id.contains(textEditingValue.text))
+                      .toList();
                 },
-                onChanged: (value) async {
-                  if (RegExp(r'^\d{2}[A-Z]{3}\d{5}$').hasMatch(value)) {
-                    DocumentSnapshot<Map<String, dynamic>> student =
-                        await FirebaseFirestore.instance
-                            .collection('user')
-                            .doc(id.text)
-                            .get();
-
-                    if (student.exists) {
-                      Map<String, dynamic> studentData = student.data()!;
-                      name.text = studentData['name'];
-                      found = true;
-                    } else {
-                      name.text = '';
-                      found = false;
-                    }
-                  } else {
-                    name.text = '';
-                    found = false;
-                  }
+                onSelected: (String value) {
+                  onTextChanged(value, name);
+                },
+                fieldViewBuilder: (BuildContext context,
+                    TextEditingController controller,
+                    FocusNode focusNode,
+                    VoidCallback onFieldSubmitted) {
+                  return TextFormField(
+                    validator: (value) {
+                      if (value!.isEmpty) {
+                        return 'Please enter student ID';
+                      } else if (!RegExp(r'^\d{2}[A-Z]{3}\d{5}$')
+                          .hasMatch(value)) {
+                        return 'Invalid student ID';
+                      }
+                      return null;
+                    },
+                    controller: controller,
+                    focusNode: focusNode,
+                    onChanged: (value) {
+                      onTextChanged(value, name);
+                    },
+                    decoration: InputDecoration(
+                      errorText: errorMessage,
+                      enabledBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(width: 1, color: Colors.grey),
+                      ),
+                      focusedBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(width: 1, color: Colors.blue),
+                      ),
+                      errorBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(width: 1, color: Colors.red),
+                      ),
+                      focusedErrorBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(width: 1, color: Colors.red),
+                      ),
+                      labelText: 'Student ID',
+                      hintText: 'Enter student ID',
+                    ),
+                  );
+                },
+                optionsViewBuilder: (BuildContext context,
+                    AutocompleteOnSelected<String> onSelected,
+                    Iterable<String> options) {
+                  return Align(
+                    alignment: Alignment.topLeft,
+                    child: Material(
+                      elevation: 4.0,
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(
+                          maxWidth: 300,
+                          maxHeight: 250,
+                        ),
+                        child: ListView.builder(
+                          padding: const EdgeInsets.all(8.0),
+                          itemCount: options.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            final String user = options.elementAt(index);
+                            return GestureDetector(
+                              onTap: () {
+                                onSelected(user);
+                              },
+                              child: ListTile(
+                                title: Text(user),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  );
                 },
               ),
               const SizedBox(height: 10),
@@ -1005,7 +1142,7 @@ class _AddDialogState extends State<AddDialog> {
               errorMessage = null;
             });
             try {
-              if (_formKey.currentState!.validate() && found) {
+              if (_formKey.currentState!.validate()) {
                 QuerySnapshot<Map<String, dynamic>> existingMembers =
                     await FirebaseFirestore.instance
                         .collection('member')
@@ -1030,10 +1167,6 @@ class _AddDialogState extends State<AddDialog> {
                     errorMessage = 'Student already registered';
                   });
                 }
-              } else {
-                setState(() {
-                  errorMessage = 'Student not found';
-                });
               }
             } catch (error) {
               print("Error fetching student data: $error");
@@ -1067,6 +1200,55 @@ class _EditDialogState extends State<EditDialog> {
   TextEditingController id2 = TextEditingController();
   TextEditingController name1 = TextEditingController();
   TextEditingController name2 = TextEditingController();
+
+  void _sendEmail(String studentID, String committeeName, String position,
+      String email) async {
+    String subject;
+    String message;
+    String societyName = '';
+    DocumentSnapshot<Map<String, dynamic>> societySnapshot =
+        await FirebaseFirestore.instance
+            .collection('society')
+            .doc(widget.selectedSociety)
+            .get();
+
+    if (societySnapshot.exists) {
+      societyName = societySnapshot.data()?['societyName'] ?? 'Unknown Society';
+    }
+
+    if (position == 'Member') {
+      subject = 'Adv Demotion Notification';
+      message =
+          'We regret to inform you that your role as $position within the $societyName at TAR UMT has been adjusted. We appreciate your past contributions and dedication to our university community.\n\nWhile this decision has been made, we value your continued involvement and encourage you to explore other opportunities to contribute to the $societyName.\n\nThank you for your understanding, and we look forward to your ongoing support within our community.';
+    } else {
+      subject = 'Committee Promotion Notification';
+      message =
+          'Congratulations! We are pleased to inform you that you have been promoted to the position of $position within the $societyName at TAR UMT.\n\nYour dedication and outstanding contributions have not gone unnoticed, and we are confident that you will excel in your new role. Thank you for your continued commitment to our university community.\n\nWe look forward to your continued success and valuable contributions to the $societyName.';
+    }
+
+    try {
+      // Send email using EmailJS
+      await EmailJS.send(
+        'service_ul1uscs',
+        'template_alwxa78',
+        {
+          'name': committeeName,
+          'email': email,
+          'subject': subject,
+          'message': message,
+        },
+        const Options(
+          publicKey: 'Zfr0vuSDdyYaWouwQ',
+          privateKey: 'c2nvTqTugRdLVJxuMSYwe',
+        ),
+      );
+    } catch (error) {
+      if (error is EmailJSResponseStatus) {
+        print('ERROR... ${error.status}: ${error.text}');
+      }
+      print(error.toString());
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1166,6 +1348,13 @@ class _EditDialogState extends State<EditDialog> {
                   });
                 }
               });
+              Map<String, dynamic>? user = widget.lowcomm.firstWhere(
+                (user) => user['id'].toString() == selectedID1,
+              );
+
+              // Retrieve email from the user
+              String userEmail = user['email'].toString();
+              _sendEmail(selectedID1, name1.text, position.text, userEmail);
 
               await FirebaseFirestore.instance
                   .collection('member')
@@ -1179,6 +1368,13 @@ class _EditDialogState extends State<EditDialog> {
                   });
                 }
               });
+              Map<String, dynamic>? user2 = widget.highcomm.firstWhere(
+                (user) => user['id'].toString() == selectedID2,
+              );
+
+              // Retrieve email from the user
+              String userEmail2 = user2['email'].toString();
+              _sendEmail(selectedID2, name2.text, 'Member', userEmail2);
               if (widget.function != null) {
                 widget.function!();
               }
@@ -1280,11 +1476,13 @@ class ChangeDialog extends StatefulWidget {
   final String selectedSociety;
   final VoidCallback? function;
   final List<Map<String, dynamic>> original;
+  final List<Map<String, dynamic>> allAdvisorList;
 
   ChangeDialog({
     required this.selectedSociety,
     this.function,
     required this.original,
+    required this.allAdvisorList,
   });
   @override
   _ChangeDialogState createState() => _ChangeDialogState();
@@ -1297,14 +1495,103 @@ class _ChangeDialogState extends State<ChangeDialog> {
   TextEditingController id2 = TextEditingController();
   TextEditingController name1 = TextEditingController();
   TextEditingController name2 = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
   String? errorMessage;
-  bool found = false;
   String? selectedID;
+
   @override
-  Widget build(BuildContext context) {
+  void initState() {
+    super.initState();
     name2.text = widget.original[0]['name'].toString();
     position.text = widget.original[0]['position'].toString();
     selectedID = widget.original[0]['id'].toString();
+  }
+
+  void _sendEmail(String studentID, String committeeName, String position, String type) async {
+    String subject;
+    String message;
+    String societyName = '';
+    String email ='';
+
+    DocumentSnapshot<Map<String, dynamic>> userSnapshot =
+        await FirebaseFirestore.instance
+            .collection('user')
+            .doc(studentID)
+            .get();
+
+    if (userSnapshot.exists) {
+      email = userSnapshot.data()?['email'] ?? 'Unknown email';
+    }
+
+    DocumentSnapshot<Map<String, dynamic>> societySnapshot =
+        await FirebaseFirestore.instance
+            .collection('society')
+            .doc(widget.selectedSociety)
+            .get();
+
+    if (societySnapshot.exists) {
+      societyName = societySnapshot.data()?['societyName'] ?? 'Unknown Society';
+    }
+
+    if (type == 'demote') {
+      subject = 'Society Advisor Demotion Notification';
+      message =
+          'We regret to inform you that your role as $position within the $societyName at TAR UMT has been adjusted. We appreciate your past contributions and dedication to our university community.\n\nWhile this decision has been made, we value your continued involvement and encourage you to explore other opportunities to contribute to the $societyName.\n\nThank you for your understanding, and we look forward to your ongoing support within our community.';
+    } else {
+      subject = 'Society Advisor Promotion Notification';
+      message =
+          'Congratulations! We are pleased to inform you that you have been promoted to the position of $position within the $societyName at TAR UMT.\n\nYour dedication and outstanding contributions have not gone unnoticed, and we are confident that you will excel in your new role. Thank you for your continued commitment to our university community.\n\nWe look forward to your continued success and valuable contributions to the $societyName.';
+    }
+
+    try {
+      // Send email using EmailJS
+      await EmailJS.send(
+        'service_ul1uscs',
+        'template_alwxa78',
+        {
+          'name': committeeName,
+          'email': email,
+          'subject': subject,
+          'message': message,
+        },
+        const Options(
+          publicKey: 'Zfr0vuSDdyYaWouwQ',
+          privateKey: 'c2nvTqTugRdLVJxuMSYwe',
+        ),
+      );
+    } catch (error) {
+      if (error is EmailJSResponseStatus) {
+        print('ERROR... ${error.status}: ${error.text}');
+      }
+      print(error.toString());
+    }
+  }
+
+  Future<void> onTextChanged(String value, TextEditingController name) async {
+    if (RegExp(r'^A\d{3}$').hasMatch(value)) {
+      bool hasMatch = false;
+      String studentName = '';
+
+      for (Map<String, dynamic> user in widget.allAdvisorList) {
+        if (user['id'] == value) {
+          hasMatch = true;
+          studentName = user['name'];
+          break;
+        }
+      }
+
+      setState(() {
+        name.text = hasMatch ? studentName : '';
+      });
+    } else {
+      setState(() {
+        name.text = '';
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text('Change Advisor'),
       content: Form(
@@ -1315,41 +1602,87 @@ class _ChangeDialogState extends State<ChangeDialog> {
             children: [
               const Text('New Advisor'),
               const SizedBox(height: 10),
-              CustomTextField(
-                  errorText: errorMessage,
-                  controller: id1,
-                  hintText: 'Enter Advisor ID',
-                  validator: (value) {
-                    if (value!.isEmpty) {
-                      return 'Please enter advisor ID';
-                    } else if (!RegExp(r'^A\d{3}').hasMatch(value)) {
-                      return 'Invalid advisor ID';
-                    }
-                    return null;
-                  },
-                  onChanged: (value) async {
-                    if (RegExp(r'^A\d{3}').hasMatch(value)) {
-                      DocumentSnapshot<Map<String, dynamic>> advisor =
-                          await FirebaseFirestore.instance
-                              .collection('user')
-                              .doc(id1.text)
-                              .get();
-
-                      if (advisor.exists) {
-                        Map<String, dynamic> advisorData = advisor.data()!;
-                        if (advisorData['ic'] != '') {
-                          name1.text = advisorData['name'];
-                          found = true;
-                        }
-                      } else {
-                        name1.text = '';
-                        found = false;
+              RawAutocomplete<String>(
+                focusNode: _focusNode,
+                textEditingController: id1,
+                optionsBuilder: (TextEditingValue textEditingValue) {
+                  return widget.allAdvisorList
+                      .map<String>((user) => user['id'].toString())
+                      .where((id) => id.contains(textEditingValue.text))
+                      .toList();
+                },
+                onSelected: (String value) {
+                  onTextChanged(value, name1);
+                },
+                fieldViewBuilder: (BuildContext context,
+                    TextEditingController controller,
+                    FocusNode focusNode,
+                    VoidCallback onFieldSubmitted) {
+                  return TextFormField(
+                    validator: (value) {
+                      if (value!.isEmpty) {
+                        return 'Please enter advisor ID';
+                      } else if (!RegExp(r'^A\d{3}$').hasMatch(value)) {
+                        return 'Invalid advisor ID';
                       }
-                    } else {
-                      name1.text = '';
-                      found = false;
-                    }
-                  }),
+                      return null;
+                    },
+                    controller: controller,
+                    focusNode: focusNode,
+                    onChanged: (value) {
+                      onTextChanged(value, name1);
+                    },
+                    decoration: InputDecoration(
+                      errorText: errorMessage,
+                      enabledBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(width: 1, color: Colors.grey),
+                      ),
+                      focusedBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(width: 1, color: Colors.blue),
+                      ),
+                      errorBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(width: 1, color: Colors.red),
+                      ),
+                      focusedErrorBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(width: 1, color: Colors.red),
+                      ),
+                      labelText: 'Advisor ID',
+                      hintText: 'Enter advisor ID',
+                    ),
+                  );
+                },
+                optionsViewBuilder: (BuildContext context,
+                    AutocompleteOnSelected<String> onSelected,
+                    Iterable<String> options) {
+                  return Align(
+                    alignment: Alignment.topLeft,
+                    child: Material(
+                      elevation: 4.0,
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(
+                          maxWidth: 300,
+                          maxHeight: 250,
+                        ),
+                        child: ListView.builder(
+                          padding: const EdgeInsets.all(8.0),
+                          itemCount: options.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            final String user = options.elementAt(index);
+                            return GestureDetector(
+                              onTap: () {
+                                onSelected(user);
+                              },
+                              child: ListTile(
+                                title: Text(user),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
               const SizedBox(height: 10),
               CustomTextField(
                 controller: name1,
@@ -1407,7 +1740,7 @@ class _ChangeDialogState extends State<ChangeDialog> {
               errorMessage = null;
             });
 
-            if (_formKey.currentState!.validate() && found) {
+            if (_formKey.currentState!.validate()) {
               try {
                 DocumentReference<Map<String, dynamic>> newAdvisorRef =
                     FirebaseFirestore.instance.collection('user').doc(id1.text);
@@ -1417,41 +1750,30 @@ class _ChangeDialogState extends State<ChangeDialog> {
                         .collection('user')
                         .doc(selectedID);
 
-                DocumentSnapshot<Map<String, dynamic>> newAdvisorSnapshot =
-                    await newAdvisorRef.get();
 
                 DocumentSnapshot<Map<String, dynamic>> currentAdvisorSnapshot =
                     await currentAdvisorRef.get();
 
-                Map<String, dynamic> newAdvisorData =
-                    newAdvisorSnapshot.data()!;
-                if (newAdvisorData['societyID'] == '' &&
-                    newAdvisorData['position'] == '') {
-                  await newAdvisorRef.update({
-                    'societyID': widget.selectedSociety,
-                    'position': currentAdvisorSnapshot['position'],
-                  });
+                await newAdvisorRef.update({
+                  'societyID': widget.selectedSociety,
+                  'position': currentAdvisorSnapshot['position'],
+                });
+                _sendEmail(
+                    id1.text, name1.text, currentAdvisorSnapshot['position'], 'promote');
 
-                  await currentAdvisorRef.update({
-                    'societyID': '',
-                    'position': '',
-                  });
-                  if (widget.function != null) {
-                    widget.function!();
-                  }
-                  Navigator.pop(context);
-                } else {
-                  setState(() {
-                    errorMessage = 'This advisor is unavailable';
-                  });
+                await currentAdvisorRef.update({
+                  'societyID': '',
+                  'position': '',
+                });
+                _sendEmail(
+                    id2.text, name2.text, position.text, 'demote');
+                if (widget.function != null) {
+                  widget.function!();
                 }
+                Navigator.pop(context);
               } catch (e) {
                 print(e.toString());
               }
-            } else {
-              setState(() {
-                errorMessage = 'Advisor not found';
-              });
             }
           },
           child: const Text('OK'),
